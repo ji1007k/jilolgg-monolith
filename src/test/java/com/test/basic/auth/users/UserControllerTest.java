@@ -18,8 +18,8 @@ import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -51,7 +51,7 @@ public class UserControllerTest {
         User newUser = new User(1L, "password123", "email@example.com", "username", null, null, null);
 
         // Mocking된 서비스가 반환할 유저 설정
-        given(userService.createUser(any(User.class))).willReturn(newUser);
+        when(userService.createUser(any(User.class))).thenReturn(newUser);
 
         // 서비스 없이 컨트롤러에서 HTTP 응답만 확인
         mockMvc.perform(post("/api/users")
@@ -71,7 +71,7 @@ public class UserControllerTest {
         List<User> users = List.of(newUser);
 
         // Mocking된 서비스가 반환할 유저 목록 설정
-        given(userService.getAllUsers(1, 10, "", "id,asc")).willReturn(users);
+        when(userService.getAllUsers(1, 10, "", "id,asc")).thenReturn(users);
 
         // GET 요청으로 유저 목록 조회
         mockMvc.perform(get("/api/users")
@@ -91,7 +91,7 @@ public class UserControllerTest {
         User newUser = new User(1L, "password123", "email@example.com", "username", null, null, null);
 
         // Mocking된 서비스가 반환할 유저 설정
-        given(userService.getUserById(1L)).willReturn(Optional.of(newUser));
+        when(userService.getUserById(1L)).thenReturn(Optional.of(newUser));
 
         // 특정 ID로 유저 조회
         mockMvc.perform(get("/api/users/{id}", 1L))  // 예시 ID: 1
@@ -110,9 +110,9 @@ public class UserControllerTest {
         updatedUser.setName("newname");// 수정할 유저의 ID를 설정
 
         // Mocking된 서비스가 반환할 유저 설정
-//        given(userService.updateUser(1L, any(User.class))).willReturn(Optional.of(updatedUser));
+//        when(userService.updateUser(1L, any(User.class))).thenReturn(Optional.of(updatedUser));
         // Mockito는 모든 인자에 ArgumentMatchers를 사용해야 함
-        given(userService.updateUser(eq(1L), any(User.class))).willReturn(Optional.of(updatedUser));
+        when(userService.updateUser(eq(1L), any(User.class))).thenReturn(Optional.of(updatedUser));
 
         // 특정 ID로 유저 수정
         mockMvc.perform(put("/api/users/{id}", 1L)  // URL 경로에서 id 값을 1L로 전달

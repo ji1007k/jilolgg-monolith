@@ -1,10 +1,15 @@
 package com.test.basic.auth.users;
 
+import com.test.basic.utils.PasswordUtils;
+import com.test.basic.utils.RSAUtil;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.KeyPair;
+import java.security.PrivateKey;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +25,17 @@ class UserService {
         String hashedPwd = PasswordUtils.hashPassword(user.getPassword());
         user.setPassword(hashedPwd);
         return userRepository.save(user);
+    }
+
+    public String decryptPassword(String encryptedPwd, HttpSession session) throws Exception {
+        PrivateKey privateKey = (PrivateKey) session.getAttribute("privateKey");
+        if (privateKey == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "PrivateKey does not exists");
+        }
+        
+        // 개인키 재사용 불가
+        session.removeAttribute("privateKey");
+        return RSAUtil.decryptWithPrivateKey(encryptedPwd, privateKey);
     }
 
     // FIXME 비밀번호 제외하고 조회
@@ -87,5 +103,11 @@ class UserService {
         }
 
         userRepository.deleteById(id);
+    }
+
+    public String generateRSAKeyPair(HttpSession session) throws Exception {
+        KeyPair keyPair = RSAUtil.generateKeyPair();
+        session.setAttribute("privateKey", keyPair.getPrivate());
+        return RSAUtil.getPublicKeyAsString(keyPair.getPublic());
     }
 }

@@ -1,6 +1,7 @@
 package com.test.basic.auth.users;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.test.basic.utils.RSAUtil;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -11,19 +12,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-//import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.List;
 import java.util.Optional;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(UserController.class)  // Controller만 테스트하기 위해 사용
 @ExtendWith(MockitoExtension.class)
@@ -134,5 +136,23 @@ public class UserControllerTest {
         // DELETE 요청을 보내고 HTTP 상태 코드가 204 (No Content)인지를 검증
         mockMvc.perform(delete("/api/users/{id}", 1L))
                 .andExpect(status().isNoContent());
+    }
+    
+    @Test
+    @DisplayName("RSA Key 생성 테스트")
+    void testGenerateRSA() throws Exception {
+        // Given
+        MockHttpSession session = mock(MockHttpSession.class);  // MockHttpSession 사용
+        KeyPair keyPair = RSAUtil.generateKeyPair();  // 실제 키 쌍을 생성
+        PublicKey publicKey = keyPair.getPublic();  // 공개 키를 반환
+
+        // UserService의 generateRSAKeyPair 메서드를 mock
+        when(userService.generateRSAKeyPair(session)).thenReturn(publicKey.toString());
+
+        // When & Then
+        mockMvc.perform(get("/api/users/rsa")
+                        .session(session))  // 세션을 포함한 요청
+                .andExpect(status().isOk())  // 응답 상태가 OK인지 검증
+                .andExpect(content().string(containsString(publicKey.toString())));  // 반환된 공개키 포함 여부 확인
     }
 }

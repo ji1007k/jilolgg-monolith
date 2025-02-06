@@ -1,5 +1,7 @@
 package com.test.basic.auth.users;
 
+import com.test.basic.utils.PasswordUtils;
+import com.test.basic.utils.RSAUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.KeyPair;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -42,8 +45,7 @@ public class UserServiceTest {
     @Test
     @DisplayName("유저 생성 테스트")
     void testCreateUser() {
-        // Given
-//        User user = new User(1L, "password", "email", "name", "profileImageUrl", null, null);
+        String orgPwd = user.getPassword();
 
         // When
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
@@ -58,7 +60,7 @@ public class UserServiceTest {
         assertNotNull(createdUser);
         assertThat(createdUser.getId()).isNotNull();
         assertThat(createdUser.getName()).isEqualTo("name");
-        assertTrue(new BCryptPasswordEncoder().matches("password", createdUser.getPassword()));
+        assertTrue(new BCryptPasswordEncoder().matches(orgPwd, createdUser.getPassword()));
     }
 
     @Test
@@ -104,12 +106,57 @@ public class UserServiceTest {
 
     // 비밀번호 확인
     @Test
-    @DisplayName("비밀번호 일치여부 확인 테스트")
-    void testCheckPassword() {
+    @DisplayName("비밀번호 일치여부 확인 테스트 - BCrypt")
+    void testCheckPasswordWithBCrypt() {
         String password = user.getPassword();
         String hashedPassword = PasswordUtils.hashPassword(user.getPassword());
 
         assertThat(PasswordUtils.checkPassword(password, hashedPassword)).isTrue();
+    }
+
+    // 비밀번호 확인
+    @Test
+    @DisplayName("비밀번호 일치 테스트 - BCrypt + RSA")
+    void testSuccessCheckPasswordWithBCryptAndRSA() throws Exception {
+        String originalPassword = "testPassword";
+        user.setPassword(PasswordUtils.hashPassword(originalPassword));
+
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+
+        userService.changePassword(user.getId(), originalPassword);
+
+        // RSA 키 생성
+        KeyPair keyPair = RSAUtil.generateKeyPair();
+
+        // RSA 암호화 후 데이터 전송
+        String password = "testPassword";
+        String encodedPassword = RSAUtil.encryptWithPublicKey(password, keyPair.getPublic());
+
+        // 복호화 후 비밀번호 확인
+        String decodedPassword = RSAUtil.decryptWithPrivateKey(encodedPassword, keyPair.getPrivate());
+        assertThat(PasswordUtils.checkPassword(decodedPassword, user.getPassword())).isTrue();
+    }
+
+    @Test
+    @DisplayName("비밀번호 불일치 테스트 - BCrypt + RSA")
+    void testFailCheckPasswordWithBCryptAndRSA() throws Exception {
+        String originalPassword = "testPassword";
+        user.setPassword(PasswordUtils.hashPassword(originalPassword));
+
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+
+        userService.changePassword(user.getId(), originalPassword);
+
+        // RSA 키 생성
+        KeyPair keyPair = RSAUtil.generateKeyPair();
+
+        // RSA 암호화 후 데이터 전송
+        String password = "wrongPassword";
+        String encodedPassword = RSAUtil.encryptWithPublicKey(password, keyPair.getPublic());
+
+        // 복호화 후 비밀번호 확인
+        String decodedPassword = RSAUtil.decryptWithPrivateKey(encodedPassword, keyPair.getPrivate());
+        assertThat(PasswordUtils.checkPassword(decodedPassword, user.getPassword())).isFalse();
     }
 
     @Test

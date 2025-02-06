@@ -31,17 +31,20 @@ class UserService {
 
     @Transactional
     public Optional<User> updateUser(Long id, User user) {
-        Optional<User> foundUser = userRepository.findById(id);
+        Optional<User> existingUser = userRepository.findById(id);
 
-        foundUser.ifPresent(userEntity -> {
+        if (existingUser.isPresent()) {
+            User userEntity = existingUser.get();
             userEntity.setEmail(user.getEmail());
             userEntity.setName(user.getName());
             userEntity.setPassword(user.getPassword());
             userEntity.setProfileImageUrl(user.getProfileImageUrl());
             userRepository.save(userEntity);
-        });
 
-        return foundUser;
+            return Optional.of(userEntity);
+        }
+
+        return Optional.empty();
     }
 
     public void deleteUser(Long id) {

@@ -37,6 +37,7 @@ dependencies {
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     // SpringDoc OpenAPI + Swagger UI
+    // spring boot 3.4 버전과 쓰면 에러 발생
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -25,6 +26,13 @@ public class User {
     private String email;
     private String name;
     private String profileImageUrl;
-    private Date createdDt;
-    private Date updatedDt;
+    private LocalDateTime createdDt;
+    private LocalDateTime updatedDt;
+
+    public User(User user) {
+        this.password = user.getPassword();
+        this.email = user.getEmail();
+        this.name = user.getName();
+        this.profileImageUrl = user.getProfileImageUrl();
+    }
 }

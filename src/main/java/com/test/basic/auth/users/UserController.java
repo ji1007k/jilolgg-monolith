@@ -1,17 +1,20 @@
 package com.test.basic.auth.users;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Controller
+@RestController
 @RequestMapping("/api/users")
+@Tag(name = "User API", description = "사용자 관리 API")  // API 그룹 태그
 public class UserController {
 
     private UserService userService;
@@ -21,6 +24,7 @@ public class UserController {
     }
 
     @PostMapping
+    @Operation(summary = "사용자 등록", description = "새로운 사용자를 등록합니다.")
     public ResponseEntity<User> createUser(@RequestBody User user) {
         User newUser = userService.createUser(user);
 
@@ -35,7 +39,8 @@ public class UserController {
 
 
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers(@RequestParam int page,
+    @Operation(summary = "사용자 목록 조회", description = "사용자 목록을 조회합니다.")
+    public ResponseEntity<List<User>> getAllUsers(@RequestParam(defaultValue = "1") int page,
                                                   @RequestParam(value = "size", defaultValue = "10") int size,
                                                   @RequestParam(required = false) String keyword,
                                                   @RequestParam(required = false, defaultValue = "id,asc") String sort) {
@@ -46,6 +51,11 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "사용자 조회", description = "ID로 사용자를 조회합니다.", responses = {
+            @ApiResponse(responseCode = "200", description = "Successful retrieval of user"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    @Parameter(name = "id", description = "사용자 ID", required = true)
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
         Optional<User> user = userService.getUserById(id);
 
@@ -57,6 +67,8 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "사용자 정보 수정", description = "ID로 사용자 정보를 조회합니다.")
+    @Parameter(name = "id", description = "사용자 ID", required = true)
     public ResponseEntity<User> updateUser(@PathVariable Long id,
                                            @RequestBody User user) {
 
@@ -74,6 +86,8 @@ public class UserController {
     // 컨트롤러 메서드에 throws를 명시하지 않아도
     // 런타임 예외는 전파되어 전역 예외 처리기에 의해 처리됩니다.
     @DeleteMapping("/{id}")
+    @Operation(summary = "사용자 삭제", description = "ID로 사용자 정보를 삭제합니다.")
+    @Parameter(name = "id", description = "사용자 ID", required = true)
     public ResponseEntity deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();

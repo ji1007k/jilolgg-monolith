@@ -61,8 +61,6 @@ public class UserServiceTest {
         User user1 = new User(1L, "password1", "email1", "name1", "profileImageUrl1", LocalDateTime.now(), null);
         User user2 = new User(2L, "password2", "email2", "name2", "profileImageUrl2", LocalDateTime.now(), null);
 
-        List.of(user1, user2);
-
         when(userRepository.findAll()).thenReturn(List.of(user1, user2));
 
         List<User> users = userService.getAllUsers(1, 10, "", "");
@@ -97,6 +95,47 @@ public class UserServiceTest {
         assertThat(updatedUser.get().getId()).isEqualTo(user.getId());
         assertThat(updatedUser.get().getName()).isEqualTo(newUser.getName());
     }
+
+    // 비밀번호 확인
+    @Test
+    @DisplayName("비밀번호 일치여부 확인 테스트")
+    void testCheckPassword() {
+        String password = user.getPassword();
+        String hashedPassword = PasswordUtils.hashPassword(user.getPassword());
+
+        assertThat(PasswordUtils.checkPassword(password, hashedPassword)).isTrue();
+    }
+
+    @Test
+    @DisplayName("비밀번호 변경 테스트")
+    void testChangePassword() {
+        // Given
+        String newPassword = "newPassword";
+
+        System.out.println("Before change - user.getPassword() = " + user.getPassword());
+
+        // Mockito 설정: userRepository.findById() 가 기존 user 반환
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+
+        // ✅ save() 메서드가 호출될 때 user 객체의 비밀번호가 실제로 변경되도록 처리
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User savedUser = invocation.getArgument(0); // 전달된 User 객체 가져오기
+            user.setPassword(savedUser.getPassword());  // ✅ user 객체의 password 변경
+            return savedUser;
+        });
+
+        // When: 비밀번호 변경 실행
+        boolean changed = userService.changePassword(user.getId(), newPassword);
+
+        // Then: 변경 후 user 객체의 password 확인
+        System.out.println("After change - user.getPassword() = " + user.getPassword());
+
+        // ✅ 해시된 비밀번호끼리 직접 비교하면 안 됨 → PasswordUtils.checkPassword() 사용해야 함
+        assertTrue(changed);
+        assertTrue(PasswordUtils.checkPassword(newPassword, user.getPassword()));  // ✅ 올바른 검증 방식
+    }
+
+
 
     @Test
     @DisplayName("유저 삭제 테스트 - 유저가 존재하는 경우")

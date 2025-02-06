@@ -28,6 +28,7 @@ public class UserController {
     @Operation(summary = "사용자 등록", description = "새로운 사용자를 등록합니다.")
     public ResponseEntity<User> createUser(@RequestBody User user) {
         User newUser = userService.createUser(user);
+        newUser.setPassword(null);
 
         // 생성한 사용자 정보 조회 URI 반환
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -61,6 +62,7 @@ public class UserController {
         Optional<User> user = userService.getUserById(id);
 
         if (user.isPresent()) {
+            user.get().setPassword(null);
             return ResponseEntity.ok().body(user.get());
         }
 

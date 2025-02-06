@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -78,6 +79,31 @@ public class UserController {
             return ResponseEntity.ok().body(updatedUser.get());
         } else {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/password")
+    public ResponseEntity<String> checkPassword(@RequestParam Long id,
+                                               @RequestParam String password) {
+        boolean isMatched = userService.checkPassword(id, password);
+        if (isMatched) {
+            return ResponseEntity.ok("비밀번호가 일치합니다.");
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("비밀번호가 일치하지 않습니다.");
+        }
+    }
+
+    // 비밀번호 변경 API
+    @PutMapping("/password")
+    public ResponseEntity<String> changePassword(@RequestParam Long id,
+                                                 @RequestParam String newPassword) {
+
+        boolean success = userService.changePassword(id, newPassword);
+
+        if (success) {
+            return ResponseEntity.ok("비밀번호가 변경되었습니다.");
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("비밀번호 변경에 실패했습니다.");
         }
     }
 

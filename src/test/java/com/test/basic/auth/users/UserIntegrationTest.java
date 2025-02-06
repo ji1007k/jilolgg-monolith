@@ -1,6 +1,7 @@
 package com.test.basic.auth.users;
 
 import com.test.basic.handler.AcceptanceTestExecutionListener;
+import com.test.basic.utils.RSAUtil;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,6 +14,7 @@ import org.springframework.test.context.jdbc.Sql;
 
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 // Spring Boot 애플리케이션의 통합 테스트를 실행하기 위한 애너테이션.
@@ -43,16 +45,43 @@ class UserIntegrationTest {
         // given (요청할 URL과 파라미터 설정)
         String url = "/api/users";
         User user = new User(null, "newpass", "new@example.com", "newuser", null, null, null);
+        // 요청 데이터 중 사용자 비밀번호 rsa 암호화
+
+        String rsaUrl = "/api/users/rsa";
+        ResponseEntity<String> res = restTemplate.getForEntity(rsaUrl, String.class);
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // 세션 쿠키 추출 (Set-Cookie 헤더에서 JSESSIONID 찾기)
+        List<String> cookies = res.getHeaders().get("Set-Cookie");
+        String sessionId = null;
+        for (String cookie : cookies) {
+            if (cookie.startsWith("JSESSIONID")) {
+                sessionId = cookie.split(";")[0].split("=")[1];  // JSESSIONID 값을 추출
+                break;
+            }
+        }
+        assertNotNull(sessionId);
+        System.out.println("Session ID: " + sessionId);
+
+        String publicKey = res.getBody();
+        assertThat(publicKey).isNotNull();
+
+        try {
+            user.setPassword(RSAUtil.encryptWithPublicKey(user.getPassword(), RSAUtil.getPublicKeyFromString(publicKey)));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         // when (실제 HTTP POST 요청)
+        // 두 번째 요청 (세션 쿠키 포함하여 보내기)
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add("Cookie", "JSESSIONID=" + sessionId);  // 세션 쿠키를 헤더에 추가
 
         // Spring이 자동으로 JSON으로 직렬화(변환)해서 요청 본문에 담아줌
         HttpEntity<User> request = new HttpEntity<>(user, headers);
 
         ResponseEntity<User> response = restTemplate.postForEntity(url, request, User.class);
-//        User newUser = response.getBody();
 
         // then (응답 검증)
         assertEquals(HttpStatus.CREATED, response.getStatusCode());  // HTTP 201 응답 확인

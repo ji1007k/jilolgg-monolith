@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +27,15 @@ public class UserController {
 
     @PostMapping
     @Operation(summary = "사용자 등록", description = "새로운 사용자를 등록합니다.")
-    public ResponseEntity<User> createUser(@RequestBody User user) {
+    public ResponseEntity<User> createUser(@RequestBody User user, HttpSession session) {
+        try {
+            // 비밀번호 복호화
+            String decryptedPwd = userService.decryptPassword(user.getPassword(), session);
+            user.setPassword(decryptedPwd);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+
         User newUser = userService.createUser(user);
         newUser.setPassword(null);
 
@@ -119,6 +128,17 @@ public class UserController {
     public ResponseEntity deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping(value = "/rsa")
+    @Operation(summary = "RSA 암호화 키 생성", description = "사용자 정보 암호화를 위한 RSA 암호화 키를 생성합니다.")
+    public ResponseEntity<String> generateRSAKeyPair(HttpSession session) {
+        try {
+            String publicKey = userService.generateRSAKeyPair(session);
+            return ResponseEntity.ok().body(publicKey);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
 }

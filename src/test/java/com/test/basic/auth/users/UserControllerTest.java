@@ -9,8 +9,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+//import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -36,7 +37,8 @@ public class UserControllerTest {
 
     // UserService를 Mock 처리하여 실제 서비스 호출을 Mocking
     // @MockBean을 사용했지만, Spring Boot 3.4부터는 @MockitoBean을 사용
-    @MockitoBean
+    // 25-02-06 jikim: Swagger ui 와 spring boot 3.4 버전 충돌로 sb 버전 3.3.1 로 변경함에 따라 MockBean 사용
+    @MockBean
     private UserService userService;
 
     @BeforeEach

@@ -8,6 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -45,14 +46,19 @@ public class UserServiceTest {
 //        User user = new User(1L, "password", "email", "name", "profileImageUrl", null, null);
 
         // When
-        when(userRepository.save(any(User.class))).thenReturn(user);
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User newUser = invocation.getArgument(0);
+            user.setPassword(newUser.getPassword());
+            return newUser;
+        });
+
         User createdUser = userService.createUser(user);
 
         // Then
         assertNotNull(createdUser);
         assertThat(createdUser.getId()).isNotNull();
         assertThat(createdUser.getName()).isEqualTo("name");
-        assertThat(createdUser.getPassword()).isEqualTo("password");
+        assertTrue(new BCryptPasswordEncoder().matches("password", createdUser.getPassword()));
     }
 
     @Test

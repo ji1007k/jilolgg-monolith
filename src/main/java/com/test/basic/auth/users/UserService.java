@@ -19,10 +19,7 @@ class UserService {
     public User createUser(User user) {
         String hashedPwd = PasswordUtils.hashPassword(user.getPassword());
         user.setPassword(hashedPwd);
-
-        User savedUser = userRepository.save(user);
-        savedUser.setPassword(null);
-        return savedUser;
+        return userRepository.save(user);
     }
 
     // FIXME 비밀번호 제외하고 조회
@@ -31,14 +28,7 @@ class UserService {
     }
 
     public Optional<User> getUserById(Long id) {
-        Optional<User> user = userRepository.findById(id);
-
-        if (user.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
-        }
-
-        user.get().setPassword(null);
-        return user;
+        return userRepository.findById(id);
     }
 
     @Transactional

@@ -1,0 +1,43 @@
+<!-- src/main/resources/templates/login.html (Thymeleaf 사용 예시) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login Page</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+<!--    spring boot 기본 설정에 의해 아래 4개 경로에 대해서는 /** 로 접근 가능함-->
+<!--    resources/static/, resources/public/, resources/resources/, resources/META-INF/resources/-->
+    <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}" />
+    <script type="module">
+        import Login from '/js/auth/login/Login.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new Login();
+        });
+    </script>
+</head>
+<body>
+    <!-- 헤더 영역 -->
+    <header>
+        <div class="header-container">
+            <a th:href="@{/}" class="main-link">My Website</a>
+        </div>
+    </header>
+
+    <div class="login-container" id="loginArea">
+    <!--<form action="/login" method="post">-->
+        <h2>로그인</h2>
+        <div class="login-form-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required placeholder="Enter your username">
+        </div>
+        <div class="login-form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required placeholder="Enter your password">
+        </div>
+        <button class="login-btn">Login</button>
+    <!--</form>-->
+        <p>계정이 없나요? <a th:href="@{/register}">회원가입</a></p>
+    </div>
+</body>
+</html>

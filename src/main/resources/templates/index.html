@@ -1,12 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Title</title>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}" />
+
+    <script type="module">
+        import App from '/js/App.js';
+
+        new App().init();
+
+    </script>
 </head>
 <body>
+
+<!-- 헤더 영역 -->
+<header>
+    <div class="header-container">
+        <a th:href="@{/}" class="main-link">My Website</a>
+        <div class="user-info">
+            <span id="username-area" th:if="${username != null}">
+                <!-- 사용자 이름 클릭 시 드롭다운 메뉴 나타남 -->
+                <span th:text="${username}" class="username username-clickable"></span> |
+                <span id="tokenExpirationTimeArea">
+                    <span id="tokenExpirationTime" th:text="${expirationTime}"><!--2025-02-12 12:00--></span>
+                    <button class="refresh-token-btn">갱신</button>
+                </span>
+
+                <!-- 드롭다운 메뉴 -->
+                <div id="dropdown" class="dropdown-content">
+                    <a href="/mypage" th:href="@{/mypage}">마이페이지</a>
+                    <a th:href="@{/user/logout}" class="logout-btn">로그아웃</a>
+                </div>
+            </span>
+            <span th:if="${username == null}">
+                <a th:href="@{/user/login}" class="login-btn">로그인</a>
+            </span>
+        </div>
+    </div>
+</header>
+
+<main>
     <h1>Index Page</h1>
     <p>This is the index page.</p>
-    <a href="/">Main</a>
+
+    <div class="button-group">
+        <button onClick="testAdminScope()" class="action-btn">관리자 SCOPE</button>
+        <button onClick="testUserScope()" class="action-btn">일반사용자 SCOPE</button>
+        <button onClick="testUserScopeToAdmin()" class="action-btn">일반사용자로 관리자권한 접근</button>
+    </div>
+</main>
+
+<script>
+    const accounts = {
+        admin: "admin:admin",
+        user: "user:password"
+    }
+
+    async function testAdminScope() {
+        const token = await getToken(accounts.admin);
+
+        const response = await fetch("/admin-page", {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log(await response.text());
+    }
+
+    async function testUserScope() {
+        const token = await getToken(accounts.user);
+
+        const response = await fetch("/mypage", {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
+
+        console.log(await response.text());
+    }
+
+    async function testUserScopeToAdmin() {
+        const token = await getToken(accounts.user);
+
+        const response = await fetch("/admin-page", {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
+
+        // expect Forbidden: Access is denied
+        console.log(await response.text());
+    }
+
+    async function getToken(data) {
+        const utf8Encoded = String.fromCharCode(...new TextEncoder().encode(data));
+
+        const response = await fetch("/token", {
+            method: "POST",
+            headers: {
+                "Authorization": `Basic ${btoa(utf8Encoded)}`,
+                "Content-Type": "application/json" // 필요에 따라 설정
+            }
+        });
+
+        const token = await response.text();
+        console.log(token);
+
+        return token;
+    }
+
+</script>
 </body>
 </html>

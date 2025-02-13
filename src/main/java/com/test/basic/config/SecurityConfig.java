@@ -16,21 +16,17 @@
 
 package com.test.basic.config;
 
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
-
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
-
 import com.test.basic.auth.jwt.JwtCookieFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -40,13 +36,15 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
-import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 
 /**
  * Security configuration for the main application.
@@ -94,6 +92,41 @@ public class SecurityConfig {
 						).permitAll()	// 인증 해제
 						.anyRequest().authenticated()	// 그 외 요청은 인증 필요
 				)
+				// 특정 요청에서 CSRF 해제
+				.csrf((csrf) -> csrf.ignoringRequestMatchers("/token/**", "/token/generate/*"))
+				// Basic Authentication 인증 설정
+//				.httpBasic(Customizer.withDefaults())	// Basic Authentication 활성화
+				.httpBasic(httpBasic -> httpBasic
+						.authenticationEntryPoint((request, response, authException) -> {
+							// 처음 토큰 발급 요청인 경우만 처리
+							if (request.getRequestURI().equals("/token/generate/sc")) {
+								// 커스텀 인증 엔트리 포인트. (팝업 방지)
+								response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+								response.setContentType("application/json");
+								response.getWriter().write("{\"error\": \"Unauthorized\"}");
+							}
+						})
+				)
+				// 250207. jwt() in OAuth2ResourceServerConfigurer has been deprecated and marked for removal
+				// JWT 기반 OAuth2 인증 설정
+//				.oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt)	// 시큐리티 6 이전 버전
+				.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(jwtDecoder())))	// 시큐리티 6 이상 버전
+				// 세션 사용 X (REST API 용)
+				.sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+				.exceptionHandling((exceptions) -> exceptions
+//						.authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
+//						.accessDeniedHandler(new BearerTokenAccessDeniedHandler())
+						.authenticationEntryPoint((request, response, authException) -> {
+							response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+							response.setContentType("application/json");
+							response.getWriter().write("{\"error\": \"Unauthorized\"}"); // JSON 응답으로 변경
+						})
+						.accessDeniedHandler(new BearerTokenAccessDeniedHandler())
+				);
+
+
+		/*http
+				// 세션 기반 로그인/로그아웃 시 아래 설정 사용
 				// 로그인 페이지
 				.formLogin(formLogin ->
 						formLogin
@@ -106,19 +139,8 @@ public class SecurityConfig {
 				.logout(logout ->
 						logout
 								.permitAll()  // 로그아웃은 누구나 가능
-				)
-				// 특정 요청에서 CSRF 해제
-				.csrf((csrf) -> csrf.ignoringRequestMatchers("/token/**", "/token/generate/*"))
-				.httpBasic(Customizer.withDefaults())
-				// 250207. jwt() in OAuth2ResourceServerConfigurer has been deprecated and marked for removal
-//				.oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt)
-				.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(jwtDecoder())))
-				// 세션 사용 X (REST API 용)
-				.sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-				.exceptionHandling((exceptions) -> exceptions
-						.authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
-						.accessDeniedHandler(new BearerTokenAccessDeniedHandler())
-				);
+				)*/
+
 		// @formatter:on
 		return http.build();
 	}

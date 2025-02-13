@@ -15,6 +15,11 @@ export async function getTokenWithSessionCookie(data) {
         }
     });
 
+    if (!response.ok) {
+        alert("로그인 실패");
+        throw new Error(await response.text());
+    }
+
     const result = await response.json();
 
     // 토큰 만료 시간 초기화

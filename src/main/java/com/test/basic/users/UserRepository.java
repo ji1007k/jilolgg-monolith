@@ -1,4 +1,4 @@
-package com.test.basic.auth.users;
+package com.test.basic.users;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -9,10 +9,14 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
-    Optional<User> findByEmail(String mail);
+    @Query(value = "SELECT * FROM users WHERE email = :email", nativeQuery = true)
+    Optional<UserEntity> findByEmail(String email);
 
+//    @Query(value = "SELECT * FROM users WHERE name LIKE %:name%", nativeQuery = true)
+    @Query(value = "SELECT * FROM users WHERE LOWER(name) = LOWER(:name)", nativeQuery = true)
+    Optional<UserEntity> findByName(String name); // 사용자의 username으로 조회
 
     // 기본 메소드를 대신할 커스텀 메소드 정의. 커스텀 메소드는 엔티티 객체 반환 불가
     @Modifying  // INSERT, UPDATE, DELETE 쿼리 실행을 위한 어노테이션

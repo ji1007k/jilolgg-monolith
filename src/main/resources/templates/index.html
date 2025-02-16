@@ -31,11 +31,11 @@
                 <!-- 드롭다운 메뉴 -->
                 <div id="dropdown" class="dropdown-content">
                     <a href="/mypage" th:href="@{/mypage}">마이페이지</a>
-                    <a th:href="@{/user/logout}" class="logout-btn">로그아웃</a>
+                    <a th:href="@{/auth/logout}" class="logout-btn">로그아웃</a>
                 </div>
             </span>
             <span th:if="${username == null}">
-                <a th:href="@{/user/login}" class="login-btn">로그인</a>
+                <a th:href="@{/auth/login}" class="login-btn">로그인</a>
             </span>
         </div>
     </div>

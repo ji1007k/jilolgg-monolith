@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS "users" (
      "password" varchar(255),
      "email" varchar(255) unique,
      "name" varchar(255),
+     "authority" varchar(255) default 'SCOPE_USER',
      "profile_image_url" varchar(255),
      "created_dt" timestamp(6),
      "updated_dt" timestamp(6),

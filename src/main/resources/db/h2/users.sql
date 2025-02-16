@@ -9,5 +9,5 @@
 --      primary key ("id")
 -- );
 
-INSERT INTO users (id, password, email, name) VALUES (1, 'password123', 'test@example.com', 'testuser');
-INSERT INTO users (id, password, email, name) VALUES (2, 'password123', 'test2@example.com', 'testuser2');
+INSERT INTO users (id, password, email, name) VALUES (2, 'password123', 'test@example.com', 'testuser');
+INSERT INTO users (id, password, email, name) VALUES (3, 'password123', 'test2@example.com', 'testuser2');

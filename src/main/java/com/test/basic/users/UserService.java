@@ -1,4 +1,4 @@
-package com.test.basic.auth.users;
+package com.test.basic.users;
 
 import com.test.basic.utils.PasswordUtils;
 import com.test.basic.utils.RSAUtil;
@@ -14,14 +14,14 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-class UserService {
+public class UserService {
     private UserRepository userRepository;
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
-    public User createUser(User user) {
+    public UserEntity createUser(UserEntity user) {
         String hashedPwd = PasswordUtils.hashPassword(user.getPassword());
         user.setPassword(hashedPwd);
         return userRepository.save(user);
@@ -39,20 +39,20 @@ class UserService {
     }
 
     // FIXME 비밀번호 제외하고 조회
-    public List<User> getAllUsers(int page, int size, String keyword, String sort) {
+    public List<UserEntity> getAllUsers(int page, int size, String keyword, String sort) {
         return userRepository.findAll();
     }
 
-    public Optional<User> getUserById(Long id) {
+    public Optional<UserEntity> getUserById(Long id) {
         return userRepository.findById(id);
     }
 
     @Transactional
-    public Optional<User> updateUser(Long id, User user) {
-        Optional<User> existingUser = userRepository.findById(id);
+    public Optional<UserEntity> updateUser(Long id, UserEntity user) {
+        Optional<UserEntity> existingUser = userRepository.findById(id);
 
         if (existingUser.isPresent()) {
-            User userEntity = existingUser.get();
+            UserEntity userEntity = existingUser.get();
             userEntity.setEmail(user.getEmail());
             userEntity.setName(user.getName());
             userEntity.setProfileImageUrl(user.getProfileImageUrl());
@@ -65,7 +65,7 @@ class UserService {
     }
 
     public boolean checkPassword(Long id, String password) {
-        Optional<User> user = userRepository.findById(id);
+        Optional<UserEntity> user = userRepository.findById(id);
 
         if (user.isPresent()) {
             String userPassword = user.get().getPassword();
@@ -81,10 +81,10 @@ class UserService {
     }
 
     public boolean changePassword(Long id, String newPassword) {
-        Optional<User> user = userRepository.findById(id);
+        Optional<UserEntity> user = userRepository.findById(id);
 
         if (user.isPresent()) {
-            User userEntity = user.get();
+            UserEntity userEntity = user.get();
             String hashedPwd = PasswordUtils.hashPassword(newPassword);
             userEntity.setPassword(hashedPwd);
             userRepository.save(userEntity);
@@ -96,7 +96,7 @@ class UserService {
     }
 
     public void deleteUser(Long id) {
-        Optional<User> user = userRepository.findById(id);
+        Optional<UserEntity> user = userRepository.findById(id);
 
         if (user.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");

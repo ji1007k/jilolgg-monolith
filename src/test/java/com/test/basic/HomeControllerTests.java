@@ -17,8 +17,8 @@ package com.test.basic;
  * limitations under the License.
  */
 
-import com.test.basic.config.SecurityConfig;
-import com.test.basic.auth.jwt.TokenController;
+import com.test.basic.auth.security.config.SecurityConfig;
+import com.test.basic.auth.sample.TokenController;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;

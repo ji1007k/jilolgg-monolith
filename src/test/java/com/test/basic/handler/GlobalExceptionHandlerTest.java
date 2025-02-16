@@ -1,8 +1,7 @@
 package com.test.basic.handler;
 
-import com.test.basic.auth.users.User;
+import com.test.basic.users.UserEntity;
 import jakarta.validation.Valid;
-import org.apache.coyote.BadRequestException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,11 +15,9 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -38,7 +35,7 @@ class GlobalExceptionHandlerTest {
     @RequestMapping("/test")
     static class TestController {
         @PostMapping("/bad-request")
-        public ResponseEntity<String> badRequest(@Valid @RequestBody User user) {
+        public ResponseEntity<String> badRequest(@Valid @RequestBody UserEntity user) {
             return ResponseEntity.badRequest().body("Invalid request");
         }
 

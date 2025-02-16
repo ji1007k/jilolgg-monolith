@@ -1,6 +1,8 @@
 package com.test.basic.auth.users;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.test.basic.users.UserEntity;
+import com.test.basic.users.UserRepository;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Transactional  // 테스트 후 DB 롤백
 @ActiveProfiles("test")  // 테스트 실행 시 특정 프로필(test)을 강제로 활성화
-public class UserIntegrationTestWithMockMvc {
+public class UserEntityIntegrationTestWithMockMvc {
     @Autowired
     private MockMvc mockMvc;  // HTTP 요청 테스트를 위한 MockMvc
 
@@ -36,18 +38,20 @@ public class UserIntegrationTestWithMockMvc {
     @Autowired
     private ObjectMapper objectMapper;  // JSON 변환을 위한 ObjectMapper
 
-    private User testUser;
+    private UserEntity testUser;
 
     @BeforeEach
     void setUp() {
-        testUser = new User(null, "password123", "email@example.com", "username", null, null, null);
+//        testUser = new UserEntity(null, "password123", "email@example.com", "username", null, null, null);
+        testUser = new UserEntity();
         testUser = userRepository.save(testUser);  // DB에 실제 저장
     }
 
     @Test
     @DisplayName("유저 생성 - DB 저장 및 HTTP 응답 테스트")
     void testCreateUser() throws Exception {
-        User newUser = new User(null, "newpass", "new@example.com", "newuser", null, null, null);
+//        UserEntity newUser = new UserEntity(null, "newpass", "new@example.com", "newuser", null, null, null);
+        UserEntity newUser = new UserEntity();
         String userJson = objectMapper.writeValueAsString(newUser);
 
         mockMvc.perform(post("/api/users")
@@ -58,7 +62,7 @@ public class UserIntegrationTestWithMockMvc {
                 .andExpect(jsonPath("$.email").value("new@example.com"));  // 이메일 검증
 
         // DB에 저장되었는지 확인
-        Optional<User> savedUser = userRepository.findByEmail("new@example.com");
+        Optional<UserEntity> savedUser = userRepository.findByEmail("new@example.com");
         assertTrue(savedUser.isPresent());  // DB에 존재하는지 확인
         assertEquals("newuser", savedUser.get().getName());  // 저장된 데이터 검증
     }
@@ -87,7 +91,7 @@ public class UserIntegrationTestWithMockMvc {
     @Test
     @DisplayName("유저 수정 - DB 및 HTTP 응답 검증")
     void testUpdateUser() throws Exception {
-        User updateUser = new User();
+        UserEntity updateUser = new UserEntity();
         updateUser.setId(testUser.getId());
         updateUser.setName("newname");
 
@@ -106,7 +110,7 @@ public class UserIntegrationTestWithMockMvc {
                 .andExpect(status().isNoContent());  // HTTP 204 응답 확인
 
         // DB에서 삭제되었는지 확인
-        Optional<User> deletedUser = userRepository.findById(testUser.getId());
+        Optional<UserEntity> deletedUser = userRepository.findById(testUser.getId());
         assertFalse(deletedUser.isPresent());  // 삭제되었는지 확인
     }
 }

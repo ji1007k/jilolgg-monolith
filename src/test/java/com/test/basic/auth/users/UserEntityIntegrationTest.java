@@ -1,6 +1,7 @@
 package com.test.basic.auth.users;
 
 import com.test.basic.handler.AcceptanceTestExecutionListener;
+import com.test.basic.users.UserEntity;
 import com.test.basic.utils.RSAUtil;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
         value = {AcceptanceTestExecutionListener.class},
         mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS
 )
-class UserIntegrationTest {
+class UserEntityIntegrationTest {
 
     @Autowired
     private TestRestTemplate restTemplate;  // 실제 HTTP 요청을 보내는 객체
@@ -44,7 +45,8 @@ class UserIntegrationTest {
     void testCreateUser() {
         // given (요청할 URL과 파라미터 설정)
         String url = "/api/users";
-        User user = new User(null, "newpass", "new@example.com", "newuser", null, null, null);
+//        UserEntity user = new UserEntity(null, "newpass", "new@example.com", "newuser", null, null, null);
+        UserEntity user = new UserEntity();
         // 요청 데이터 중 사용자 비밀번호 rsa 암호화
 
         String rsaUrl = "/api/users/rsa";
@@ -56,20 +58,23 @@ class UserIntegrationTest {
         String sessionId = null;
         for (String cookie : cookies) {
             if (cookie.startsWith("JSESSIONID")) {
+                // JSESSIONID=abc123; Path=/; HttpOnly → "abc123" 부분을 추출
                 sessionId = cookie.split(";")[0].split("=")[1];  // JSESSIONID 값을 추출
                 break;
             }
         }
-        assertNotNull(sessionId);
+        assertNotNull(sessionId, "세션ID가 없습니다.");
         System.out.println("Session ID: " + sessionId);
 
         String publicKey = res.getBody();
         assertThat(publicKey).isNotNull();
 
+        String originalPassword = user.getPassword();  // 원본 비밀번호
+        String encryptedPassword;
         try {
-            user.setPassword(RSAUtil.encryptWithPublicKey(user.getPassword(), RSAUtil.getPublicKeyFromString(publicKey)));
+            encryptedPassword = RSAUtil.encryptWithPublicKey(originalPassword, RSAUtil.getPublicKeyFromString(publicKey));
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("비밀번호 암호화 실패", e);
         }
 
         // when (실제 HTTP POST 요청)
@@ -79,9 +84,10 @@ class UserIntegrationTest {
         headers.add("Cookie", "JSESSIONID=" + sessionId);  // 세션 쿠키를 헤더에 추가
 
         // Spring이 자동으로 JSON으로 직렬화(변환)해서 요청 본문에 담아줌
-        HttpEntity<User> request = new HttpEntity<>(user, headers);
+        user.setPassword(encryptedPassword);
+        HttpEntity<UserEntity> request = new HttpEntity<>(user, headers);
 
-        ResponseEntity<User> response = restTemplate.postForEntity(url, request, User.class);
+        ResponseEntity<UserEntity> response = restTemplate.postForEntity(url, request, UserEntity.class);
 
         // then (응답 검증)
         assertEquals(HttpStatus.CREATED, response.getStatusCode());  // HTTP 201 응답 확인
@@ -104,14 +110,14 @@ class UserIntegrationTest {
 //        headers.setAccept(List.of(MediaType.APPLICATION_JSON));  // JSON 응답 요청
 
 //        HttpEntity<List<User>> request = new HttpEntity<>(headers);
-        ResponseEntity<List<User>> response = restTemplate.exchange(
+        ResponseEntity<List<UserEntity>> response = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
                 null,   // requestEntity,  // 헤더 포함
                 new ParameterizedTypeReference<>() {}
         );
 
-        List<User> users = response.getBody();
+        List<UserEntity> users = response.getBody();
 
         // then
         assertEquals(HttpStatus.OK, response.getStatusCode());  // HTTP 200 응답 확인
@@ -129,12 +135,12 @@ class UserIntegrationTest {
         Long userId = 1L;;
 
         // w
-        ResponseEntity<User> response = restTemplate.getForEntity(url, User.class, userId);
+        ResponseEntity<UserEntity> response = restTemplate.getForEntity(url, UserEntity.class, userId);
 
         // t
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        User user = response.getBody();
+        UserEntity user = response.getBody();
         assertNotNull(user);
         assertEquals(1L, user.getId());
         assertEquals("test@example.com", user.getEmail());
@@ -145,27 +151,27 @@ class UserIntegrationTest {
     void testUpdateUser() {
         // g
         String url = "/api/users/{id}";
-        User updateUser = new User();
+        UserEntity updateUser = new UserEntity();
         updateUser.setId(1L);
         updateUser.setName("newname");
 
         // w
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<User> request = new HttpEntity<>(updateUser, headers);
+        HttpEntity<UserEntity> request = new HttpEntity<>(updateUser, headers);
 
-        ResponseEntity<User> response = restTemplate.exchange(
+        ResponseEntity<UserEntity> response = restTemplate.exchange(
                 url,  // ID를 경로 변수로 전달
                 HttpMethod.PUT,
                 request,
-                User.class,
+                UserEntity.class,
                 updateUser.getId()   // ID 값 전달
          );
 
         // t
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        User user = response.getBody();
+        UserEntity user = response.getBody();
         assertNotNull(user);
         assertEquals(1L, user.getId());
         assertEquals("newname", user.getName());

@@ -1,10 +1,11 @@
-package com.test.basic.auth.jwt;
+package com.test.basic.auth.sample;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -18,13 +19,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static org.apache.el.lang.ELArithmetic.add;
 
 
 @Tag(name = "JWT 토큰 관리 API", description = "JWT 토큰 발급/갱신 API")  // API 그룹 태그
@@ -35,6 +36,12 @@ public class JwtController {
 
 	private static JwtEncoder encoder;
 
+	@Value("${jwt.public.key}")
+	RSAPublicKey key;
+
+	@Value("${jwt.private.key}")
+	RSAPrivateKey priv;
+
 	private static final long ACCESS_TOKEN_EXPIRY = 3600L;
 	private static final long REFRESH_TOKEN_EXPIRY = 3600L;
 
@@ -43,10 +50,36 @@ public class JwtController {
 		this.encoder = encoder;
 	}
 
-
-	// 액세스 토큰과 리프레시 토큰 검증 과정을 필터에서 처리하여 발급/재발급에 동일한 api 요청 가능
-	@PostMapping(value = { "/generate/sc", "/refresh" })
+//	@PostMapping(value = { "/generate/sc" })
 	public ResponseEntity generateTokenWithSessionCookie(Authentication authentication, HttpServletResponse response) {
+		Jwt accessToken = makeAccessToken(authentication);
+		ResponseCookie accessTokenCookie = makeResponseCookie("access_token", accessToken.getTokenValue());
+		ResponseCookie refreshTokenCookie = makeRefreshToken(authentication);
+
+		// 서버가 Set-Cookie 헤더로 보낸 쿠키는 자동으로 클라이언트 브라우저에 저장된다
+		// 사용자는 쿠키를 수동으로 저장할 필요가 없으며, 브라우저가 이를 처리.
+		// 클라이언트가 이후 동일 도메인에 요청을 보낼 때, 브라우저는 저장된 쿠키를 자동으로 포함하여 서버에 요청을 보냅니다
+		response.setHeader("Set-Cookie", accessTokenCookie.toString());
+		response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+
+		// JWT에서 만료 시간 (exp 클레임) 추출
+		Instant expirationTime = accessToken.getExpiresAt();
+
+		// 한국 시간으로 변환
+		LocalDateTime expirationTimeKST = LocalDateTime.ofInstant(expirationTime, ZoneId.of("Asia/Seoul"));
+		logger.info("Expiration Time in KST (LocalDateTime): {}", expirationTimeKST);
+
+		Map<String, String> result = Map.of(
+				"expirationTime", expirationTimeKST.toString(),
+				"mainPageUrl", "/"
+		);
+
+		// 상태 코드 200과 함께 빈 응답 반환
+		return ResponseEntity.status(HttpStatus.OK).body(result);
+	}
+
+	@PostMapping(value = {  "/refresh" })
+	public ResponseEntity refreshToken(Authentication authentication, HttpServletResponse response) {
 		Jwt accessToken = makeAccessToken(authentication);
 		ResponseCookie accessTokenCookie = makeResponseCookie("access_token", accessToken.getTokenValue());
 		ResponseCookie refreshTokenCookie = makeRefreshToken(authentication);
@@ -101,7 +134,7 @@ public class JwtController {
 				.httpOnly(true)  // 클라이언트 JS에서 접근 불가능. XSS 공격이 JWT를 읽을 수 없으므로 보안성이 향상
 				.secure(true)    // HTTPS에서만 전송
 				.path("/")       // 모든 경로에서 쿠키 사용 가능
-//				.maxAge(3600)    // 만료 시간 설정. 60분
+				.maxAge(ACCESS_TOKEN_EXPIRY)    // 만료 시간 설정
 				.sameSite("None")  // CORS 환경에서 사용 가능하도록 설정 (필요하면 변경 가능)
 				.build();
 

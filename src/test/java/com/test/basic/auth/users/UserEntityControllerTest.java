@@ -1,6 +1,9 @@
 package com.test.basic.auth.users;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.test.basic.users.UserController;
+import com.test.basic.users.UserEntity;
+import com.test.basic.users.UserService;
 import com.test.basic.utils.RSAUtil;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(UserController.class)  // Controller만 테스트하기 위해 사용
 @ExtendWith(MockitoExtension.class)
-public class UserControllerTest {
+public class UserEntityControllerTest {
 
     @Autowired
     private MockMvc mockMvc;  // MockMvc를 사용하여 HTTP 요청을 테스트
@@ -52,10 +55,11 @@ public class UserControllerTest {
     @DisplayName("유저 생성 - HTTP 응답만 검증")
     void testCreateUser() throws Exception {
         // 테스트용 유저 데이터 (서비스 없이 컨트롤러 단위 테스트)
-        User newUser = new User(1L, "password123", "email@example.com", "username", null, null, null);
+//        UserEntity newUser = new UserEntity(1L, "password123", "email@example.com", "username");
+        UserEntity newUser = new UserEntity();
 
         // Mocking된 서비스가 반환할 유저 설정
-        when(userService.createUser(any(User.class))).thenReturn(newUser);
+        when(userService.createUser(any(UserEntity.class))).thenReturn(newUser);
 
         // 서비스 없이 컨트롤러에서 HTTP 응답만 확인
         mockMvc.perform(post("/api/users")
@@ -70,9 +74,10 @@ public class UserControllerTest {
     @DisplayName("유저 목록 조회 - HTTP 응답만 검증")
     void testGetUsers() throws Exception {
         // 테스트용 유저 데이터 (서비스 없이 컨트롤러 단위 테스트)
-        User newUser = new User(null, "password123", "email@example.com", "username", null, null, null);
+//        UserEntity newUser = new UserEntity(null, "password123", "email@example.com", "username", null, null, null);
+        UserEntity newUser = new UserEntity();
 
-        List<User> users = List.of(newUser);
+        List<UserEntity> users = List.of(newUser);
 
         // Mocking된 서비스가 반환할 유저 목록 설정
         when(userService.getAllUsers(1, 10, "", "id,asc")).thenReturn(users);
@@ -92,7 +97,8 @@ public class UserControllerTest {
     @DisplayName("유저 단건 조회 - HTTP 응답만 검증")
     void testGetUserById() throws Exception {
         // 테스트용 유저 데이터 (서비스 없이 컨트롤러 단위 테스트)
-        User newUser = new User(1L, "password123", "email@example.com", "username", null, null, null);
+//        UserEntity newUser = new UserEntity(1L, "password123", "email@example.com", "username", null, null, null);
+        UserEntity newUser = new UserEntity();
 
         // Mocking된 서비스가 반환할 유저 설정
         when(userService.getUserById(1L)).thenReturn(Optional.of(newUser));
@@ -108,15 +114,16 @@ public class UserControllerTest {
     @DisplayName("유저 수정 - HTTP 응답만 검증")
     void testUpdateUser() throws Exception {
         // 수정하려는 기존 유저 데이터 (서비스 없이 컨트롤러 단위 테스트)
-        User existingUser = new User(1L, "password123", "username@test.com", "username", null, null, null);
-        User updatedUser = new User();
+//        UserEntity existingUser = new UserEntity(1L, "password123", "username@test.com", "username", null, null, null);
+        UserEntity existingUser = new UserEntity();
+        UserEntity updatedUser = new UserEntity();
         updatedUser.setId(existingUser.getId());// 수정할 유저의 ID를 설정
         updatedUser.setName("newname");// 수정할 유저의 ID를 설정
 
         // Mocking된 서비스가 반환할 유저 설정
 //        when(userService.updateUser(1L, any(User.class))).thenReturn(Optional.of(updatedUser));
         // Mockito는 모든 인자에 ArgumentMatchers를 사용해야 함
-        when(userService.updateUser(eq(1L), any(User.class))).thenReturn(Optional.of(updatedUser));
+        when(userService.updateUser(eq(1L), any(UserEntity.class))).thenReturn(Optional.of(updatedUser));
 
         // 특정 ID로 유저 수정
         mockMvc.perform(put("/api/users/{id}", 1L)  // URL 경로에서 id 값을 1L로 전달

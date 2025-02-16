@@ -1,5 +1,8 @@
 package com.test.basic.auth.users;
 
+import com.test.basic.users.UserEntity;
+import com.test.basic.users.UserRepository;
+import com.test.basic.users.UserService;
 import com.test.basic.utils.PasswordUtils;
 import com.test.basic.utils.RSAUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +29,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("User Service Test")
-public class UserServiceTest {
+public class UserEntityServiceTest {
 
     @Mock
     private UserRepository userRepository;
@@ -34,11 +37,12 @@ public class UserServiceTest {
     @InjectMocks
     private UserService userService;
 
-    private User user;
+    private UserEntity user;
 
     @BeforeEach
     void setUp() {
-        user = new User(1L, "password", "email", "name", "profileImageUrl", LocalDateTime.now(), null);
+//        user = new UserEntity(1L, "password", "email", "name", "profileImageUrl", LocalDateTime.now(), null);
+        user = new UserEntity();
     }
 
 
@@ -48,13 +52,13 @@ public class UserServiceTest {
         String orgPwd = user.getPassword();
 
         // When
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
-            User newUser = invocation.getArgument(0);
+        when(userRepository.save(any(UserEntity.class))).thenAnswer(invocation -> {
+            UserEntity newUser = invocation.getArgument(0);
             user.setPassword(newUser.getPassword());
             return newUser;
         });
 
-        User createdUser = userService.createUser(user);
+        UserEntity createdUser = userService.createUser(user);
 
         // Then
         assertNotNull(createdUser);
@@ -66,12 +70,14 @@ public class UserServiceTest {
     @Test
     @DisplayName("유저 목록 조회 테스트")
     void testGetAllUsers() {
-        User user1 = new User(1L, "password1", "email1", "name1", "profileImageUrl1", LocalDateTime.now(), null);
-        User user2 = new User(2L, "password2", "email2", "name2", "profileImageUrl2", LocalDateTime.now(), null);
+//        UserEntity user1 = new UserEntity(1L, "password1", "email1", "name1", "profileImageUrl1", LocalDateTime.now(), null);
+        UserEntity user1 = new UserEntity();
+//        UserEntity user2 = new UserEntity(2L, "password2", "email2", "name2", "profileImageUrl2", LocalDateTime.now(), null);
+        UserEntity user2 = new UserEntity();
 
         when(userRepository.findAll()).thenReturn(List.of(user1, user2));
 
-        List<User> users = userService.getAllUsers(1, 10, "", "");
+        List<UserEntity> users = userService.getAllUsers(1, 10, "", "");
 
         assertThat(users).hasSize(2);
     }
@@ -81,7 +87,7 @@ public class UserServiceTest {
     void testGetUserById() {
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
 
-        Optional<User> foundUser = userRepository.findById(user.getId());
+        Optional<UserEntity> foundUser = userRepository.findById(user.getId());
 
         assertThat(foundUser).isNotNull();
         assertThat(foundUser.get().getId()).isEqualTo(user.getId());
@@ -90,14 +96,14 @@ public class UserServiceTest {
     @Test
     @DisplayName("유저 수정 테스트")
     void testUpdateUser() {
-        User newUser = new User(user);
+        UserEntity newUser = new UserEntity(user);
         newUser.setId(user.getId());
         newUser.setName("newname");
 
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(userService.updateUser(user.getId(), newUser)).thenReturn(any(Optional.class));
 
-        Optional<User> updatedUser = userService.updateUser(user.getId(), newUser);
+        Optional<UserEntity> updatedUser = userService.updateUser(user.getId(), newUser);
 
         assertThat(updatedUser).isNotNull();
         assertThat(updatedUser.get().getId()).isEqualTo(user.getId());
@@ -171,8 +177,8 @@ public class UserServiceTest {
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
 
         // ✅ save() 메서드가 호출될 때 user 객체의 비밀번호가 실제로 변경되도록 처리
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
-            User savedUser = invocation.getArgument(0); // 전달된 User 객체 가져오기
+        when(userRepository.save(any(UserEntity.class))).thenAnswer(invocation -> {
+            UserEntity savedUser = invocation.getArgument(0); // 전달된 User 객체 가져오기
             user.setPassword(savedUser.getPassword());  // ✅ user 객체의 password 변경
             return savedUser;
         });

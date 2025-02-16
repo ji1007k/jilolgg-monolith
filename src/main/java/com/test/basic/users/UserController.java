@@ -1,4 +1,4 @@
-package com.test.basic.auth.users;
+package com.test.basic.users;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -27,7 +27,7 @@ public class UserController {
 
     @PostMapping
     @Operation(summary = "사용자 등록", description = "새로운 사용자를 등록합니다.")
-    public ResponseEntity<User> createUser(@RequestBody User user, HttpSession session) {
+    public ResponseEntity<UserEntity> createUser(@RequestBody UserEntity user, HttpSession session) {
         try {
             // 비밀번호 복호화
             String decryptedPwd = userService.decryptPassword(user.getPassword(), session);
@@ -36,7 +36,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
 
-        User newUser = userService.createUser(user);
+        UserEntity newUser = userService.createUser(user);
         newUser.setPassword(null);
 
         // 생성한 사용자 정보 조회 URI 반환
@@ -51,12 +51,12 @@ public class UserController {
 
     @GetMapping
     @Operation(summary = "사용자 목록 조회", description = "사용자 목록을 조회합니다.")
-    public ResponseEntity<List<User>> getAllUsers(@RequestParam(defaultValue = "1") int page,
-                                                  @RequestParam(value = "size", defaultValue = "10") int size,
-                                                  @RequestParam(required = false) String keyword,
-                                                  @RequestParam(required = false, defaultValue = "id,asc") String sort) {
+    public ResponseEntity<List<UserEntity>> getAllUsers(@RequestParam(defaultValue = "1") int page,
+                                                        @RequestParam(value = "size", defaultValue = "10") int size,
+                                                        @RequestParam(required = false) String keyword,
+                                                        @RequestParam(required = false, defaultValue = "id,asc") String sort) {
 
-        List<User> users = userService.getAllUsers(page, size, keyword, sort);
+        List<UserEntity> users = userService.getAllUsers(page, size, keyword, sort);
 
         return ResponseEntity.ok().body(users);
     }
@@ -67,8 +67,8 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "User not found")
     })
     @Parameter(name = "id", description = "사용자 ID", required = true)
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        Optional<User> user = userService.getUserById(id);
+    public ResponseEntity<UserEntity> getUserById(@PathVariable Long id) {
+        Optional<UserEntity> user = userService.getUserById(id);
 
         if (user.isPresent()) {
             user.get().setPassword(null);
@@ -81,10 +81,10 @@ public class UserController {
     @PutMapping("/{id}")
     @Operation(summary = "사용자 정보 수정", description = "ID로 사용자 정보를 조회합니다.")
     @Parameter(name = "id", description = "사용자 ID", required = true)
-    public ResponseEntity<User> updateUser(@PathVariable Long id,
-                                           @RequestBody User user) {
+    public ResponseEntity<UserEntity> updateUser(@PathVariable Long id,
+                                                 @RequestBody UserEntity user) {
 
-        Optional<User> updatedUser = userService.updateUser(id, user);
+        Optional<UserEntity> updatedUser = userService.updateUser(id, user);
 
         if (updatedUser.isPresent()) {
             return ResponseEntity.ok().body(updatedUser.get());

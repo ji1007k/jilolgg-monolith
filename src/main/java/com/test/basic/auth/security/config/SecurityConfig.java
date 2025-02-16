@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.test.basic.config;
+package com.test.basic.auth.security.config;
 
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
@@ -22,26 +22,25 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
-import com.test.basic.auth.jwt.JwtCookieFilter;
+import com.test.basic.auth.jwt.CustomJwtFilter;
+import com.test.basic.auth.jwt.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
@@ -52,7 +51,6 @@ import java.security.interfaces.RSAPublicKey;
  * @author Josh Cummings
  */
 @Configuration
-@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
 	@Value("${jwt.public.key}")
@@ -69,8 +67,8 @@ public class SecurityConfig {
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		// @formatter:off
 		// 토큰 유효성 검증 필터 등록 (커스텀 필터)
-//		http.addFilterBefore(new JwtAuthenticationFilter(jwtDecoder()), UsernamePasswordAuthenticationFilter.class);
-		http.addFilterBefore(new JwtCookieFilter(jwtDecoder()), UsernamePasswordAuthenticationFilter.class);
+		// 커스텀 필터가 usesrnamepassword 인증 필터보다 먼저 동작하도록 등록
+		http.addFilterBefore(new CustomJwtFilter(jwtTokenProvider()), UsernamePasswordAuthenticationFilter.class);
 
 		http
 				// CSRF(Cross-Site Request Forgery) 공격은 사용자가 의도하지 않은 요청을 다른 사용자나 시스템에 보내는 공격 방어 비활성화
@@ -82,25 +80,36 @@ public class SecurityConfig {
 								"/",
 								"/favicon.ico",
 								"/css/**", "/js/**",	// static 파일
-								"/user/login", "/user/logout",
 //								"/error/**",
 								"/swagger",      		// Swagger 관련 url
 								"/v3/api-docs/**",     // OpenAPI 3.0 문서
 								"/swagger-ui/**",      // Swagger UI
 								"/swagger-ui.html",    // Swagger UI 메인 페이지
-								"/webjars/**"          // Swagger 관련 리소스
+								"/webjars/**",          // Swagger 관련 리소스
+
+								"/auth/login",
+								"/auth/signup"
 						).permitAll()	// 인증 해제
+//						.requestMatchers("/auth/login")
+//								.anonymous()	// 회원가입 페이지: 인증되지 않은 사용자만 접근 가능
+						.requestMatchers("/mypage/manager")
+								.hasAuthority("SCOPE_ADMIN")    // ADMIN 권한이 있어야 접근 가능
 						.anyRequest().authenticated()	// 그 외 요청은 인증 필요
 				)
 				// 특정 요청에서 CSRF 해제
-				.csrf((csrf) -> csrf.ignoringRequestMatchers("/token/**", "/token/generate/*"))
+//				.csrf((csrf) -> csrf.ignoringRequestMatchers("/token/**", "/token/generate/*"))
+				.csrf((csrf) -> csrf.ignoringRequestMatchers(
+						"/auth/login",
+						"/auth/signup",
+						"/token/refresh")
+				)
 				// Basic Authentication 인증 설정
 //				.httpBasic(Customizer.withDefaults())	// Basic Authentication 활성화
+				// basic 인증 실패 시 뜨는 id/pw 재인증 팝업 방지를 위해 커스텀 엔트리 포인트 설정
 				.httpBasic(httpBasic -> httpBasic
 						.authenticationEntryPoint((request, response, authException) -> {
 							// 처음 토큰 발급 요청인 경우만 처리
-							if (request.getRequestURI().equals("/token/generate/sc")) {
-								// 커스텀 인증 엔트리 포인트. (팝업 방지)
+							if (request.getRequestURI().equals("/auth/login")) {
 								response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 								response.setContentType("application/json");
 								response.getWriter().write("{\"error\": \"Unauthorized\"}");
@@ -130,9 +139,9 @@ public class SecurityConfig {
 				// 로그인 페이지
 				.formLogin(formLogin ->
 						formLogin
-								.loginPage("/user/login")  // 커스터마이징된 로그인 페이지 경로
+								.loginPage("/auth/login")  // 커스터마이징된 로그인 페이지 경로
 								.defaultSuccessUrl("/home", true) // 로그인 성공 후 이동할 페이지
-								.failureForwardUrl("/user/login")
+								.failureForwardUrl("/auth/login")
 								.permitAll()  // 로그인 페이지는 누구나 접근 가능하도록 설정
 				)
 				// 로그아웃 권한
@@ -145,20 +154,42 @@ public class SecurityConfig {
 		return http.build();
 	}
 
-	@Bean
+	// 애플리케이션 종료 시 사라짐. 테스트용 사용자 정보
+	/*@Bean
 	UserDetailsService users() {
 		// @formatter:off
-		return new InMemoryUserDetailsManager(
-			User.withUsername("admin")
-				.password("{noop}admin")
+		UserDetails admin = User.withUsername("admin")
+				.password("{noop}admin") //{noop} 암호화 없이 저장
 				.authorities("ADMIN")
-				.build(),
-			User.withUsername("user")
+				.build();
+
+		UserDetails user = User.builder()
+				.username("user")
 				.password("{noop}password")
-				.authorities("USER")	// SCOPE_ 접두사 자동 추가
-				.build()
-		);
+				.authorities("USER")
+				.build();	// SCOPE_ 접두사 자동 추가
+
 		// @formatter:on
+		return new InMemoryUserDetailsManager(admin, user);
+	}*/
+
+    //. Spring Boot에서 CORS를 사용하고 있다면, 쿠키를 보내기 위해 Access-Control-Allow-Credentials: true를 설정해야 해.
+	/*@Bean
+	public WebMvcConfigurer corsConfigurer() {
+		return new WebMvcConfigurer() {
+			@Override
+			public void addCorsMappings(CorsRegistry registry) {
+				registry.addMapping("/**")
+						.allowedOrigins("http://localhost:3000")  // 클라이언트 주소
+						.allowedMethods("GET", "POST", "PUT", "DELETE")
+						.allowCredentials(true);  // 인증 정보(쿠키) 포함 허용
+			}
+		};
+	}*/
+
+	@Bean
+	public JwtTokenProvider jwtTokenProvider() throws Exception {
+		return new JwtTokenProvider(jwtEncoder(), jwtDecoder());
 	}
 
 	// JWT 토큰 검증 (서명 확인)
@@ -175,18 +206,16 @@ public class SecurityConfig {
 		return new NimbusJwtEncoder(jwks);
 	}
 
-    //. Spring Boot에서 CORS를 사용하고 있다면, 쿠키를 보내기 위해 Access-Control-Allow-Credentials: true를 설정해야 해.
+
 	@Bean
-	public WebMvcConfigurer corsConfigurer() {
-		return new WebMvcConfigurer() {
-			@Override
-			public void addCorsMappings(CorsRegistry registry) {
-				registry.addMapping("/**")
-						.allowedOrigins("http://localhost:3000")  // 클라이언트 주소
-						.allowedMethods("GET", "POST", "PUT", "DELETE")
-						.allowCredentials(true);  // 인증 정보(쿠키) 포함 허용
-			}
-		};
+	public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+		return authConfig.getAuthenticationManager();
+	}
+
+	// BCryptPasswordEncoder를 PasswordEncoder로 등록
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder(); // 비밀번호 암호화
 	}
 
 }

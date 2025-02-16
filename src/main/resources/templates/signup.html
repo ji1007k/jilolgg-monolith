@@ -3,16 +3,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login Page</title>
+    <title>SignUp Page</title>
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-<!--    spring boot 기본 설정에 의해 아래 4개 경로에 대해서는 /** 로 접근 가능함-->
-<!--    resources/static/, resources/public/, resources/resources/, resources/META-INF/resources/-->
     <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}" />
     <script type="module">
-        import Login from '/js/auth/Login.js';
+        import Signup from '/js/auth/SignUp.js';
 
         document.addEventListener('DOMContentLoaded', () => {
-            new Login();
+            new Signup();
         });
     </script>
 </head>
@@ -26,7 +24,7 @@
 
     <div class="login-container" id="loginArea">
     <!--<form action="/login" method="post">-->
-        <h2>로그인</h2>
+        <h2>회원가입</h2>
         <div class="login-form-group">
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" required placeholder="Enter your username">
@@ -35,9 +33,8 @@
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required placeholder="Enter your password">
         </div>
-        <button class="login-btn">Login</button>
+        <button class="signup-btn">Sign Up</button>
     <!--</form>-->
-        <p>계정이 없나요? <a th:href="@{/auth/signup}">회원가입</a></p>
     </div>
 </body>
 </html>

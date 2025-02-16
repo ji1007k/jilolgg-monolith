@@ -1,4 +1,4 @@
-import * as JwtUtil from './../jwt/JwtUtil.js';
+// import * as JwtUtil from './jwt/JwtUtil.js';
 
 export default class Login {
     CONTAINER;
@@ -21,14 +21,31 @@ export default class Login {
         const id = this.CONTAINER.querySelector("#username").value;
         const pwd = this.CONTAINER.querySelector("#password").value;
 
-        const result = await JwtUtil.getTokenWithSessionCookie(`${id}:${pwd}`);
-        // await this.testLoginWithSessionCookie();
+
+        const loginInfo = `${id}:${pwd}`;
+        const utf8Encoded = String.fromCharCode(...new TextEncoder().encode(loginInfo));
+        const response = await fetch("/auth/login", {
+            method: "POST",
+            headers: {
+                "Authorization": `Basic ${btoa(utf8Encoded)}`,
+                "Content-Type": "application/json"
+            }
+        });
+
+
+        if (!response.ok) {
+            alert("로그인 실패");
+            throw new Error(await response.text());
+        }
+
+        const result = await response.json();
 
         setTimeout(() => {
             // 로그인 후 메인페이지로 이동
             location.href = result.mainPageUrl;
         }, 2000);
     }
+
 
     async testLoginWithSessionCookie() {
         const response = await fetch("/mypage/admin", {

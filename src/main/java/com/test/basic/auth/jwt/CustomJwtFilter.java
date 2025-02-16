@@ -7,17 +7,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -26,14 +24,17 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-public class JwtCookieFilter extends OncePerRequestFilter {
-    private static final Logger logger = LoggerFactory.getLogger(JwtCookieFilter.class);
+@Component
+public class CustomJwtFilter extends OncePerRequestFilter {
+    private static final Logger logger = LoggerFactory.getLogger(CustomJwtFilter.class);
 
-    private final JwtDecoder jwtDecoder;
     private final JwtGrantedAuthoritiesConverter authoritiesConverter;
 
-    public JwtCookieFilter(JwtDecoder jwtDecoder) {
-        this.jwtDecoder = jwtDecoder;
+    private final JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
+    public CustomJwtFilter(JwtTokenProvider jwtTokenProvider) {
+        this.jwtTokenProvider = jwtTokenProvider;
 
         this.authoritiesConverter = new JwtGrantedAuthoritiesConverter();
         this.authoritiesConverter.setAuthorityPrefix("");    // "SCOPE_" 자동 추가 방지
@@ -47,23 +48,21 @@ public class JwtCookieFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         logger.info("Request path: {}", path);
 
-        if (path.startsWith("/user/login")) {
-            filterChain.doFilter(request, response);
+        String method = request.getMethod(); // 요청 메서드 가져오기
+//        if (path.startsWith("/auth/login") && "GET".equalsIgnoreCase(method)) {
+        if (path.startsWith("/auth/login") || "/auth/signup".equals(path)) {
+            filterChain.doFilter(request, response);    // JWT 필터를 통과하지 않고 바로 넘김
             return;
         }
 
+
+        // 헤더에서 JWT 토큰을 추출
         String accessToken = getJwtFromCookie(request, "access_token");
 
         if (accessToken != null) {
             try {
-                Jwt jwt = jwtDecoder.decode(accessToken); // JWT의 서명과 기본 유효성만 확인
-
-                // 로그아웃 요청이 들어오면 처리
-                if (path.equals("/user/logout")) {
-                    // SecurityContext에서 인증 정보를 삭제
-                    SecurityContextHolder.clearContext();
-                    filterChain.doFilter(request, response);
-                    return;
+                if (!jwtTokenProvider.validateToken(accessToken)) {
+                    throw new JwtException("Invalid token");
                 }
 
                 // 토큰 재발급 요청이면 refresh 토큰 유효성 검증
@@ -71,15 +70,19 @@ public class JwtCookieFilter extends OncePerRequestFilter {
                     String refreshToken = getJwtFromCookie(request, "refresh_token");
 
                     if (refreshToken != null) {
-                        jwtDecoder.decode(refreshToken);
+                        if (!jwtTokenProvider.validateToken(refreshToken)) {
+                            throw new JwtException("Invalid token");
+                        }
                     }
                 }
-                // JWT의 권한(Role) 정보는 따로 추출해서 확인
-                Collection<GrantedAuthority> authorities = extractAuthorities(jwt);
 
-                // SecurityContext에 저장
-                AbstractAuthenticationToken authentication = new JwtAuthenticationToken(jwt, authorities);
+                // JWT의 권한(Role) 정보는 따로 추출해서 확인
+                Jwt token = jwtTokenProvider.getTokenFromStr(accessToken);
+                Collection<GrantedAuthority> authorities = extractAuthorities(token);
+
+                AbstractAuthenticationToken authentication = new JwtAuthenticationToken(token, authorities);
                 authentication.setAuthenticated(true);
+
                 // SecurityContext에 인증 정보 저장
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (JwtException e) {
@@ -113,5 +116,13 @@ public class JwtCookieFilter extends OncePerRequestFilter {
         logger.info("Converted Authorities: {}", authorities);
 
         return authorities;
+    }
+
+    private String getTokenFromRequest(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            return header.substring(7); // "Bearer " 제외한 토큰만 반환
+        }
+        return null;
     }
 }

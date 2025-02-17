@@ -1,0 +1,41 @@
+# Stage 1: Build dependencies
+FROM gradle:7.3-jdk17 AS build
+
+WORKDIR /app
+
+# Gradle Wrapper 파일과 Gradle 디렉토리를 복사
+COPY gradlew ./
+COPY gradle/ ./gradle/
+
+# 소스 코드와 build.gradle 파일을 복사
+COPY . ./
+
+# 의존성 다운로드 및 빌드
+# RUN --mount=type=cache,target=/root/.gradle ./gradlew build --no-daemon
+# 의존성 다운로드 및 빌드, 테스트 실행 방지
+RUN --mount=type=cache,target=/root/.gradle ./gradlew build --no-daemon -x test
+
+# Stage 2: Final runtime image
+FROM eclipse-temurin:17-jre-alpine AS runtime
+
+WORKDIR /app
+
+# Create a non-privileged user
+ARG UID=10001
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "/nonexistent" \
+    --shell "/sbin/nologin" \
+    --no-create-home \
+    --uid "${UID}" \
+    appuser
+USER appuser
+
+# JAR 파일을 복사
+COPY --from=build /app/build/libs/*.jar app.jar
+
+# 컨테이너 실행 시 JAR 파일 실행
+ENTRYPOINT ["java", "-jar", "app.jar"]
+
+EXPOSE 8080

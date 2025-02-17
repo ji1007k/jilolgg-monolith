@@ -66,7 +66,7 @@ public class CustomJwtFilter extends OncePerRequestFilter {
                 }
 
                 // 토큰 재발급 요청이면 refresh 토큰 유효성 검증
-                if (path.equals("/token/refresh")) {
+                if (path.equals("/auth/token/refresh")) {
                     String refreshToken = getJwtFromCookie(request, "refresh_token");
 
                     if (refreshToken != null) {

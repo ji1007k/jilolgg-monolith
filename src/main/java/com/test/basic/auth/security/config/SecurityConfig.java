@@ -101,7 +101,7 @@ public class SecurityConfig {
 				.csrf((csrf) -> csrf.ignoringRequestMatchers(
 						"/auth/login",
 						"/auth/signup",
-						"/token/refresh")
+						"/auth/token/refresh")
 				)
 				// Basic Authentication 인증 설정
 //				.httpBasic(Customizer.withDefaults())	// Basic Authentication 활성화

@@ -78,7 +78,7 @@ public class JwtController {
 		return ResponseEntity.status(HttpStatus.OK).body(result);
 	}
 
-	@PostMapping(value = {  "/refresh" })
+//	@PostMapping(value = {  "/refresh" })
 	public ResponseEntity refreshToken(Authentication authentication, HttpServletResponse response) {
 		Jwt accessToken = makeAccessToken(authentication);
 		ResponseCookie accessTokenCookie = makeResponseCookie("access_token", accessToken.getTokenValue());

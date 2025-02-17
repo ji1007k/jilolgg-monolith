@@ -9,14 +9,17 @@
 # https://github.com/docker/awesome-compose
 services:
   server:
+    container_name: app_container  # 컨테이너 이름 지정
     build:
       context: .
     ports:
       - 8080:8080
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/basic
+#      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/basic
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/basic
       - SPRING_DATASOURCE_USERNAME=jikim
-      - SPRING_DATASOURCE_PASSWORD=jikim
+#      - SPRING_DATASOURCE_PASSWORD=jikim
+      - SPRING_DATASOURCE_PASSWORD_FILE=/run/secrets/db-password
 
 # The commented out section below is an example of how to define a PostgreSQL
 # database that your application can use. `depends_on` tells Docker Compose to
@@ -25,15 +28,18 @@ services:
 # to set the database password. You must create `db/password.txt` and add
 # a password of your choosing to it before running `docker-compose up`.
     depends_on:
-      db:
-        condition: service_healthy
+      - db
+    networks:
+      - app-network
   db:
+    container_name: db_container  # 컨테이너 이름 지정
     image: postgres
     restart: always
     secrets:
       - db-password
     volumes:
       - db-data:/var/lib/postgresql/data
+#      - ./src/main/resources/db/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql  # 초기화 SQL 스크립트 추가
     environment:
       - POSTGRES_DB=basic
       - POSTGRES_USER=jikim
@@ -41,13 +47,22 @@ services:
     expose:
       - 5432:5432
     healthcheck:
-      test: [ "CMD", "pg_isready" ]
+      test: [ "CMD", "pg_isready", "-U", "jikim", "-d", "basic" ]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
 volumes:
   db-data:
+  postgres_data:
+    driver: local
+
 secrets:
   db-password:
       file: ./src/main/resources/db/postgres/password.txt
+
+networks:
+  app-network:
+    driver: bridge
 

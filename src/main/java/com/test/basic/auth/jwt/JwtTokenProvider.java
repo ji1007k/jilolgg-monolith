@@ -83,10 +83,11 @@ public class JwtTokenProvider {
         ResponseCookie cookie = ResponseCookie.from(key, token)
                 .httpOnly(true)  // 클라이언트 JS에서 접근 불가능. XSS 공격이 JWT를 읽을 수 없으므로 보안성이 향상
 //                .secure(true)    // HTTPS에서만 전송
-                .secure(false)    // HTTPS에서만 전송
+                .secure(false)    // HTTP에서 전송
                 .path("/")       // 모든 경로에서 쿠키 사용 가능
                 .maxAge(ACCESS_TOKEN_EXPIRY)    // 만료 시간 설정
-                .sameSite("None")  // CORS 환경에서 사용 가능하도록 설정 (필요하면 변경 가능)
+//                .sameSite("None")  // CORS 환경에서 사용 가능하도록 설정 (필요하면 변경 가능). 크로스 사이트 요청에서 쿠키 전송
+                .sameSite("Lax")  // CORS 환경에서 사용 가능하도록 설정 (필요하면 변경 가능). 크로스 사이트 요청에서 쿠키 전송
                 .build();
 
         return cookie;

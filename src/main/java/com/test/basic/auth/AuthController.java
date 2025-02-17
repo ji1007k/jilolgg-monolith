@@ -156,7 +156,7 @@ public class AuthController {
         return "redirect:/";
     }
 
-    @PostMapping(value = {  "/refresh" })
+    @PostMapping(value = {  "/token/refresh" })
     public ResponseEntity refreshToken(Authentication authentication, HttpServletResponse response) {
         Jwt accessToken = jwtTokenProvider.makeAccessToken(authentication);
         ResponseCookie accessTokenCookie = jwtTokenProvider.makeResponseCookie("access_token", accessToken.getTokenValue());

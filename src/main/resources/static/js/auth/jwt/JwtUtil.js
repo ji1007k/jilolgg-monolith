@@ -33,7 +33,7 @@ export async function getTokenWithSessionCookie(data) {
 export async function refreshToken() {
     try {
         // 리프레시 토큰으로 새로운 액세스 토큰을 갱신
-        const response = await fetch('/token/refresh', {
+        const response = await fetch('/auth/token/refresh', {
             method: 'POST',
             credentials: 'include', // 쿠키 포함
         });

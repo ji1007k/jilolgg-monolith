@@ -155,4 +155,32 @@ public class AuthController {
         // 홈 페이지나 다른 페이지로 리디렉션
         return "redirect:/";
     }
+
+    @PostMapping(value = {  "/refresh" })
+    public ResponseEntity refreshToken(Authentication authentication, HttpServletResponse response) {
+        Jwt accessToken = jwtTokenProvider.makeAccessToken(authentication);
+        ResponseCookie accessTokenCookie = jwtTokenProvider.makeResponseCookie("access_token", accessToken.getTokenValue());
+        ResponseCookie refreshTokenCookie = jwtTokenProvider.makeRefreshToken(authentication);
+
+        // 서버가 Set-Cookie 헤더로 보낸 쿠키는 자동으로 클라이언트 브라우저에 저장된다
+        // 사용자는 쿠키를 수동으로 저장할 필요가 없으며, 브라우저가 이를 처리.
+        // 클라이언트가 이후 동일 도메인에 요청을 보낼 때, 브라우저는 저장된 쿠키를 자동으로 포함하여 서버에 요청을 보냅니다
+        response.setHeader("Set-Cookie", accessTokenCookie.toString());
+        response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+
+        // JWT에서 만료 시간 (exp 클레임) 추출
+        Instant expirationTime = accessToken.getExpiresAt();
+
+        // 한국 시간으로 변환
+        LocalDateTime expirationTimeKST = LocalDateTime.ofInstant(expirationTime, ZoneId.of("Asia/Seoul"));
+        logger.info("Expiration Time in KST (LocalDateTime): {}", expirationTimeKST);
+
+        Map<String, String> result = Map.of(
+                "expirationTime", expirationTimeKST.toString(),
+                "mainPageUrl", "/"
+        );
+
+        // 상태 코드 200과 함께 빈 응답 반환
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
 }

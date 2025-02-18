@@ -1,8 +1,5 @@
 server:
   port: 8080
-  # HTTP 요청을 HTTPS로 리디렉션하도록 설정
-  http:
-    redirect-to-https: true
 spring:
   application:
     name: basic

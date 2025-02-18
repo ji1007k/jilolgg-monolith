@@ -14,8 +14,8 @@ services:
 #      - SPRING_DATASOURCE_URL=jdbc:postgresql://docker_db:5432/basic
       - SPRING_DATASOURCE_USERNAME=jikim
       - SPRING_DATASOURCE_PASSWORD_FILE=/run/secrets/db-password
-    depends_on:
-      - db
+#    depends_on:
+#      - docker_db
     networks:
       - app-network
 

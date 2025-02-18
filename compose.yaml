@@ -1,44 +1,33 @@
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Docker Compose reference guide at
-# https://docs.docker.com/go/compose-spec-reference/
-
-# Here the instructions define your application as a service called "server".
-# This service is built from the Dockerfile in the current directory.
-# You can add other services your application may depend on here, such as a
-# database or a cache. For examples, see the Awesome Compose repository:
-# https://github.com/docker/awesome-compose
 services:
-  server:
+
+# Application
+  my_app:   # 서비스명 지정 가능
     container_name: app_container  # 컨테이너 이름 지정
     build:
       context: .
     ports:
       - 8080:8080
     environment:
-#      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/basic
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/basic
+      # 로컬 DB 사용 시 아래 URL 사용
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/basic
+      # Docker 내부 컨테이너 db 사용할 때 아래 URL 사용
+#      - SPRING_DATASOURCE_URL=jdbc:postgresql://docker_db:5432/basic
       - SPRING_DATASOURCE_USERNAME=jikim
-#      - SPRING_DATASOURCE_PASSWORD=jikim
       - SPRING_DATASOURCE_PASSWORD_FILE=/run/secrets/db-password
-
-# The commented out section below is an example of how to define a PostgreSQL
-# database that your application can use. `depends_on` tells Docker Compose to
-# start the database before your application. The `db-data` volume persists the
-# database data between container restarts. The `db-password` secret is used
-# to set the database password. You must create `db/password.txt` and add
-# a password of your choosing to it before running `docker-compose up`.
     depends_on:
       - db
     networks:
       - app-network
-  db:
+
+# Postgres DB
+  docker_db:   # 서비스명 지정 가능
     container_name: db_container  # 컨테이너 이름 지정
     image: postgres
     restart: always
     secrets:
       - db-password
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - db-data:/var/lib/postgresql/data  # DB 데이터를 컨테이너 바깥(EC2 내부) 볼륨 마운트
 #      - ./src/main/resources/db/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql  # 초기화 SQL 스크립트 추가
     environment:
       - POSTGRES_DB=basic
@@ -62,6 +51,7 @@ secrets:
   db-password:
       file: ./src/main/resources/db/postgres/password.txt
 
+# 같은 네트워크를 사용하면 컨테이너 이름으로 서로 통신 가능
 networks:
   app-network:
     driver: bridge

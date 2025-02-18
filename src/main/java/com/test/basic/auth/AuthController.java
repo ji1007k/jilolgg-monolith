@@ -136,16 +136,16 @@ public class AuthController {
         cookie.setHttpOnly(true);  // 자바스크립트에서 쿠키를 접근할 수 없도록 설정
         cookie.setPath("/");  // 쿠키의 경로를 현재 웹사이트의 루트로 설정
         cookie.setMaxAge(0);  // 쿠키 만료 시간 설정 (0으로 설정하면 즉시 만료됨)
-//        cookie.setSecure(true);  // HTTPS 연결에서만 쿠키가 전달됨
-        cookie.setSecure(false);  // HTTP 연결에서 쿠키가 전달됨
+        cookie.setSecure(true);  // HTTPS 연결에서만 쿠키가 전달됨
+//        cookie.setSecure(false);  // HTTP 연결에서 쿠키가 전달됨
         response.addCookie(cookie);  // 쿠키를 응답에 추가하여 클라이언트에서 삭제되도록 함
 
         Cookie refreshTokenCookie = new Cookie("refresh_token", null);
         refreshTokenCookie.setHttpOnly(true);  // 자바스크립트에서 쿠키를 접근할 수 없도록 설정
         refreshTokenCookie.setPath("/");  // 쿠키의 경로를 현재 웹사이트의 루트로 설정
         refreshTokenCookie.setMaxAge(0);  // 쿠키 만료 시간 설정 (0으로 설정하면 즉시 만료됨)
-//        refreshTokenCookie.setSecure(true);  // refreshToken 쿠키에 대해서도 동일
-        refreshTokenCookie.setSecure(false);  // HTTP 연결에서 쿠키가 전달됨
+        refreshTokenCookie.setSecure(true);  // refreshToken 쿠키에 대해서도 동일
+//        refreshTokenCookie.setSecure(false);  // HTTP 연결에서 쿠키가 전달됨
         response.addCookie(refreshTokenCookie);  // 쿠키를 응답에 추가하여 클라이언트에서 삭제되도록 함
 
         // 추가적으로 헤더에서 JWT 토큰 삭제 (필터에서 처리되는 부분)

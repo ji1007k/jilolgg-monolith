@@ -19,7 +19,7 @@ services:
     networks:
       - app-network
 
-# Postgres DB
+# Postgres DB (미사용)
   docker_db:   # 서비스명 지정 가능
     container_name: db_container  # 컨테이너 이름 지정
     image: postgres

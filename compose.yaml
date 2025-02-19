@@ -8,11 +8,11 @@ services:
     ports:
       - "8080:8080"
     environment:
-      # 로컬 DB 사용 시 아래 URL 사용
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/basic
-      # 로컬 db (windows 운영체제)
+      # 1) 로컬 db (windows 운영체제)
 #      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/basic
-      # Docker 내부 컨테이너 db 사용할 때 아래 URL 사용
+      # 2) 로컬 DB (리눅스 운영체제). ec2의 경우 ip 고정 아니라 변경되면 바꿔야함
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://172.31.42.140:5432/basic
+      # 3) Docker 내부 컨테이너 db 사용할 때 아래 URL 사용
 #      - SPRING_DATASOURCE_URL=jdbc:postgresql://docker_db:5432/basic
       - SPRING_DATASOURCE_USERNAME=jikim
       - SPRING_DATASOURCE_PASSWORD_FILE=/run/secrets/db-password

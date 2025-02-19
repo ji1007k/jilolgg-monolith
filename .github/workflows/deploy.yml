@@ -31,7 +31,7 @@ jobs:
       - name: Build and push Docker image using Docker Compose
         run: |
           # Docker Compose를 사용하여 빌드 및 푸시
-          docker compose -f compose.yaml build
+          docker compose -f compose.yaml build --no-cache
           docker compose -f compose.yaml push
 
   deploy:

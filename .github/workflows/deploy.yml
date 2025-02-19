@@ -30,6 +30,16 @@ jobs:
 
       - name: Build and push Docker image using Docker Compose
         run: |
+          # 기존 이미지를 새 이름으로 복사
+          # 현재 타임스탬프 생성 (형식: YYYYMMDD-HHMMSS)
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          # 원본 이미지에 타임스탬프 추가하여 백업본 태그 생성
+          docker tag my_app:latest my_app_backup:$TIMESTAMP
+          # 태그된 이미지를 파일로 저장 (백업본)
+          docker save -o my_app_backup_$TIMESTAMP.tar my_app_backup:$TIMESTAMP
+          # 기존 이미지 삭제
+          docker rmi my_app:latest --force
+          
           # Docker Compose를 사용하여 빌드 및 푸시
           docker compose -f compose.yaml build
           docker compose -f compose.yaml push

@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main    # main 브랜치에 푸시될 때마다 실행됨
-#  pull_request:
-#    branches:
-#      - main  # main 브랜치로 PR이 생성될 때마다 실행됨
 
 jobs:
   build:
@@ -33,7 +30,7 @@ jobs:
 
       - name: Build and push Docker image using Docker Compose
         run: |
-          # Docker Compose를 사용하여 빌드 및 푸시
+#           Docker Compose를 사용하여 빌드 및 푸시
           docker build -t $REPO_URL:latest .  # GHCR에 태그 붙여서 빌드
           docker push $REPO_URL:latest  # 이미지를 GHCR로 푸시
 

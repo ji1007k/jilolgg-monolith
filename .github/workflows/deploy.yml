@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main    # main 브랜치에 푸시될 때마다 실행됨
-#  pull_request:
-#    branches:
-#      - main  # main 브랜치로 PR이 생성될 때마다 실행됨
 
 jobs:
   build:
@@ -33,7 +30,7 @@ jobs:
 
       - name: Build and push Docker image using Docker Compose
         run: |
-          # Docker Compose를 사용하여 빌드 및 푸시
+#           Docker Compose를 사용하여 빌드 및 푸시
           docker build -t $REPO_URL:latest .  # GHCR에 태그 붙여서 빌드
           docker push $REPO_URL:latest  # 이미지를 GHCR로 푸시
 
@@ -55,14 +52,14 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # 배포 서버에서 기존 앱 컨테이너 종료 및 삭제
+#            배포 서버에서 기존 앱 컨테이너 종료 및 삭제
             docker compose -f /home/ubuntu/app/baisic/compose.yaml down || true
 
-            # 최신 이미지 pull
-            # - 방법1) GHCR에서 풀
+#            최신 이미지 pull
+#             - 방법1) GHCR에서 풀
             docker pull $REPO_URL:latest
-            # - 방법2) Docker Compose yaml 파일에 지정된 image 를 기반으로 다운로드
-            # Docker Compose는 이미지 URL을 명시적으로 지정 불가
+#            - 방법2) Docker Compose yaml 파일에 지정된 image 를 기반으로 다운로드
+#            Docker Compose는 이미지 URL을 명시적으로 지정 불가
 #            docker compose -f /home/ubuntu/app/baisic/compose.yaml pull
 
             # /home/app/ 경로에 배포하고 8080 포트로 실행

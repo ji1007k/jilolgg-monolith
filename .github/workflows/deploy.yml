@@ -28,11 +28,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PAT }}
 
+      - name: Set repository variable
+        run: echo "REPO_URL=ghcr.io/${{ github.repository }}" >> $GITHUB_ENV  # 환경 변수 설정
+
       - name: Build and push Docker image using Docker Compose
         run: |
           # Docker Compose를 사용하여 빌드 및 푸시
-          docker build -t ghcr.io/${{ github.repository }}:latest .  # GHCR에 태그 붙여서 빌드
-          docker push ghcr.io/${{ github.repository }}:latest  # 이미지를 GHCR로 푸시
+          docker build -t $REPO_URL:latest .  # GHCR에 태그 붙여서 빌드
+          docker push $REPO_URL:latest  # 이미지를 GHCR로 푸시
 
   deploy:
     needs: build  # build 작업이 끝나야 deploy 작업이 시작됨
@@ -41,6 +44,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+
+      - name: Set repository variable
+        run: echo "REPO_URL=ghcr.io/${{ github.repository }}" >> $GITHUB_ENV  # 환경 변수 설정
 
       - name: SSH into server and deploy
         uses: appleboy/ssh-action@v1.0.3
@@ -52,9 +58,11 @@ jobs:
             # 배포 서버에서 기존 앱 컨테이너 종료 및 삭제
             docker compose -f /home/ubuntu/app/baisic/compose.yaml down || true
 
-            # 최신 이미지를 GHCR에서 풀
-            docker pull ghcr.io/${{ github.repository }}:latest
-            # 최신 이미지를 pull
+            # 최신 이미지 pull
+            # - 방법1) GHCR에서 풀
+            docker pull $REPO_URL:latest
+            # - 방법2) Docker Compose yaml 파일에 지정된 image 를 기반으로 다운로드
+            # Docker Compose는 이미지 URL을 명시적으로 지정 불가
 #            docker compose -f /home/ubuntu/app/baisic/compose.yaml pull
 
             # /home/app/ 경로에 배포하고 8080 포트로 실행

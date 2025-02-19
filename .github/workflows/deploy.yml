@@ -71,8 +71,10 @@ jobs:
             # 최신 이미지를 GHCR에서 풀
             docker pull $REPO_URL:latest  # 최신 이미지를 GHCR에서 풀
 
+            docker run -d --name app_container $REPO_URL:latest
+
             # Docker Compose를 사용해 새로운 컨테이너 실행
-            docker compose -f /home/ubuntu/app/baisic/compose.yaml up -d  # 백그라운드에서 실행
+            # docker compose -f /home/ubuntu/app/baisic/compose.yaml up -d  # 백그라운드에서 실행
 
             # 배포 후 상태 확인 (컨테이너 상태 확인)
             docker ps  # 컨테이너 상태 확인

@@ -59,6 +59,9 @@ jobs:
           username: ${{ secrets.SSH_USER }}  # 서버 사용자
           key: ${{ secrets.SSH_PRIVATE_KEY }}  # 서버 SSH 키
           script: |
+            # 배포 서버 내부에서도 GHCR 로그인
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
             # 서버 내에서 REPO_URL을 직접 설정
             REPO_URL="ghcr.io/${{ github.repository }}"
       

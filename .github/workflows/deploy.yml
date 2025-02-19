@@ -59,6 +59,9 @@ jobs:
           username: ${{ secrets.SSH_USER }}  # 서버 사용자
           key: ${{ secrets.SSH_PRIVATE_KEY }}  # 서버 SSH 키
           script: |
+            # 서버 내에서 REPO_URL을 직접 설정
+            REPO_URL="ghcr.io/${{ github.repository }}"
+      
             # 배포 서버에서 기존 앱 컨테이너 종료 및 삭제
             docker compose -f /home/ubuntu/app/baisic/compose.yaml down || true  # 기존 컨테이너 종료
 

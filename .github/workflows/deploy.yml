@@ -56,7 +56,7 @@ jobs:
             docker compose -f /home/ubuntu/app/baisic/compose.yaml up -d
             
             # 배포 후 상태 확인 (컨테이너 상태 확인)
-            docker compose ps
+            docker ps
 
             # 애플리케이션이 올바르게 실행되고 있는지 확인
             #curl -f http://localhost:8080 || exit 1  # 앱이 8080 포트에서 정상적으로 응답하는지

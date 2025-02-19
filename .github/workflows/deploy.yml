@@ -53,9 +53,9 @@ jobs:
             docker compose -f /home/ubuntu/app/baisic/compose.yaml down || true
 
             # 최신 이미지를 GHCR에서 풀
-#            docker pull ghcr.io/${{ github.repository }}:latest
+            docker pull ghcr.io/${{ github.repository }}:latest
             # 최신 이미지를 pull
-            docker compose -f /home/ubuntu/app/baisic/compose.yaml pull ghcr.io/${{ github.repository }}:latest
+#            docker compose -f /home/ubuntu/app/baisic/compose.yaml pull
 
             # /home/app/ 경로에 배포하고 8080 포트로 실행
             docker compose -f /home/ubuntu/app/baisic/compose.yaml up -d

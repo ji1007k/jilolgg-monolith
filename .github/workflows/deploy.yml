@@ -6,7 +6,7 @@ on:
       - main    # main 브랜치에 푸시될 때마다 실행됨
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-22.04
     steps:
       #uses: → 공식 액션(플러그인) 사용

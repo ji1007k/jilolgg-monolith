@@ -1,0 +1,47 @@
+name: Continuous Integration with GHCR (Github Container Registry)
+
+on:
+  pull_request:
+    branches:
+      - main  # 'main' 브랜치에 생긴 PR에 대해서 실행
+    types:
+      - opened  # PR이 처음 열릴 때만 실행
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      # 원격 서버에서 사용할 수 있도록 레포지토리 코드 다운로드
+      - name: Checkout repository
+        uses: actions/checkout@v4  # 레포지토리 체크아웃 (git clone)
+
+      # 기본 Docker 빌드보다 더 유연한 빌드를 지원하는
+      # Docker Buildx(멀티 플랫폼 빌드 도구)를 최신 버전으로 설정
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          version: latest  # 최신 버전으로 설정
+
+      # Github Actions에서 GHCR 로그인
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}  # GitHub Personal Access Token
+
+      # GHCR의 이미지 URL을 환경 변수(REPO_URL)에 저장
+      # 이후 docker build, docker push에서 활용
+      - name: Set repository variable
+        run: echo "REPO_URL=ghcr.io/${{ github.repository }}" >> $GITHUB_ENV  # GHCR URL을 환경 변수로 설정
+        
+      # 도커 이미지 빌드 및 GHCR에 푸시
+      - name: Build and push Docker image
+        run: |
+          # Docker 이미지를 빌드하고 GHCR로 푸시
+          docker build -t $REPO_URL:latest .  # GHCR에 태그 붙여서 빌드
+          docker push $REPO_URL:latest  # 이미지를 GHCR로 푸시
+
+
+

@@ -41,6 +41,8 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
@@ -66,43 +68,28 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		// @formatter:off
-		// 토큰 유효성 검증 필터 등록 (커스텀 필터)
-		// 커스텀 필터가 usesrnamepassword 인증 필터보다 먼저 동작하도록 등록
-		http.addFilterBefore(new CustomJwtFilter(jwtTokenProvider()), UsernamePasswordAuthenticationFilter.class);
-
 		http
 				// CSRF(Cross-Site Request Forgery) 공격은 사용자가 의도하지 않은 요청을 다른 사용자나 시스템에 보내는 공격 방어 비활성화
 				// jwt는 stateless 하기 때문에 session 쿠키 등을 통해 저장된 정보로 다른 사이트에 접근하는 공격인 csrf에 대한 방어 불필요
 				// But!!! 생성된 jwt 토큰을 session 쿠키에 저장해 사용하려면 방어 설정 필요!!
 //				.csrf((csrf) -> csrf.disable()) // security는 기본적으로 csrf(보안 공격) 공격에 대한 방어 세팅이 있다. (disable로 해제도 가능)
 				.authorizeHttpRequests((authorize) -> authorize
-						.requestMatchers(
-								"/",
-								"/favicon.ico",
-								"/css/**", "/js/**",	// static 파일
-//								"/error/**",
-								"/swagger",      		// Swagger 관련 url
-								"/v3/api-docs/**",     // OpenAPI 3.0 문서
-								"/swagger-ui/**",      // Swagger UI
-								"/swagger-ui.html",    // Swagger UI 메인 페이지
-								"/webjars/**",          // Swagger 관련 리소스
-
-								"/auth/login",
-								"/auth/signup"
-						).permitAll()	// 인증 해제
-//						.requestMatchers("/auth/login")
-//								.anonymous()	// 회원가입 페이지: 인증되지 않은 사용자만 접근 가능
-						.requestMatchers("/mypage/manager")
-								.hasAuthority("SCOPE_ADMIN")    // ADMIN 권한이 있어야 접근 가능
-						.anyRequest().authenticated()	// 그 외 요청은 인증 필요
+						.requestMatchers("/", "/favicon.ico").permitAll()
+						.requestMatchers( "/css/**", "/js/**", "/images/**").permitAll()	// 정적 리소스 허용
+						.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()  // Swagger 허용
+						.requestMatchers("/auth/login", "/auth/signup").permitAll()  // 로그인, 회원가입 허용
+						.requestMatchers("/mypage/manager").hasAuthority("SCOPE_ADMIN")  // 특정 권한 필요
+						.anyRequest().authenticated()  // 나머지 요청은 인증 필요
 				)
+				// 토큰 유효성 검증 필터 등록 (커스텀 필터)
+				// 커스텀 필터가 usesrnamepassword 인증 필터보다 먼저 동작하도록 등록
+				.addFilterBefore(new CustomJwtFilter(jwtTokenProvider()), UsernamePasswordAuthenticationFilter.class)
+
 				// 특정 요청에서 CSRF 해제
 //				.csrf((csrf) -> csrf.ignoringRequestMatchers("/token/**", "/token/generate/*"))
 				.csrf((csrf) -> csrf.ignoringRequestMatchers(
-						"/auth/login",
-						"/auth/signup",
-						"/auth/token/refresh")
-				)
+						"/auth/login", "/auth/signup", "/auth/token/refresh"
+				))
 				// Basic Authentication 인증 설정
 //				.httpBasic(Customizer.withDefaults())	// Basic Authentication 활성화
 				// basic 인증 실패 시 뜨는 id/pw 재인증 팝업 방지를 위해 커스텀 엔트리 포인트 설정
@@ -173,19 +160,23 @@ public class SecurityConfig {
 		return new InMemoryUserDetailsManager(admin, user);
 	}*/
 
+
     //. Spring Boot에서 CORS를 사용하고 있다면, 쿠키를 보내기 위해 Access-Control-Allow-Credentials: true를 설정해야 해.
-	/*@Bean
-	public WebMvcConfigurer corsConfigurer() {
-		return new WebMvcConfigurer() {
-			@Override
-			public void addCorsMappings(CorsRegistry registry) {
-				registry.addMapping("/**")
-						.allowedOrigins("http://localhost:3000")  // 클라이언트 주소
-						.allowedMethods("GET", "POST", "PUT", "DELETE")
-						.allowCredentials(true);  // 인증 정보(쿠키) 포함 허용
-			}
-		};
-	}*/
+	// React 등 프론트엔드에서 백엔드 API를 호출할 때 CORS 오류를 방지
+	@Configuration
+	public class CorsConfig implements WebMvcConfigurer {
+
+		@Override
+		public void addCorsMappings(CorsRegistry registry) {
+			registry.addMapping("/**") // 모든 경로에 대해 CORS 허용
+					// React 개발 서버(localhost:3000)에서 Spring Boot(localhost:8080)로 API 요청 가능
+					.allowedOrigins("http://localhost:3000")  // 허용할 클라이언트 주소 (React 등)
+					.allowedMethods("GET", "POST", "PUT", "DELETE") // 허용할 HTTP 메서드
+					// withCredentials: true가 포함된 요청도 허용 (JWT 같은 인증 쿠키 허용).
+					.allowCredentials(true);  // 인증 정보(쿠키) 포함 허용
+		}
+	}
+
 
 	@Bean
 	public JwtTokenProvider jwtTokenProvider() throws Exception {

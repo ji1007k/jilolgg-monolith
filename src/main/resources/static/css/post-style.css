@@ -1,0 +1,288 @@
+/* ================================
+   게시판 목록 스타일
+=============================== */
+
+.board-container {
+    max-width: 1200px;
+    width: 100%;
+    margin: 100px auto 50px; /* 헤더 높이를 고려한 여백 추가 */
+    padding: 20px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    font-family: 'Roboto', sans-serif;
+}
+
+/* 검색 영역 */
+.board-search {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.board-search input,
+.board-search select {
+    flex: 1;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    transition: border-color 0.3s ease;
+}
+
+.board-search input:focus,
+.board-search select:focus {
+    border-color: #ff5722;
+    outline: none;
+}
+
+/* 검색 버튼 */
+.board-search button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #ff5722;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.board-search button:hover {
+    background-color: #e64a19;
+}
+
+/* 게시글 목록 테이블 */
+.board-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.board-table th,
+.board-table td {
+    padding: 15px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+.board-table th {
+    background-color: #333;
+    color: white;
+}
+
+.board-table td a {
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.board-table td a:hover {
+    color: #ff5722;
+    text-decoration: underline;
+}
+
+/* 게시글 작성 버튼 */
+.write-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #ff5722;
+    color: white;
+    font-size: 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.write-btn:hover {
+    background-color: #e64a19;
+}
+
+/* ================================
+   게시글 상세 스타일
+=============================== */
+
+.post-container {
+    max-width: 800px;
+    width: 100%;
+    margin: 100px auto 50px;
+    padding: 30px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.post-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.post-info {
+    font-size: 14px;
+    color: #666;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* 게시글 내용 */
+.post-content {
+    font-size: 16px;
+    color: #444;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+/* 좋아요 버튼 */
+.like-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 12px;
+    background-color: #ff5722;
+    color: white;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.like-btn:hover {
+    background-color: #e64a19;
+}
+
+.like-btn i {
+    font-size: 18px;
+}
+
+/* ================================
+   댓글 스타일
+=============================== */
+
+.comments-container {
+    margin-top: 40px;
+}
+
+.comment-box {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.comment-content {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.reply-btn {
+    font-size: 14px;
+    color: #ff5722;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.reply-btn:hover {
+    color: #e64a19;
+}
+
+/* 대댓글 스타일 */
+.reply-container {
+    margin-left: 30px;
+    border-left: 3px solid #ff5722;
+    padding-left: 10px;
+    margin-top: 10px;
+}
+
+/* 댓글 입력 영역 */
+.comment-input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.comment-input-container textarea {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    resize: none;
+}
+
+.comment-input-container button {
+    align-self: flex-end;
+    padding: 10px 15px;
+    font-size: 16px;
+    background-color: #ff5722;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.comment-input-container button:hover {
+    background-color: #e64a19;
+}
+
+/* ================================
+   반응형 디자인 - 게시판
+=============================== */
+@media (max-width: 768px) {
+    .board-container,
+    .post-container {
+        width: 90%;
+        padding: 15px;
+    }
+
+    .board-search {
+        flex-direction: column;
+    }
+
+    .board-search input,
+    .board-search select,
+    .board-search button {
+        width: 100%;
+    }
+
+    .post-title {
+        font-size: 24px;
+    }
+
+    .post-info {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .like-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .comment-box {
+        padding: 10px;
+    }
+
+    .reply-container {
+        margin-left: 15px;
+    }
+}

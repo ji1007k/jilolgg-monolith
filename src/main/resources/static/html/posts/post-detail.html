@@ -1,0 +1,122 @@
+<!-- ================================
+    게시글 상세 페이지
+================================ -->
+<div class="post-container" th:if="${post}">
+    <h1 class="post-title" th:text="${post.title}"></h1>
+    <div class="post-info">
+        <span>작성자: <b th:text="${post.author}"></b></span>
+        <span>작성일: <b th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}"></b></span>
+    </div>
+    <p class="post-content" th:text="${post.content}"></p>
+
+    <!-- 좋아요 버튼 -->
+    <button class="like-btn" onclick="likePost()" th:data-post-id="${post.id}">
+        <i class="fas fa-thumbs-up"></i> 좋아요 <span th:text="${post.likes}"></span>
+    </button>
+
+    <!-- 댓글 섹션 -->
+    <section class="comments-container">
+        <h2>댓글</h2>
+
+        <!-- 댓글 입력 폼 -->
+        <div class="comment-input-container">
+            <textarea id="commentContent" placeholder="댓글을 입력하세요..."></textarea>
+            <button onclick="submitComment()">댓글 작성</button>
+        </div>
+
+        <!-- 댓글 목록 -->
+        <div th:each="comment : ${post.comments}" class="comment-box">
+            <div class="comment-header">
+                <span th:text="${comment.author}"></span>
+                <span th:text="${#temporals.format(comment.createdAt, 'yyyy-MM-dd HH:mm')}"></span>
+            </div>
+            <p class="comment-content" th:text="${comment.content}"></p>
+
+            <!-- 대댓글 버튼 -->
+            <span class="reply-btn" onclick="showReplyForm(this)">답글</span>
+
+            <!-- 대댓글 입력 폼 -->
+            <div class="comment-input-container reply-container" style="display: none;">
+                <textarea placeholder="답글을 입력하세요..."></textarea>
+                <button onclick="submitReply()">답글 작성</button>
+            </div>
+
+            <!-- 대댓글 목록 -->
+            <div th:each="reply : ${comment.replies}" class="reply-container">
+                <div class="comment-box">
+                    <div class="comment-header">
+                        <span th:text="${reply.author}"></span>
+                        <span th:text="${#temporals.format(reply.createdAt, 'yyyy-MM-dd HH:mm')}"></span>
+                    </div>
+                    <p class="comment-content" th:text="${reply.content}"></p>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+
+
+<!--
+<div class="post-container">
+    &lt;!&ndash; 게시글 제목 &ndash;&gt;
+    <h1 class="post-title">첫 번째 게시글</h1>
+
+    &lt;!&ndash; 게시글 정보 &ndash;&gt;
+    <div class="post-info">
+        <span>작성자: <b>관리자</b></span>
+        <span>작성일: <b>2025-02-25 14:00</b></span>
+    </div>
+
+    &lt;!&ndash; 게시글 내용 &ndash;&gt;
+    <p class="post-content">
+        안녕하세요, 이 게시판을 처음 만들었습니다.
+        앞으로 많은 이용 부탁드립니다!
+    </p>
+
+    &lt;!&ndash; 좋아요 버튼 &ndash;&gt;
+    <button class="like-btn">
+        <i class="fas fa-thumbs-up"></i> 좋아요 <span>12</span>
+    </button>
+
+    &lt;!&ndash; 댓글 섹션 &ndash;&gt;
+    <section class="comments-container">
+        <h2>댓글</h2>
+
+        &lt;!&ndash; 댓글 입력 폼 &ndash;&gt;
+        <div class="comment-input-container">
+            <textarea placeholder="댓글을 입력하세요..."></textarea>
+            <button>댓글 작성</button>
+        </div>
+
+        &lt;!&ndash; 댓글 목록 &ndash;&gt;
+        <div class="comment-box">
+            <div class="comment-header">
+                <span>홍길동</span>
+                <span>2025-02-25 15:00</span>
+            </div>
+            <p class="comment-content">잘 봤습니다!</p>
+
+            &lt;!&ndash; 대댓글 버튼 &ndash;&gt;
+            <span class="reply-btn" onclick="showReplyForm(this)">답글</span>
+
+            &lt;!&ndash; 대댓글 입력 폼 &ndash;&gt;
+            <div class="comment-input-container reply-container" style="display: none;">
+                <textarea placeholder="답글을 입력하세요..."></textarea>
+                <button>답글 작성</button>
+            </div>
+
+            &lt;!&ndash; 대댓글 &ndash;&gt;
+            <div class="reply-container">
+                <div class="comment-box">
+                    <div class="comment-header">
+                        <span>관리자</span>
+                        <span>2025-02-25 16:00</span>
+                    </div>
+                    <p class="comment-content">감사합니다!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+-->

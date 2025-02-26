@@ -1,5 +1,9 @@
 import * as JwtUtil from './auth/jwt/JwtUtil.js';
 
+
+// TODO
+//  - JWT 만료 후 자동으로 로그아웃 & 메인페이지 이동
+
 export default class App {
     constructor() {
     }

@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+// OncePerRequestFilter를 상속 시 요청 하나당 한 번만 필터 실행
 @Component
 public class CustomJwtFilter extends OncePerRequestFilter {
     private static final Logger logger = LoggerFactory.getLogger(CustomJwtFilter.class);
@@ -44,11 +45,16 @@ public class CustomJwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 필터 적용 제외
         String path = request.getRequestURI();
         logger.info("Request path: {}", path);
 
-        String method = request.getMethod(); // 요청 메서드 가져오기
+        // 정적 리소스가 요청된 경우, 인증 건너뜀
+        if (path.startsWith("/css/") || path.startsWith("/js/") || path.startsWith("/images/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        
+//        String method = request.getMethod(); // 요청 메서드 가져오기
 //        if (path.startsWith("/auth/login") && "GET".equalsIgnoreCase(method)) {
         if (path.startsWith("/auth/login") || "/auth/signup".equals(path)) {
             filterChain.doFilter(request, response);    // JWT 필터를 통과하지 않고 바로 넘김

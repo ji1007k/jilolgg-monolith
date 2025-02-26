@@ -1,0 +1,98 @@
+<div class="board-container">
+    <!-- 게시판 제목 -->
+    <h1>게시판</h1>
+
+    <!-- 게시글 검색 영역 -->
+    <div class="board-search">
+        <select name="category" id="category">
+            <option value="">전체 카테고리</option>
+            <option th:each="category : ${categories}" th:value="${category}" th:text="${category}"></option>
+        </select>
+        <input type="text" id="searchKeyword" placeholder="제목 또는 내용을 입력하세요" th:value="${keyword}">
+        <button onclick="searchPosts()">검색</button>
+    </div>
+
+    <!-- 게시글 목록 -->
+    <table class="board-table">
+        <thead>
+        <tr>
+            <th>번호</th>
+            <th>제목</th>
+            <th>작성자</th>
+            <th>작성일</th>
+            <th>조회수</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="post : ${posts}">
+            <td th:text="${post.id}"></td>
+            <td>
+                <a th:href="@{/post/{id}(id=${post.id})}" th:text="${post.title}"></a>
+            </td>
+            <td th:text="${post.author}"></td>
+            <td th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+            <td th:text="${post.views}"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!-- 글 작성 버튼 -->
+    <div style="text-align: right; margin-top: 20px;">
+        <a th:href="@{/post/write}" class="write-btn">글 작성</a>
+    </div>
+</div>
+
+
+
+<!--
+<div class="post-container">
+    &lt;!&ndash; 게시판 제목 &ndash;&gt;
+    <h1>게시판</h1>
+
+    &lt;!&ndash; 게시글 검색 영역 &ndash;&gt;
+    <div class="board-search">
+        <select name="category" id="category">
+            <option value="">전체 카테고리</option>
+            <option value="공지사항">공지사항</option>
+            <option value="자유게시판">자유게시판</option>
+        </select>
+        <input type="text" id="searchKeyword" placeholder="제목 또는 내용을 입력하세요">
+        <button>검색</button>
+    </div>
+
+    &lt;!&ndash; 게시글 목록 &ndash;&gt;
+    <table class="board-table">
+        <thead>
+        <tr>
+            <th>번호</th>
+            <th>제목</th>
+            <th>작성자</th>
+            <th>작성일</th>
+            <th>조회수</th>
+        </tr>
+        </thead>
+        <tbody>
+        &lt;!&ndash; 예제 데이터 &ndash;&gt;
+        <tr>
+            <td>1</td>
+            <td><a href="post-1.html">첫 번째 게시글</a></td>
+            <td>관리자</td>
+            <td>2025-02-25 14:00</td>
+            <td>120</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td><a href="post-2.html">두 번째 게시글</a></td>
+            <td>홍길동</td>
+            <td>2025-02-24 10:30</td>
+            <td>95</td>
+        </tr>
+        </tbody>
+    </table>
+
+    &lt;!&ndash; 글 작성 버튼 &ndash;&gt;
+    <div style="text-align: right; margin-top: 20px;">
+        <a href="write.html" class="write-btn">글 작성</a>
+    </div>
+</div>
+-->

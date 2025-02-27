@@ -28,11 +28,11 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-web'
 //    compileOnly 'org.projectlombok:lombok'
-    implementation 'org.projectlombok:lombok'
+    implementation 'org.projectlombok:lombok:1.18.22'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 
     runtimeOnly 'org.postgresql:postgresql'
-    annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok:1.18.22'
     // WAR는 외부 Tomcat
 //    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
     // JAR 는 내부 Tomcat

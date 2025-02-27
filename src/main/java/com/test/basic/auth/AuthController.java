@@ -3,6 +3,7 @@ package com.test.basic.auth;
 import com.test.basic.auth.jwt.JwtTokenProvider;
 import com.test.basic.users.UserEntity;
 import com.test.basic.users.UserRepository;
+import com.test.basic.users.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -37,12 +38,12 @@ public class AuthController {
 
     private final JwtTokenProvider jwtTokenProvider;
 
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     @Autowired
-    public AuthController(JwtTokenProvider jwtTokenProvider, UserRepository userRepository) {
+    public AuthController(JwtTokenProvider jwtTokenProvider, UserService userService) {
         this.jwtTokenProvider = jwtTokenProvider;
-        this.userRepository = userRepository;
+        this.userService = userService;
     }
 
 
@@ -78,14 +79,10 @@ public class AuthController {
 
     @PostMapping(value = { "/signup" })
     public ResponseEntity signupPage(@RequestBody UserEntity user) {
-
-        String encodedPwd = new BCryptPasswordEncoder().encode(user.getPassword());
-        user.setPassword(encodedPwd);
-
         // save
-        Optional<UserEntity> newUser = Optional.of(userRepository.save(user));
+        UserEntity newUser = userService.createUser(user);
 
-        if (newUser.isPresent()) {
+        if (newUser != null) {
             return ResponseEntity.ok("/auth/login");
         }
 

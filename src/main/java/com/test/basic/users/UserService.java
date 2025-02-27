@@ -4,6 +4,7 @@ import com.test.basic.utils.PasswordUtils;
 import com.test.basic.utils.RSAUtil;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -22,6 +23,9 @@ public class UserService {
     }
 
     public UserEntity createUser(UserEntity user) {
+//        String encodedPwd = new BCryptPasswordEncoder().encode(user.getPassword());
+//        user.setPassword(encodedPwd);
+
         String hashedPwd = PasswordUtils.hashPassword(user.getPassword());
         user.setPassword(hashedPwd);
         return userRepository.save(user);

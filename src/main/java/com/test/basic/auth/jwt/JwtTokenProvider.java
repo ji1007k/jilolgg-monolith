@@ -1,6 +1,8 @@
 package com.test.basic.auth.jwt;
 
 import com.test.basic.auth.security.CustomUserDetailsService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -11,6 +13,7 @@ import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 @Component
@@ -22,8 +25,8 @@ public class JwtTokenProvider {
     private static final long ACCESS_TOKEN_EXPIRY = 3600L;
     private static final long REFRESH_TOKEN_EXPIRY = 3600L;
 
-    @Autowired
-    private CustomUserDetailsService customUserDetailsService;
+    /*@Autowired
+    private CustomUserDetailsService customUserDetailsService;*/
 
     public JwtTokenProvider(JwtEncoder encoder, JwtDecoder decoder) throws Exception {
         this.encoder = encoder;
@@ -112,14 +115,25 @@ public class JwtTokenProvider {
         }
     }
 
+    public String getJwtFromCookie(Cookie[] cookies, String key) {
+        if (cookies != null) {
+            return Arrays.stream(cookies)
+                    .filter(cookie -> key.equals(cookie.getName()))
+                    .map(Cookie::getValue)
+                    .findFirst()
+                    .orElse(null);
+        }
+        return null;
+    }
+
     // jwt 토큰 기반 사용자 검증
-    public Authentication getAuthentication(String token) {
+    /*public Authentication getAuthentication(String token) {
         Jwt jwt = this.decoder.decode(token);
 
         String username = jwt.getSubject();
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
 
         return new UsernamePasswordAuthenticationToken(userDetails, token, userDetails.getAuthorities());
-    }
+    }*/
 
 }

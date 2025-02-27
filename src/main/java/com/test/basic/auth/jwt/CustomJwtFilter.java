@@ -49,10 +49,10 @@ public class CustomJwtFilter extends OncePerRequestFilter {
         logger.info("Request path: {}", path);
 
         // 정적 리소스가 요청된 경우, 인증 건너뜀
-        if (path.startsWith("/css/") || path.startsWith("/js/") || path.startsWith("/images/")) {
+       /* if (path.startsWith("/css/") || path.startsWith("/js/") || path.startsWith("/images/")) {
             filterChain.doFilter(request, response);
             return;
-        }
+        }*/
         
 //        String method = request.getMethod(); // 요청 메서드 가져오기
 //        if (path.startsWith("/auth/login") && "GET".equalsIgnoreCase(method)) {
@@ -63,7 +63,7 @@ public class CustomJwtFilter extends OncePerRequestFilter {
 
 
         // 헤더에서 JWT 토큰을 추출
-        String accessToken = getJwtFromCookie(request, "access_token");
+        String accessToken = jwtTokenProvider.getJwtFromCookie(request.getCookies(), "access_token");
 
         if (accessToken != null) {
             try {
@@ -73,7 +73,7 @@ public class CustomJwtFilter extends OncePerRequestFilter {
 
                 // 토큰 재발급 요청이면 refresh 토큰 유효성 검증
                 if (path.equals("/auth/token/refresh")) {
-                    String refreshToken = getJwtFromCookie(request, "refresh_token");
+                    String refreshToken = jwtTokenProvider.getJwtFromCookie(request.getCookies(), "refresh_token");
 
                     if (refreshToken != null) {
                         if (!jwtTokenProvider.validateToken(refreshToken)) {
@@ -99,17 +99,6 @@ public class CustomJwtFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private String getJwtFromCookie(HttpServletRequest request, String key) {
-        if (request.getCookies() != null) {
-            return Arrays.stream(request.getCookies())
-                    .filter(cookie -> key.equals(cookie.getName()))
-                    .map(Cookie::getValue)
-                    .findFirst()
-                    .orElse(null);
-        }
-        return null;
-    }
-
     private Collection<GrantedAuthority> extractAuthorities(Jwt jwt) {
         // JwtGrantedAuthoritiesConverter를 사용하여 권한 변환
         // JwtGrantedAuthoritiesConverter: 기본적으로 OAuth2의 scope 클레임을 권한(GrantedAuthority)으로 변환
@@ -124,11 +113,11 @@ public class CustomJwtFilter extends OncePerRequestFilter {
         return authorities;
     }
 
-    private String getTokenFromRequest(HttpServletRequest request) {
+    /*private String getTokenFromRequest(HttpServletRequest request) {
         String header = request.getHeader("Authorization");
         if (header != null && header.startsWith("Bearer ")) {
             return header.substring(7); // "Bearer " 제외한 토큰만 반환
         }
         return null;
-    }
+    }*/
 }

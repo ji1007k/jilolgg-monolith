@@ -169,8 +169,8 @@ public class SecurityConfig {
 		@Override
 		public void addCorsMappings(CorsRegistry registry) {
 			registry.addMapping("/**") // 모든 경로에 대해 CORS 허용
-					// React 개발 서버(localhost:3000)에서 Spring Boot(localhost:8080)로 API 요청 가능
-					.allowedOrigins("http://localhost:3000")  // 허용할 클라이언트 주소 (React 등)
+					// 허용할 클라이언트 주소 (React 등). React 개발 서버(localhost:3000)에서 Spring Boot(localhost:8080)로 API 요청 가능
+					.allowedOrigins("*")  // 전체 허용
 					.allowedMethods("GET", "POST", "PUT", "DELETE") // 허용할 HTTP 메서드
 					// withCredentials: true가 포함된 요청도 허용 (JWT 같은 인증 쿠키 허용).
 					.allowCredentials(true);  // 인증 정보(쿠키) 포함 허용

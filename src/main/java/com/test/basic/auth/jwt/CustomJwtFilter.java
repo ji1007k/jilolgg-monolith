@@ -49,10 +49,10 @@ public class CustomJwtFilter extends OncePerRequestFilter {
         logger.info("Request path: {}", path);
 
         // 정적 리소스가 요청된 경우, 인증 건너뜀
-       /* if (path.startsWith("/css/") || path.startsWith("/js/") || path.startsWith("/images/")) {
+        if (path.startsWith("/css/") || path.startsWith("/js/") || path.startsWith("/images/")) {
             filterChain.doFilter(request, response);
             return;
-        }*/
+        }
         
 //        String method = request.getMethod(); // 요청 메서드 가져오기
 //        if (path.startsWith("/auth/login") && "GET".equalsIgnoreCase(method)) {

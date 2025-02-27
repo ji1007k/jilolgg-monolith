@@ -163,7 +163,7 @@ public class SecurityConfig {
 
     //. Spring Boot에서 CORS를 사용하고 있다면, 쿠키를 보내기 위해 Access-Control-Allow-Credentials: true를 설정해야 해.
 	// React 등 프론트엔드에서 백엔드 API를 호출할 때 CORS 오류를 방지
-	@Configuration
+	/*@Configuration
 	public class CorsConfig implements WebMvcConfigurer {
 
 		@Override
@@ -175,7 +175,7 @@ public class SecurityConfig {
 					// withCredentials: true가 포함된 요청도 허용 (JWT 같은 인증 쿠키 허용).
 					.allowCredentials(true);  // 인증 정보(쿠키) 포함 허용
 		}
-	}
+	}*/
 
 
 	@Bean

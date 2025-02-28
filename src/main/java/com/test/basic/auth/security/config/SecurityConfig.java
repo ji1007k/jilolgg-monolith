@@ -62,17 +62,17 @@ public class SecurityConfig {
 	RSAPrivateKey priv;
 
 	/**
-	 * authorizeRequests().permitAll()은 특정 URL 경로에 대해 인증 없이 접근할 수 있도록 설정합니다.
-	 * formLogin().permitAll()은 로그인 폼을 모든 사용자가 접근할 수 있도록 설정합니다.
+	 * authorizeRequests().permitAll()은 특정 URL 경로에 대해 인증 없이 접근할 수 있도록 설정
+	 * formLogin().permitAll()은 로그인 폼을 모든 사용자가 접근할 수 있도록 설정
 	 */
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		// @formatter:off
 		http
-				// CSRF(Cross-Site Request Forgery) 공격은 사용자가 의도하지 않은 요청을 다른 사용자나 시스템에 보내는 공격 방어 비활성화
-				// jwt는 stateless 하기 때문에 session 쿠키 등을 통해 저장된 정보로 다른 사이트에 접근하는 공격인 csrf에 대한 방어 불필요
-				// But!!! 생성된 jwt 토큰을 session 쿠키에 저장해 사용하려면 방어 설정 필요!!
-//				.csrf((csrf) -> csrf.disable()) // security는 기본적으로 csrf(보안 공격) 공격에 대한 방어 세팅이 있다. (disable로 해제도 가능)
+				// CSRF(Cross-Site Request Forgery) 공격은 사용자가 의도하지 않은 요청을 다른 사용자나 시스템에 보내는 공격
+				// jwt는 stateless 하기 때문에 session 쿠키 등을 통해 인증된 정보로 다른 사이트에 접근하는 공격인 csrf에 대한 방어 불필요
+				// 	But!!! 생성된 jwt 토큰을 session 쿠키에 저장해 사용하려면 방어 설정 필요!!
+//				.csrf((csrf) -> csrf.disable()) // security는 기본적으로 csrf(보안 공격) 공격에 대한 방어 세팅이 있으며, disable로 해제 가능
 				.authorizeHttpRequests((authorize) -> authorize
 						.requestMatchers("/", "/favicon.ico").permitAll()
 						.requestMatchers( "/css/**", "/js/**", "/images/**").permitAll()	// 정적 리소스 허용
@@ -86,7 +86,6 @@ public class SecurityConfig {
 				.addFilterBefore(new CustomJwtFilter(jwtTokenProvider()), UsernamePasswordAuthenticationFilter.class)
 
 				// 특정 요청에서 CSRF 해제
-//				.csrf((csrf) -> csrf.ignoringRequestMatchers("/token/**", "/token/generate/*"))
 				.csrf((csrf) -> csrf.ignoringRequestMatchers(
 						"/auth/login", "/auth/signup", "/auth/token/refresh"
 				))
@@ -94,6 +93,8 @@ public class SecurityConfig {
 //				.httpBasic(Customizer.withDefaults())	// Basic Authentication 활성화
 				// basic 인증 실패 시 뜨는 id/pw 재인증 팝업 방지를 위해 커스텀 엔트리 포인트 설정
 				.httpBasic(httpBasic -> httpBasic
+						// Security 필터 체인에서 발생하는 인증/인가 관련 예외를 처리
+						// Spring MVC 컨트롤러까지 요청이 도달하지 못하고 여기서 처리됨
 						.authenticationEntryPoint((request, response, authException) -> {
 							// 처음 토큰 발급 요청인 경우만 처리
 							if (request.getRequestURI().equals("/auth/login")) {
@@ -110,32 +111,16 @@ public class SecurityConfig {
 				// 세션 사용 X (REST API 용)
 				.sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.exceptionHandling((exceptions) -> exceptions
+						// 인증되지 않은 사용자가 /auth/login 이외의 API를 요청하면
 //						.authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
-//						.accessDeniedHandler(new BearerTokenAccessDeniedHandler())
 						.authenticationEntryPoint((request, response, authException) -> {
 							response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 							response.setContentType("application/json");
 							response.getWriter().write("{\"error\": \"Unauthorized\"}"); // JSON 응답으로 변경
 						})
+						// 인가되지 않은 사용자가 접근하면
 						.accessDeniedHandler(new BearerTokenAccessDeniedHandler())
 				);
-
-
-		/*http
-				// 세션 기반 로그인/로그아웃 시 아래 설정 사용
-				// 로그인 페이지
-				.formLogin(formLogin ->
-						formLogin
-								.loginPage("/auth/login")  // 커스터마이징된 로그인 페이지 경로
-								.defaultSuccessUrl("/home", true) // 로그인 성공 후 이동할 페이지
-								.failureForwardUrl("/auth/login")
-								.permitAll()  // 로그인 페이지는 누구나 접근 가능하도록 설정
-				)
-				// 로그아웃 권한
-				.logout(logout ->
-						logout
-								.permitAll()  // 로그아웃은 누구나 가능
-				)*/
 
 		// @formatter:on
 		return http.build();
@@ -159,24 +144,6 @@ public class SecurityConfig {
 		// @formatter:on
 		return new InMemoryUserDetailsManager(admin, user);
 	}*/
-
-
-    //. Spring Boot에서 CORS를 사용하고 있다면, 쿠키를 보내기 위해 Access-Control-Allow-Credentials: true를 설정해야 해.
-	// React 등 프론트엔드에서 백엔드 API를 호출할 때 CORS 오류를 방지
-	@Configuration
-	public class CorsConfig implements WebMvcConfigurer {
-
-		@Override
-		public void addCorsMappings(CorsRegistry registry) {
-			registry.addMapping("/**") // 모든 경로에 대해 CORS 허용
-					// 허용할 클라이언트 주소 (React 등). React 개발 서버(localhost:3000)에서 Spring Boot(localhost:8080)로 API 요청 가능
-//					.allowedOrigins("localhost:8080", "localhost:3000")  // 특정 도메인만 허용
-					.allowedOriginPatterns("*")  // 전체 허용
-					.allowedMethods("GET", "POST", "PUT", "DELETE") // 허용할 HTTP 메서드
-					// withCredentials: true가 포함된 요청도 허용 (JWT 같은 인증 쿠키 허용).
-					.allowCredentials(true);  // 인증 정보(쿠키) 포함 허용.
-		}
-	}
 
 
 	@Bean
@@ -208,6 +175,24 @@ public class SecurityConfig {
 	@Bean
 	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder(); // 비밀번호 암호화
+	}
+
+
+	//. Spring Boot에서 CORS를 사용하고 있다면, 쿠키를 보내기 위해 Access-Control-Allow-Credentials: true를 설정해야 해.
+	// React 등 프론트엔드에서 백엔드 API를 호출할 때 CORS 오류를 방지
+	@Configuration
+	public class CorsConfig implements WebMvcConfigurer {
+
+		@Override
+		public void addCorsMappings(CorsRegistry registry) {
+			registry.addMapping("/**") // 모든 경로에 대해 CORS 허용
+					// 허용할 클라이언트 주소 (React 등). React 개발 서버(localhost:3000)에서 Spring Boot(localhost:8080)로 API 요청 가능
+//					.allowedOrigins("localhost:8080", "localhost:3000")  // 특정 도메인만 허용
+					.allowedOriginPatterns("*")  // 전체 허용
+					.allowedMethods("GET", "POST", "PUT", "DELETE") // 허용할 HTTP 메서드
+					// withCredentials: true가 포함된 요청도 허용 (JWT 같은 인증 쿠키 허용).
+					.allowCredentials(true);  // 인증 정보(쿠키) 포함 허용.
+		}
 	}
 
 }

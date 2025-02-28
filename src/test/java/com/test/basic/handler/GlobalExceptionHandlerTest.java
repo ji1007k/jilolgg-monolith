@@ -1,5 +1,6 @@
 package com.test.basic.handler;
 
+import com.test.basic.auth.security.config.SecurityConfig;
 import com.test.basic.users.UserEntity;
 import jakarta.validation.Valid;
 import org.junit.jupiter.api.BeforeEach;
@@ -7,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.MediaType;
@@ -26,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(GlobalExceptionHandler.class)
 @AutoConfigureMockMvc
+@Import(SecurityConfig.class)
 class GlobalExceptionHandlerTest {
 
     @Autowired

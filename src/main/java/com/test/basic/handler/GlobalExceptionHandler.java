@@ -10,7 +10,11 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-// 전역(글로벌) 예외 처리 및 공통 설정을 담당하는 클래스에 붙여 사용
+// 전역(글로벌) 예외 처리 및 공통 설정을 담당하는 클래스에 붙여 사용하는 어노테이션
+// Spring MVC의 예외 처리기(@ExceptionHandler)가 적용되는 영역
+// 보통 컨트롤러 내부에서 발생한 예외를 처리
+// Security 필터에서 이미 응답을 반환한 경우, @RestControllerAdvice는 실행X
+// 인증/인가 외 에러 처리를 위한 핸들러
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 

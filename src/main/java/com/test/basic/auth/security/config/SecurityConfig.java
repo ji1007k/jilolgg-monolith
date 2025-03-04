@@ -75,7 +75,7 @@ public class SecurityConfig {
 //				.csrf((csrf) -> csrf.disable()) // security는 기본적으로 csrf(보안 공격) 공격에 대한 방어 세팅이 있으며, disable로 해제 가능
 				.authorizeHttpRequests((authorize) -> authorize
 						.requestMatchers("/", "/favicon.ico").permitAll()
-						.requestMatchers( "/css/**", "/js/**", "/images/**").permitAll()	// 정적 리소스 허용
+						.requestMatchers( "/css/**", "/js/**", "/images/**", "/html/**").permitAll()	// 정적 리소스 허용
 						.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()  // Swagger 허용
 						.requestMatchers("/auth/login", "/auth/signup").permitAll()  // 로그인, 회원가입 허용
 						.requestMatchers("/mypage/manager").hasAuthority("SCOPE_ADMIN")  // 특정 권한 필요
@@ -185,13 +185,11 @@ public class SecurityConfig {
 
 		@Override
 		public void addCorsMappings(CorsRegistry registry) {
-			registry.addMapping("/**") // 모든 경로에 대해 CORS 허용
-					// 허용할 클라이언트 주소 (React 등). React 개발 서버(localhost:3000)에서 Spring Boot(localhost:8080)로 API 요청 가능
-//					.allowedOrigins("localhost:8080", "localhost:3000")  // 특정 도메인만 허용
-					.allowedOriginPatterns("*")  // 전체 허용
-					.allowedMethods("GET", "POST", "PUT", "DELETE") // 허용할 HTTP 메서드
-					// withCredentials: true가 포함된 요청도 허용 (JWT 같은 인증 쿠키 허용).
-					.allowCredentials(true);  // 인증 정보(쿠키) 포함 허용.
+			registry.addMapping("/**")	// 모든 경로에 대해 CORS 허용
+					// 크로스 도메인 요청에서 쿠키를 허용하려면 특정 도메인(allowedOrigins)을 지정해야 함
+					.allowedOrigins("http://localhost:8080", "https://localhost:3000", "https://ec2-3-36-70-95.ap-northeast-2.compute.amazonaws.com") // 허용할 프론트엔드 도메인
+					.allowedMethods("GET", "POST", "PUT", "DELETE")	// 허용할 HTTP 메서드
+					.allowCredentials(true);	// JWT 등 인증 정보(쿠키) 포함 허용 (credentials: 'include'가 포함된 요청 허용)
 		}
 	}
 

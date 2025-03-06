@@ -47,7 +47,7 @@ public class AuthController {
     }
 
 
-    @GetMapping(value = { "/signup" })
+    /*@GetMapping(value = { "/signup" })
     public String signupPage() {
         return "signup";
     }
@@ -55,7 +55,7 @@ public class AuthController {
     @GetMapping(value = { "/login" })
     public String loginPage() {
         return "login";
-    }
+    }*/
 
     //	@PreAuthorize("hasAuthority('ADMIN') and #user.username == authentication.name")
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -127,7 +127,7 @@ public class AuthController {
     }
 
     @GetMapping("/logout")
-    public String logout(HttpServletResponse response) {
+    public ResponseEntity logout(HttpServletResponse response) {
         // 세션 쿠키를 만료시켜서 삭제
         Cookie cookie = new Cookie("access_token", null);
         cookie.setHttpOnly(true);  // 자바스크립트에서 쿠키를 접근할 수 없도록 설정
@@ -151,8 +151,13 @@ public class AuthController {
         // 로그아웃 후 인증 정보를 삭제
         SecurityContextHolder.clearContext();
 
-        // 홈 페이지나 다른 페이지로 리디렉션
-        return "redirect:/";
+        // 메인 페이지 url 전달
+        Map<String, Object> result = Map.of(
+                "success", true,
+                "mainPageUrl", "/"
+        );
+
+        return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
     @PostMapping(value = {  "/token/refresh" })

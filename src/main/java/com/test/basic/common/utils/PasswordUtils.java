@@ -1,4 +1,4 @@
-package com.test.basic.utils;
+package com.test.basic.common.utils;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;

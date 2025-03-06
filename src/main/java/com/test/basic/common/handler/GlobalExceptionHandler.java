@@ -1,4 +1,4 @@
-package com.test.basic.handler;
+package com.test.basic.common.handler;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;

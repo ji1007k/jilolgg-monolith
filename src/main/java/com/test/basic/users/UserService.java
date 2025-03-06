@@ -1,10 +1,9 @@
 package com.test.basic.users;
 
-import com.test.basic.utils.PasswordUtils;
-import com.test.basic.utils.RSAUtil;
+import com.test.basic.common.utils.PasswordUtils;
+import com.test.basic.common.utils.RSAUtil;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;

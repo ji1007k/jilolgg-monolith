@@ -182,13 +182,15 @@ public class SecurityConfig {
 	// React 등 프론트엔드에서 백엔드 API를 호출할 때 CORS 오류를 방지
 	@Configuration
 	public class CorsConfig implements WebMvcConfigurer {
+		public static final String ALLOWED_METHOD_NAMES = "GET,POST,PATCH,PUT,DELETE,OPTIONS";
 
 		@Override
 		public void addCorsMappings(CorsRegistry registry) {
 			registry.addMapping("/**")	// 모든 경로에 대해 CORS 허용
 					// 크로스 도메인 요청에서 쿠키를 허용하려면 특정 도메인(allowedOrigins)을 지정해야 함
-					.allowedOrigins("http://localhost:8080", "https://localhost:3000", "https://ec2-3-36-70-95.ap-northeast-2.compute.amazonaws.com") // 허용할 프론트엔드 도메인
-					.allowedMethods("GET", "POST", "PUT", "DELETE")	// 허용할 HTTP 메서드
+					.allowedOrigins("http://localhost:3000", "https://localhost:3000", "https://ec2-3-36-70-95.ap-northeast-2.compute.amazonaws.com") // 허용할 프론트엔드 도메인
+					.allowedMethods(ALLOWED_METHOD_NAMES.split(","))	// 허용할 HTTP 메서드
+					.allowedHeaders("Authorization", "Content-Type")
 					.allowCredentials(true);	// JWT 등 인증 정보(쿠키) 포함 허용 (credentials: 'include'가 포함된 요청 허용)
 		}
 	}

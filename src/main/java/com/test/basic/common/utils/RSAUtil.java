@@ -1,4 +1,4 @@
-package com.test.basic.utils;
+package com.test.basic.common.utils;
 
 import javax.crypto.Cipher;
 import java.security.*;

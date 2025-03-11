@@ -17,22 +17,28 @@
 package com.test.basic.auth.sample;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.stream.Collectors;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jwt.*;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * A controller for the token resource.
  *
  * @author Josh Cummings
  */
+
+@Tag(name = "JWT 토큰 발급 테스트 API", description = "JWT 토큰 발급 테스트 API")
 @RestController
 @RequestMapping("/token")
 public class TokenController {
@@ -43,8 +49,20 @@ public class TokenController {
 		this.encoder = encoder;
 	}
 
-	@PostMapping("/token")
-	public String generateToken(Authentication authentication, HttpServletResponse response) {
+	/*@Operation(summary = "JWT 토큰 발급", description = "JWT 토큰을 발급합니다.")
+	@GetMapping("/generate")
+	public ResponseEntity<?> getToken(@CookieValue(value = "access_token", required = false) String token) {
+		if (token == null) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No token found");
+		}
+		return ResponseEntity.ok(Collections.singletonMap("token", token));
+	}*/
+
+	// spring security 샘플 프로젝트
+	@GetMapping("/generate")
+	@Operation(summary = "JWT 토큰 발급", description = "JWT 토큰을 발급합니다.")
+	@SecurityRequirement(name = "BasicAuth")  // 🔥 Swagger에서 Basic Auth로 인증 가능
+	public String generateTokenSample(Authentication authentication) {
 		Instant now = Instant.now();
 		long expiry = 36000L;
 		// @formatter:off
@@ -64,4 +82,5 @@ public class TokenController {
 
 		return this.encoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
 	}
+
 }

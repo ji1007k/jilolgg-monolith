@@ -1,4 +1,4 @@
-name: Continuous Deployment with GHCR (Github Container Registry)
+name: "[CD] Deploy Basic BE SpringBoot TO AWS EC2"
 
 on:
   push:
@@ -12,7 +12,7 @@ jobs:
       #uses: → 공식 액션(플러그인) 사용
       #run: → 직접 명령어 실행
 
-      - name: SSH into server and deploy
+      - name: "[1] SSH into server and deploy"
         uses: appleboy/ssh-action@v1.0.3  # SSH를 통해 서버에 배포
         with:
           host: ${{ secrets.SSH_HOST }}  # 서버 호스트

@@ -50,11 +50,6 @@ public class AuthController {
     /*@GetMapping(value = { "/signup" })
     public String signupPage() {
         return "signup";
-    }
-
-    @GetMapping(value = { "/login" })
-    public String loginPage() {
-        return "login";
     }*/
 
     //	@PreAuthorize("hasAuthority('ADMIN') and #user.username == authentication.name")
@@ -90,7 +85,7 @@ public class AuthController {
     }
 
     // Spring Security는 Basic Auth 방식에서 자동으로 username과 password를 추출해서 Authentication 객체에 넣어줌
-    @PostMapping("/login")
+    @GetMapping("/login")
     public ResponseEntity login(Authentication authentication, HttpServletResponse response) throws Exception {
         // 1. Basic Authentication 정보는 이미 authentication 객체에 담겨 있음
         String username = authentication.getName(); // Basic Auth에서 username 추출

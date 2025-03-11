@@ -4,6 +4,8 @@ import com.test.basic.auth.jwt.JwtTokenProvider;
 import com.test.basic.users.UserEntity;
 import com.test.basic.users.UserRepository;
 import com.test.basic.users.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -86,6 +88,8 @@ public class AuthController {
 
     // Spring Security는 Basic Auth 방식에서 자동으로 username과 password를 추출해서 Authentication 객체에 넣어줌
     @GetMapping("/login")
+    @Operation(summary = "로그인", description = "로그인 API")
+    @SecurityRequirement(name = "BasicAuth")  // 🔥 Swagger에서 Basic Auth로 인증 가능
     public ResponseEntity login(Authentication authentication, HttpServletResponse response) throws Exception {
         // 1. Basic Authentication 정보는 이미 authentication 객체에 담겨 있음
         String username = authentication.getName(); // Basic Auth에서 username 추출
@@ -122,6 +126,7 @@ public class AuthController {
     }
 
     @GetMapping("/logout")
+    @SecurityRequirement(name = "BearerAuth")  // 🔥 Swagger에서 JWT 인증 필요
     public ResponseEntity logout(HttpServletResponse response) {
         // 세션 쿠키를 만료시켜서 삭제
         Cookie cookie = new Cookie("access_token", null);
@@ -156,6 +161,7 @@ public class AuthController {
     }
 
     @PostMapping(value = {  "/token/refresh" })
+    @SecurityRequirement(name = "BearerAuth")  // 🔥 Swagger에서 JWT 인증 필요
     public ResponseEntity refreshToken(Authentication authentication, HttpServletResponse response) {
         Jwt accessToken = jwtTokenProvider.makeAccessToken(authentication);
         ResponseCookie accessTokenCookie = jwtTokenProvider.makeResponseCookie("access_token", accessToken.getTokenValue());

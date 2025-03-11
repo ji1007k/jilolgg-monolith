@@ -38,5 +38,4 @@ public class UserEntity {
         this.authority = user.getAuthority();
         this.profileImageUrl = user.getProfileImageUrl();
     }
-
 }

@@ -78,6 +78,7 @@ public class SecurityConfig {
 						.requestMatchers( "/css/**", "/js/**", "/images/**", "/html/**").permitAll()	// 정적 리소스 허용
 						.requestMatchers("/api/swagger-ui/**", "/api/v3/api-docs/**").permitAll()  // Swagger 허용
 						.requestMatchers("/auth/login", "/auth/signup").permitAll()  // 로그인, 회원가입 허용
+						.requestMatchers("/chat/**").permitAll()  // 채팅
 						.requestMatchers("/mypage/manager").hasAuthority("SCOPE_ADMIN")  // 특정 권한 필요
 						.anyRequest().authenticated()  // 나머지 요청은 인증 필요
 				)

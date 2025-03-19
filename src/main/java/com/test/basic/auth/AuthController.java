@@ -48,33 +48,8 @@ public class AuthController {
         this.userService = userService;
     }
 
-
-    /*@GetMapping(value = { "/signup" })
-    public String signupPage() {
-        return "signup";
-    }*/
-
-    //	@PreAuthorize("hasAuthority('ADMIN') and #user.username == authentication.name")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    @GetMapping("/mypage/admin")
-//	public ResponseEntity<String> getAdminPage(@PathVariable String username, @RequestBody User user) {
-    public ResponseEntity adminPage(Authentication authentication) {
-        return ResponseEntity.ok("Hello, " + authentication.getAuthorities() + ": " + authentication.getName() + "!");
-    }
-
-    // 글로벌 설정을 통해 권한 확인 예
-    @GetMapping("/mypage/manager")
-    public ResponseEntity managerPage(Authentication authentication) {
-        return ResponseEntity.ok("Hello, " + authentication.getAuthorities() + ": " + authentication.getName() + "!");
-    }
-
-    @PreAuthorize("hasAuthority('USER')")
-    @GetMapping("/mypage")
-    public ResponseEntity hello(Authentication authentication) {
-        return ResponseEntity.ok("Hello, " + authentication.getName() + "!");
-    }
-
     @PostMapping(value = { "/signup" })
+    @Operation(summary = "회원가입", description = "회원가입 API")
     public ResponseEntity signupPage(@RequestBody UserEntity user) {
         // save
         UserEntity newUser = userService.createUser(user);
@@ -127,6 +102,7 @@ public class AuthController {
 
     @GetMapping("/logout")
     @SecurityRequirement(name = "BearerAuth")  // 🔥 Swagger에서 JWT 인증 필요
+    @Operation(summary = "로그아웃", description = "로그아웃 API")
     public ResponseEntity logout(HttpServletResponse response) {
         // 세션 쿠키를 만료시켜서 삭제
         Cookie cookie = new Cookie("access_token", null);
@@ -162,6 +138,7 @@ public class AuthController {
 
     @PostMapping(value = {  "/token/refresh" })
     @SecurityRequirement(name = "BearerAuth")  // 🔥 Swagger에서 JWT 인증 필요
+    @Operation(summary = "JWT 토큰 갱신", description = "JWT 토큰 갱신 API")
     public ResponseEntity refreshToken(Authentication authentication, HttpServletResponse response) {
         Jwt accessToken = jwtTokenProvider.makeAccessToken(authentication);
         ResponseCookie accessTokenCookie = jwtTokenProvider.makeResponseCookie("access_token", accessToken.getTokenValue());
@@ -188,4 +165,32 @@ public class AuthController {
         // 상태 코드 200과 함께 빈 응답 반환
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
+
+
+    // TODO 
+    //  - Nextjs 프론트엔드 프로젝트 쪽으로 기능 분리
+    /*@GetMapping(value = { "/signup" })
+    public String signupPage() {
+        return "signup";
+    }*/
+
+    //	@PreAuthorize("hasAuthority('ADMIN') and #user.username == authentication.name")
+   /* @PreAuthorize("hasAuthority('ADMIN')")
+    @GetMapping("/mypage/admin")
+//	public ResponseEntity<String> getAdminPage(@PathVariable String username, @RequestBody User user) {
+    public ResponseEntity adminPage(Authentication authentication) {
+        return ResponseEntity.ok("Hello, " + authentication.getAuthorities() + ": " + authentication.getName() + "!");
+    }
+
+    // 글로벌 설정을 통해 권한 확인 예
+    @GetMapping("/mypage/manager")
+    public ResponseEntity managerPage(Authentication authentication) {
+        return ResponseEntity.ok("Hello, " + authentication.getAuthorities() + ": " + authentication.getName() + "!");
+    }
+
+    @PreAuthorize("hasAuthority('USER')")
+    @GetMapping("/mypage")
+    public ResponseEntity hello(Authentication authentication) {
+        return ResponseEntity.ok("Hello, " + authentication.getName() + "!");
+    }*/
 }

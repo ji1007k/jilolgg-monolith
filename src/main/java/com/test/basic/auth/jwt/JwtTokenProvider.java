@@ -88,14 +88,26 @@ public class JwtTokenProvider {
                 .secure(true)    // HTTPS에서만 전송. false: HTTP 허용
                 .path("/")       // 모든 경로에서 쿠키 사용 가능
                 .maxAge(ACCESS_TOKEN_EXPIRY)    // 만료 시간 설정
-                .sameSite("None")  // CORS 환경에서 사용 가능하도록 설정 (필요하면 변경 가능). 크로스 사이트 요청에서 쿠키 전송
+                .sameSite("Lax")    // GET 메소드 요청에 한해 CORS 허용
+//                .sameSite("None")  // CORS 환경에서 사용 가능하도록 설정 (필요하면 변경 가능). 크로스 사이트 요청에서 쿠키 전송
                 .build();
 
         return cookie;
     }
 
-    public Jwt getTokenFromStr(String token) {
+    public Jwt getJwtFromStr(String token) {
         return this.decoder.decode(token);  // 서명 검증
+    }
+
+    public String getJwtStrFromCookie(Cookie[] cookies, String key) {
+        if (cookies != null) {
+            return Arrays.stream(cookies)
+                    .filter(cookie -> key.equals(cookie.getName()))
+                    .map(Cookie::getValue)
+                    .findFirst()
+                    .orElse(null);
+        }
+        return null;
     }
 
     public boolean validateToken(String token) {
@@ -111,17 +123,6 @@ public class JwtTokenProvider {
             // FIXME throw
             return false;  // 예외 발생 시 토큰이 유효하지 않음
         }
-    }
-
-    public String getJwtFromCookie(Cookie[] cookies, String key) {
-        if (cookies != null) {
-            return Arrays.stream(cookies)
-                    .filter(cookie -> key.equals(cookie.getName()))
-                    .map(Cookie::getValue)
-                    .findFirst()
-                    .orElse(null);
-        }
-        return null;
     }
 
     // jwt 토큰 기반 사용자 검증

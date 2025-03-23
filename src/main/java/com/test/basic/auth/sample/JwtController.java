@@ -135,6 +135,7 @@ public class JwtController {
 				.secure(true)    // HTTPS에서만 전송
 				.path("/")       // 모든 경로에서 쿠키 사용 가능
 				.maxAge(ACCESS_TOKEN_EXPIRY)    // 만료 시간 설정
+//				.sameSite("Lax")	// GET 메소드 요청에 한해 CORS 허용
 				.sameSite("None")  // CORS 환경에서 사용 가능하도록 설정 (필요하면 변경 가능)
 				.build();
 

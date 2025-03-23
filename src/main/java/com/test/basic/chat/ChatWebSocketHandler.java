@@ -61,10 +61,9 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         chatService.sendMessage("1", username, new TextMessage(messageContent));
     }
 
-    // FIXME JWT나 인증 정보 사용하도록 수정
-    // WebSocket에서 `sender` 정보를 얻는 메서드
+    // WebSocketSession에 저장된 사용자 인증 정보 반환 (JWT 등)
     private String getUserNameFromSession(WebSocketSession session) {
-        return (String) session.getAttributes().get("userName");
+        return (String) session.getAttributes().get("username");
     }
 
     public void broadcastWithSender(String message, String sender) throws IOException {

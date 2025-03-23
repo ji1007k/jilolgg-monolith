@@ -2,7 +2,6 @@ package com.test.basic.auth.jwt;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -18,9 +17,9 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtGra
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -61,9 +60,12 @@ public class CustomJwtFilter extends OncePerRequestFilter {
             return;
         }
 
+        // no-cache → 캐시 검증 후 사용 (완전한 방지는 아님)
+        // no-store → 브라우저에 저장 ❌
+        response.setHeader("Cache-Control", "no-cache");
 
         // 헤더에서 JWT 토큰을 추출
-        String accessToken = jwtTokenProvider.getJwtFromCookie(request.getCookies(), "access_token");
+        String accessToken = jwtTokenProvider.getJwtStrFromCookie(request.getCookies(), "access_token");
 
         if (accessToken != null) {
             try {
@@ -73,7 +75,7 @@ public class CustomJwtFilter extends OncePerRequestFilter {
 
                 // 토큰 재발급 요청이면 refresh 토큰 유효성 검증
                 if (path.equals("/auth/token/refresh")) {
-                    String refreshToken = jwtTokenProvider.getJwtFromCookie(request.getCookies(), "refresh_token");
+                    String refreshToken = jwtTokenProvider.getJwtStrFromCookie(request.getCookies(), "refresh_token");
 
                     if (refreshToken != null) {
                         if (!jwtTokenProvider.validateToken(refreshToken)) {
@@ -83,7 +85,7 @@ public class CustomJwtFilter extends OncePerRequestFilter {
                 }
 
                 // JWT의 권한(Role) 정보는 따로 추출해서 확인
-                Jwt token = jwtTokenProvider.getTokenFromStr(accessToken);
+                Jwt token = jwtTokenProvider.getJwtFromStr(accessToken);
                 Collection<GrantedAuthority> authorities = extractAuthorities(token);
 
                 AbstractAuthenticationToken authentication = new JwtAuthenticationToken(token, authorities);
@@ -113,11 +115,4 @@ public class CustomJwtFilter extends OncePerRequestFilter {
         return authorities;
     }
 
-    /*private String getTokenFromRequest(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
-        if (header != null && header.startsWith("Bearer ")) {
-            return header.substring(7); // "Bearer " 제외한 토큰만 반환
-        }
-        return null;
-    }*/
 }

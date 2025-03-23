@@ -41,7 +41,8 @@ public class RedisMessageListener implements MessageListener {
             logger.info("📬 Redis 받은 메시지: room = {}, userId = {}, message = {}", channel, userId, msg);
 
             // 메시지를 클라이언트로 전달하는 처리
-            chatHandler.broadcast(msg, userId);  // 채팅 핸들러로 메시지 전송
+//            chatHandler.broadcast(msg, userId);  // 채팅 핸들러로 메시지 전송
+            chatHandler.broadcastWithSender(jsonNode.toString(), userId);  // 채팅 핸들러로 메시지 전송
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

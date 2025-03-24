@@ -66,13 +66,10 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         return (String) session.getAttributes().get("username");
     }
 
-    public void broadcastWithSender(String message, String sender) throws IOException {
+    public void broadcastWithSender(String message) throws IOException {
         logger.info("📩 메시지 브로드캐스트 : [{}] {}", message);
         for (WebSocketSession session : sessions.values()) {
-            // 자기 자신에게는 메시지를 보내지 않음
-            if (!(getUserNameFromSession(session)).equals(sender) && session.isOpen()) {
-                session.sendMessage(new TextMessage(message));
-            }
+            session.sendMessage(new TextMessage(message));
         }
     }
 

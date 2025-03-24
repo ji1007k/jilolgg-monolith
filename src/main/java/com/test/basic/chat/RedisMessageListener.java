@@ -36,13 +36,16 @@ public class RedisMessageListener implements MessageListener {
             JsonNode jsonNode = om.readTree(message.getBody());
             String userId = jsonNode.get("userId").asText();  // userId 추출
             String msg = jsonNode.get("message").asText();    // message 추출
+            String time = jsonNode.get("time").asText();    // 작성시각 추출
 
             // 로그로 userId와 메시지 확인
-            logger.info("📬 Redis 받은 메시지: room = {}, userId = {}, message = {}", channel, userId, msg);
+            logger.info(
+                    "📬 Redis 받은 메시지: room = {}, userId = {}, message = {}, time = {}",
+                    channel, userId, msg, time);
 
             // 메시지를 클라이언트로 전달하는 처리
 //            chatHandler.broadcast(msg, userId);  // 채팅 핸들러로 메시지 전송
-            chatHandler.broadcastWithSender(jsonNode.toString(), userId);  // 채팅 핸들러로 메시지 전송
+            chatHandler.broadcastWithSender(jsonNode.toString());  // 채팅 핸들러로 메시지 전송
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

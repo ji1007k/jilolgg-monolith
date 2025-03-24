@@ -4,6 +4,10 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -20,8 +24,20 @@ public class ChatService {
     }
 
     public void sendMessage(String roomId, String userId, TextMessage message) {
+        Instant instant = Instant.now();
+        // 로컬 시간대 (사용자의 시스템 시간대)로 변환
+        LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("a h:mm"); // "오전 1:30", "오후 5:15" 형식
+        // 시간 문자열 포맷팅
+        String formattedTime = localDateTime.format(formatter);
+
         // 사용자 정보와 함께 메시지 저장 (여기서는 간단히 JSON 포맷으로 저장)
-        String messageWithUser = String.format("{\"userId\":\"%s\", \"message\":\"%s\"}", userId, message.getPayload());
+        String messageWithUser = String.format(
+                "{\"userId\":\"%s\", \"message\":\"%s\", \"time\":\"%s\"}"
+                , userId
+                , message.getPayload()
+                , formattedTime
+        );
 
         // 채팅방 메시지 리스트에 메시지 추가
         String chatRoomKey = "chat:room:" + roomId + ":messages";

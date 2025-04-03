@@ -1,10 +1,7 @@
-package com.test.basic.auth.users;
+package com.test.basic.users;
 
-import com.test.basic.users.UserEntity;
-import com.test.basic.users.UserRepository;
-import com.test.basic.users.UserService;
-import com.test.basic.utils.PasswordUtils;
-import com.test.basic.utils.RSAUtil;
+import com.test.basic.common.utils.PasswordUtils;
+import com.test.basic.common.utils.RSAUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,6 +9,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
@@ -29,8 +28,12 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("User Service Test")
-public class UserEntityServiceTest {
+public class UserServiceTest {
+    private static final Logger logger = LoggerFactory.getLogger(UserServiceTest.class);
 
+    // @Mock + @InjectMocks (순수한 Mockito 테스트)
+    //  - Spring 컨텍스트 없이, 순수한 Java 단위 테스트(Mock 단위 테스트)에서 사용
+    //  - Spring을 로드하지 않으므로 실행 속도가 빠름
     @Mock
     private UserRepository userRepository;
 
@@ -41,8 +44,13 @@ public class UserEntityServiceTest {
 
     @BeforeEach
     void setUp() {
-//        user = new UserEntity(1L, "password", "email", "name", "profileImageUrl", LocalDateTime.now(), null);
         user = new UserEntity();
+        user.setId(1L);
+        user.setEmail("email@example.com");
+        user.setPassword("password123");
+//        user.setPassword(RSAUtil.encryptWithPublicKey("password", pubKey));
+        user.setName("username");
+        user.setCreatedDt(LocalDateTime.now());
     }
 
 
@@ -54,7 +62,10 @@ public class UserEntityServiceTest {
         // When
         when(userRepository.save(any(UserEntity.class))).thenAnswer(invocation -> {
             UserEntity newUser = invocation.getArgument(0);
-            user.setPassword(newUser.getPassword());
+//            user.setPassword(newUser.getPassword());
+            logger.info("==== Before PWD: {}", orgPwd);
+            logger.info("==== After PWD: {}", newUser.getPassword());
+            logger.info("==== user PWD: {}", user.getPassword());
             return newUser;
         });
 
@@ -63,19 +74,16 @@ public class UserEntityServiceTest {
         // Then
         assertNotNull(createdUser);
         assertThat(createdUser.getId()).isNotNull();
-        assertThat(createdUser.getName()).isEqualTo("name");
+        assertThat(createdUser.getName()).isEqualTo("username");
         assertTrue(new BCryptPasswordEncoder().matches(orgPwd, createdUser.getPassword()));
     }
 
     @Test
     @DisplayName("유저 목록 조회 테스트")
     void testGetAllUsers() {
-//        UserEntity user1 = new UserEntity(1L, "password1", "email1", "name1", "profileImageUrl1", LocalDateTime.now(), null);
-        UserEntity user1 = new UserEntity();
-//        UserEntity user2 = new UserEntity(2L, "password2", "email2", "name2", "profileImageUrl2", LocalDateTime.now(), null);
         UserEntity user2 = new UserEntity();
 
-        when(userRepository.findAll()).thenReturn(List.of(user1, user2));
+        when(userRepository.findAll()).thenReturn(List.of(user, user2));
 
         List<UserEntity> users = userService.getAllUsers(1, 10, "", "");
 
@@ -132,7 +140,7 @@ public class UserEntityServiceTest {
         userService.changePassword(user.getId(), originalPassword);
 
         // RSA 키 생성
-        KeyPair keyPair = RSAUtil.generateKeyPair();
+        KeyPair keyPair = RSAUtil.generateRSAKeyPair();
 
         // RSA 암호화 후 데이터 전송
         String password = "testPassword";
@@ -154,7 +162,7 @@ public class UserEntityServiceTest {
         userService.changePassword(user.getId(), originalPassword);
 
         // RSA 키 생성
-        KeyPair keyPair = RSAUtil.generateKeyPair();
+        KeyPair keyPair = RSAUtil.generateRSAKeyPair();
 
         // RSA 암호화 후 데이터 전송
         String password = "wrongPassword";

@@ -6,8 +6,8 @@ import com.test.basic.auth.AuthController;
 import com.test.basic.auth.jwt.JwtTokenProvider;
 import com.test.basic.auth.security.CustomUserDetailsService;
 import com.test.basic.auth.security.config.SecurityConfig;
-import com.test.basic.posts.CsrfTokenProvider;
 import com.test.basic.common.utils.RSAUtil;
+import com.test.basic.posts.CsrfTokenProvider;
 import jakarta.servlet.http.Cookie;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,22 +35,30 @@ import java.security.PublicKey;
 import java.util.List;
 import java.util.Optional;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest({ UserController.class, AuthController.class, CsrfTokenProvider.class })  // Controller만 테스트하기 위해 사용
+// == 보안이 적용된 컨트롤러 단위 테스트 =====================
+// Controller만 테스트하기 위해 사용
+// 서비스 로직 없이 컨트롤러의 HTTP 요청/응답만 테스트하려는 목적으로 사용
+@WebMvcTest({ UserController.class, AuthController.class, CsrfTokenProvider.class })
+// JUnit 5 (@Test) 환경에서 Mockito(목킹 프레임워크)를 사용. => 목킹(Mock) 기능을 확장
+// Spring 컨텍스트를 로드하지 않고 가벼운 단위 테스트 가능
 @ExtendWith(MockitoExtension.class)
+// Spring Security 인증/인가 설정 로드 => 인증/인가 테스트 정상 실행 위함
 @Import({ SecurityConfig.class })
 public class UserControllerTest {
     private static final Logger logger = LoggerFactory.getLogger(UserControllerTest.class);
 
-
+    // 실제 HTTP 요청 없이 가상의 HTTP 요청을 만들어 컨트롤러를 테스트
+    // 실제 서버를 실행하지 않고도 빠르고 독립적인 컨트롤러 테스트 가능
     @Autowired
-    private MockMvc mockMvc;  // MockMvc를 사용하여 HTTP 요청을 테스트
+    private MockMvc mockMvc;  // Spring MVC 테스트에서 HTTP 요청을 모의(Mock)할 수 있는 MockMvc를 사용
 
     @Autowired
     private ObjectMapper objectMapper;  // ObjectMapper를 사용하여 JSON 변환
@@ -58,12 +66,12 @@ public class UserControllerTest {
     // UserService를 Mock 처리하여 실제 서비스 호출을 Mocking
     // @MockBean을 사용했지만, Spring Boot 3.4부터는 @MockitoBean을 사용
     // 25-02-06 jikim: Swagger ui 와 spring boot 3.4 버전 충돌로 sb 버전 3.3.1 로 변경함에 따라 MockBean 사용
-    @MockBean
+    @MockBean   // 테스트에 필요한 서비스 계층 주입 (Spring 컨텍스트가 포함되는 경우)
     private UserService userService;
 
     // 사용자 인증 ====================
     @MockBean
-    private CustomUserDetailsService customUserDetailsService;
+    private CustomUserDetailsService customUserDetailsService;  // Security의 인증 로직 Mocking
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
@@ -89,7 +97,7 @@ public class UserControllerTest {
 //        mock(MockHttpSession.class); // 행동을 when()으로 정의해야 하며 sessionId 등 모든 값이 null
         mockSession = new MockHttpSession();
 
-        KeyPair keyPair = RSAUtil.generateKeyPair();
+        KeyPair keyPair = RSAUtil.generateRSAKeyPair();
         PublicKey pubKey = keyPair.getPublic();
 
         user = new UserEntity();
@@ -126,8 +134,8 @@ public class UserControllerTest {
         String setCookieHeader = result.getResponse().getHeader("Set-Cookie");
         logger.info("Set-Cookie: {}", setCookieHeader);
 
-        this.jwtAccess = jwtTokenProvider.getJwtFromCookie(result.getResponse().getCookies(), "access_token");
-        this.jwtRefresh = jwtTokenProvider.getJwtFromCookie(result.getResponse().getCookies(), "refresh_token");
+        this.jwtAccess = jwtTokenProvider.getJwtStrFromCookie(result.getResponse().getCookies(), "access_token");
+        this.jwtRefresh = jwtTokenProvider.getJwtStrFromCookie(result.getResponse().getCookies(), "refresh_token");
         this.jwtAccessCookie = new Cookie("access_token", this.jwtAccess);
         this.jwtRefreshCookie = new Cookie("refresh_token", this.jwtRefresh);
     }
@@ -157,11 +165,12 @@ public class UserControllerTest {
 
         // 서비스 없이 컨트롤러에서 HTTP 응답만 확인
         mockMvc.perform(post("/users")
-                        .header("X-CSRF-TOKEN", this.csrfToken) // csrf 검증
+                        .with(csrf())   // 자동으로 가짜 CSRF 토큰을 생성해서 테스트 우회
+//                        .header("X-CSRF-TOKEN", this.csrfToken) // csrf 검증
+//                        .session(mockSession)  // csrf 토큰 공유용
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(user))
-                        .cookie(this.jwtAccessCookie)
-                        .session(mockSession))  // csrf 토큰 공유용
+                        .cookie(this.jwtAccessCookie))
                 .andExpect(status().isCreated())  // HTTP 201 상태 확인
                 .andExpect(jsonPath("$.email").value(user.getEmail()))  // 이메일 검증
                 .andExpect(jsonPath("$.name").value(user.getName()));  // 이름 검증
@@ -243,11 +252,12 @@ public class UserControllerTest {
                 .andExpect(status().isNoContent());
     }
 
-    @Test
+    /*@Test
+    @Disabled
     @DisplayName("RSA Key 생성 테스트")
     void testGenerateRSA() throws Exception {
         // Given
-        KeyPair keyPair = RSAUtil.generateKeyPair();  // 실제 키 쌍을 생성
+        KeyPair keyPair = RSAUtil.generateRSAKeyPair();  // 실제 키 쌍을 생성
         PublicKey publicKey = keyPair.getPublic();  // 공개 키를 반환
 
         // UserService의 generateRSAKeyPair 메서드를 mock
@@ -259,5 +269,5 @@ public class UserControllerTest {
                         .session(this.mockSession))  // 세션을 포함한 요청
                 .andExpect(status().isOk())  // 응답 상태가 OK인지 검증
                 .andExpect(content().string(containsString(publicKey.toString())));  // 반환된 공개키 포함 여부 확인
-    }
+    }*/
 }

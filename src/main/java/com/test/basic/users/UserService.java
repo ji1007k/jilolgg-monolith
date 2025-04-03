@@ -107,10 +107,4 @@ public class UserService {
 
         userRepository.deleteById(id);
     }
-
-    public String generateRSAKeyPair(HttpSession session) throws Exception {
-        KeyPair keyPair = RSAUtil.generateKeyPair();
-        session.setAttribute("privateKey", keyPair.getPrivate());
-        return RSAUtil.getPublicKeyAsString(keyPair.getPublic());
-    }
 }

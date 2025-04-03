@@ -130,15 +130,5 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping(value = "/rsa")
-    @Operation(summary = "RSA 암호화 키 생성", description = "사용자 정보 암호화를 위한 RSA 암호화 키를 생성합니다.")
-    public ResponseEntity<String> generateRSAKeyPair(HttpSession session) {
-        try {
-            String publicKey = userService.generateRSAKeyPair(session);
-            return ResponseEntity.ok().body(publicKey);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
 
 }

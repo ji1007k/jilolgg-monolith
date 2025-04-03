@@ -9,7 +9,7 @@ import java.util.Base64;
 public class RSAUtil {
 
     // RSA 키 쌍 생성
-    public static KeyPair generateKeyPair() throws Exception {
+    public static KeyPair generateRSAKeyPair() throws Exception {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
 
         // SecureRandom을 사용하여 새로운 시드로 초기화

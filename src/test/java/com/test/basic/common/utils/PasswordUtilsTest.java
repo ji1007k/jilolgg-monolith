@@ -1,4 +1,4 @@
-package com.test.basic.utils;
+package com.test.basic.common.utils;
 
 import org.junit.jupiter.api.Test;
 
@@ -13,7 +13,7 @@ public class PasswordUtilsTest {
         String storedPasswordHash = PasswordUtils.hashPassword("password123");
 
         // 올바른 비밀번호 입력
-        boolean isMatch = PasswordUtils.checkPassword(storedPasswordHash, "password123");
+        boolean isMatch = PasswordUtils.checkPassword("password123", storedPasswordHash);
 
         // 비밀번호가 일치해야 함
         assertTrue(isMatch);

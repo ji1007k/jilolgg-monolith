@@ -7,7 +7,7 @@ import com.test.basic.auth.jwt.JwtTokenProvider;
 import com.test.basic.auth.security.CustomUserDetailsService;
 import com.test.basic.auth.security.config.SecurityConfig;
 import com.test.basic.common.utils.RSAUtil;
-import com.test.basic.posts.CsrfTokenProvider;
+import com.test.basic.auth.csrf.CsrfTokenController;
 import jakarta.servlet.http.Cookie;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,7 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // == 보안이 적용된 컨트롤러 단위 테스트 =====================
 // Controller만 테스트하기 위해 사용
 // 서비스 로직 없이 컨트롤러의 HTTP 요청/응답만 테스트하려는 목적으로 사용
-@WebMvcTest({ UserController.class, AuthController.class, CsrfTokenProvider.class })
+@WebMvcTest({ UserController.class, AuthController.class, CsrfTokenController.class })
 // JUnit 5 (@Test) 환경에서 Mockito(목킹 프레임워크)를 사용. => 목킹(Mock) 기능을 확장
 // Spring 컨텍스트를 로드하지 않고 가벼운 단위 테스트 가능
 @ExtendWith(MockitoExtension.class)

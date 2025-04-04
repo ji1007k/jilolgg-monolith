@@ -28,13 +28,15 @@ public class UserController {
     @PostMapping
     @Operation(summary = "사용자 등록", description = "새로운 사용자를 등록합니다.")
     public ResponseEntity<UserEntity> createUser(@RequestBody UserEntity user, HttpSession session) {
-        try {
+
+        // 250404 - HTTPS 요청 시 SSL 암호화 자동 적용되므로 RSA 암호화 생략
+        /*try {
             // 비밀번호 복호화
             String decryptedPwd = userService.decryptPassword(user.getPassword(), session);
             user.setPassword(decryptedPwd);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
+        }*/
 
         UserEntity newUser = userService.createUser(user);
         newUser.setPassword(null);

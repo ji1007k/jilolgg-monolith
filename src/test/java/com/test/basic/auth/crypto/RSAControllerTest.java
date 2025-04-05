@@ -3,11 +3,14 @@ package com.test.basic.auth.crypto;
 import com.nimbusds.jose.util.Base64;
 import com.test.basic.auth.AuthController;
 import com.test.basic.auth.jwt.JwtTokenProvider;
-import com.test.basic.auth.security.CustomUserDetailsService;
 import com.test.basic.auth.security.config.SecurityConfig;
+import com.test.basic.auth.security.user.CustomUserDetails;
+import com.test.basic.auth.security.user.CustomUserDetailsService;
 import com.test.basic.users.UserService;
 import jakarta.servlet.http.Cookie;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,12 +19,13 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -53,10 +57,13 @@ public class RSAControllerTest {
         logger.info("======================================================");
         logger.info("...테스트용 관리자 계정 로그인 및 JWT 토큰 발급");
         logger.info("======================================================");
-        UserDetails mockUser = User.withUsername("admin")
-                .password("$2b$12$JgK.Du5J.DbMQ6zQ1Tx58OoKCEGr3NUG.p45zDQb0qALy9T5MczJy")
-                .authorities("ADMIN")
-                .build();
+        UserDetails mockUser = new CustomUserDetails(
+                1L, // 혹은 UUID.randomUUID()
+                "admin",           // email
+                "$2b$12$JgK.Du5J.DbMQ6zQ1Tx58OoKCEGr3NUG.p45zDQb0qALy9T5MczJy", // password
+                "admin",           // username
+                List.of(new SimpleGrantedAuthority("SCOPE_ADMIN"))
+        );
 
         when(customUserDetailsService.loadUserByUsername(mockUser.getUsername())).thenReturn(mockUser);
 

@@ -1,7 +1,8 @@
 package com.test.basic.users;
 
 import com.test.basic.auth.jwt.JwtTokenProvider;
-import com.test.basic.auth.security.CustomUserDetailsService;
+import com.test.basic.auth.security.user.CustomUserDetails;
+import com.test.basic.auth.security.user.CustomUserDetailsService;
 import com.test.basic.common.handler.AcceptanceTestExecutionListener;
 import com.test.basic.common.utils.RSAUtil;
 import org.junit.jupiter.api.*;
@@ -14,6 +15,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
@@ -88,10 +90,13 @@ public class UserIntegrationTest {
         logger.info("...테스트용 관리자 계정 로그인 및 JWT 토큰 발급");
         logger.info("======================================================");
 
-        UserDetails mockUser = User.withUsername("admin")
-                .password("$2b$12$JgK.Du5J.DbMQ6zQ1Tx58OoKCEGr3NUG.p45zDQb0qALy9T5MczJy")
-                .authorities("ADMIN")
-                .build();
+        UserDetails mockUser = new CustomUserDetails(
+                1L, // 혹은 UUID.randomUUID()
+                "admin",           // email
+                "$2b$12$JgK.Du5J.DbMQ6zQ1Tx58OoKCEGr3NUG.p45zDQb0qALy9T5MczJy", // password
+                "admin",           // username
+                List.of(new SimpleGrantedAuthority("SCOPE_ADMIN"))
+        );
 
         when(customUserDetailsService.loadUserByUsername(mockUser.getUsername())).thenReturn(mockUser);
 

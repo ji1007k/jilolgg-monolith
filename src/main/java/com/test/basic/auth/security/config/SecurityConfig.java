@@ -24,6 +24,7 @@ import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.test.basic.auth.jwt.CustomJwtFilter;
 import com.test.basic.auth.jwt.JwtTokenProvider;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -41,11 +42,13 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.regex.Pattern;
 
 /**
  * Security configuration for the main application.
@@ -87,9 +90,12 @@ public class SecurityConfig {
 				.addFilterBefore(new CustomJwtFilter(jwtTokenProvider()), UsernamePasswordAuthenticationFilter.class)
 
 				// 특정 요청에서 CSRF 해제
-				.csrf((csrf) -> csrf.ignoringRequestMatchers(
-						"/auth/login", "/auth/signup", "/auth/token/refresh"
-				))
+				.csrf((csrf) -> csrf
+						.ignoringRequestMatchers(
+							"/auth/login", "/auth/signup", "/auth/token/refresh"
+						)
+						.requireCsrfProtectionMatcher(new CsrfRequireMatcher())
+				)
 				// Basic Authentication 인증 설정
 //				.httpBasic(Customizer.withDefaults())	// Basic Authentication 활성화
 				// basic 인증 실패 시 뜨는 id/pw 재인증 팝업 방지를 위해 커스텀 엔트리 포인트 설정
@@ -200,6 +206,29 @@ public class SecurityConfig {
 					.allowedMethods(ALLOWED_METHOD_NAMES.split(","))	// 허용할 HTTP 메서드
 					.allowedHeaders("Authorization", "Content-Type")
 					.allowCredentials(true);	// JWT 등 인증 정보(쿠키) 포함 허용 (credentials: 'include'가 포함된 요청 허용)
+		}
+	}
+
+
+	// Spring Security의 CSRF 보호 기능이 어떤 요청에 적용될지를 커스터마이징하는 필터 역할
+	// 특정 요청에 대한 csrf 토큰 검사 진행 여부를 true/false로 리턴해줌
+	// 참고) https://jeonyoungho.github.io/posts/Open-API-3.0-Swagger-v3/
+	static class CsrfRequireMatcher implements RequestMatcher {
+		// POST, PUT, DELETE처럼 상태를 바꾸는 메서드만 검사 대상으로 선정
+		private static final Pattern ALLOWED_METHODS = Pattern.compile("^(GET|HEAD|TRACE|OPTIONS)$");
+
+		// 모든 요청 하나하나에 대해 호출되며 true -> CSRF 검사 O. false -> 검사 X.
+		@Override
+		public boolean matches(HttpServletRequest request) {
+			if (ALLOWED_METHODS.matcher(request.getMethod()).matches())
+				return false;
+
+			// request를 보낸 페이지 url에 /swagger-ui url이 포함되어있다면 CORS 처리 X
+			final String referer = request.getHeader("Referer");
+			if (referer != null && referer.contains("/swagger-ui")) {
+				return false;
+			}
+			return true;
 		}
 	}
 

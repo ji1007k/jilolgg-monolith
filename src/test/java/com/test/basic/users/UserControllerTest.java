@@ -3,11 +3,12 @@ package com.test.basic.users;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.util.Base64;
 import com.test.basic.auth.AuthController;
-import com.test.basic.auth.jwt.JwtTokenProvider;
-import com.test.basic.auth.security.CustomUserDetailsService;
-import com.test.basic.auth.security.config.SecurityConfig;
-import com.test.basic.common.utils.RSAUtil;
 import com.test.basic.auth.csrf.CsrfTokenController;
+import com.test.basic.auth.jwt.JwtTokenProvider;
+import com.test.basic.auth.security.config.SecurityConfig;
+import com.test.basic.auth.security.user.CustomUserDetails;
+import com.test.basic.auth.security.user.CustomUserDetailsService;
+import com.test.basic.common.utils.RSAUtil;
 import jakarta.servlet.http.Cookie;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +25,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -114,10 +115,13 @@ public class UserControllerTest {
         logger.info("======================================================");
         logger.info("...테스트용 관리자 계정 로그인 및 JWT 토큰 발급");
         logger.info("======================================================");
-        UserDetails mockUser = User.withUsername("admin")
-                .password("$2b$12$JgK.Du5J.DbMQ6zQ1Tx58OoKCEGr3NUG.p45zDQb0qALy9T5MczJy")
-                .authorities("ADMIN")
-                .build();
+        UserDetails mockUser = new CustomUserDetails(
+                1L, // 혹은 UUID.randomUUID()
+                "admin",           // email
+                "$2b$12$JgK.Du5J.DbMQ6zQ1Tx58OoKCEGr3NUG.p45zDQb0qALy9T5MczJy", // password
+                "admin",           // username
+                List.of(new SimpleGrantedAuthority("SCOPE_ADMIN"))
+        );
 
         when(customUserDetailsService.loadUserByUsername(mockUser.getUsername())).thenReturn(mockUser);
 

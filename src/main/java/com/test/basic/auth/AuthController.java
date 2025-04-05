@@ -2,7 +2,6 @@ package com.test.basic.auth;
 
 import com.test.basic.auth.jwt.JwtTokenProvider;
 import com.test.basic.users.UserEntity;
-import com.test.basic.users.UserRepository;
 import com.test.basic.users.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -15,10 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,7 +27,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Map;
-import java.util.Optional;
 
 @Tag(name = "Auth API", description = "권한 관리 API")
 @RequestMapping("/auth")
@@ -67,12 +63,13 @@ public class AuthController {
     @SecurityRequirement(name = "BasicAuth")  // 🔥 Swagger에서 Basic Auth로 인증 가능
     public ResponseEntity login(Authentication authentication, HttpServletResponse response) throws Exception {
         // 1. Basic Authentication 정보는 이미 authentication 객체에 담겨 있음
-        String username = authentication.getName(); // Basic Auth에서 username 추출
+        // 여기서 authentication의 principal === UserDetails 객체
+//        String username = authentication.getName(); // Basic Auth에서 username 추출
 //		String password = (String) authentication.getCredentials(); // Basic Auth에서 password 추출
 
-        // 4. 인증 성공 시 JWT 토큰 생성
+        // 2. 인증 성공 시 JWT 토큰 생성
         // authentication이 이미 인증된 상태라면 불필요한 authenticate() 호출을 방지
-        logger.info("Login successful for user: {}", username);
+        logger.info("Login successful for username: {}", authentication.getName()); // 여기선 UserDetails의 username
         Jwt accessToken = jwtTokenProvider.createToken(authentication); // JWT 토큰 생성
 
         ResponseCookie accessTokenCookie = jwtTokenProvider.makeResponseCookie("access_token", accessToken.getTokenValue());
@@ -169,10 +166,6 @@ public class AuthController {
 
     // TODO 
     //  - Nextjs 프론트엔드 프로젝트 쪽으로 기능 분리
-    /*@GetMapping(value = { "/signup" })
-    public String signupPage() {
-        return "signup";
-    }*/
 
     //	@PreAuthorize("hasAuthority('ADMIN') and #user.username == authentication.name")
    /* @PreAuthorize("hasAuthority('ADMIN')")

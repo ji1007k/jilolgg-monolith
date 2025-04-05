@@ -41,11 +41,11 @@ public class HomeController {
 	@GetMapping(value = { "/", "/home" })
 	public String mainPage(Model model, Authentication authentication, @AuthenticationPrincipal Jwt jwt) {
 		if (authentication != null) {
-			logger.info(authentication.getName());
+			logger.info(authentication.getName());	// == jwt.getClaim("sub") == userId
 		}
 
 		if (jwt != null) {
-			model.addAttribute("username", jwt.getClaim("sub"));
+			model.addAttribute("username", jwt.getClaimAsString("username"));
 			// JWT 만료 시간 추출 및 전달 (한국 시간)
 			Instant expirationTime = jwt.getExpiresAt();
 			LocalDateTime expirationTimeKST = LocalDateTime.ofInstant(expirationTime, ZoneId.of("Asia/Seoul"));

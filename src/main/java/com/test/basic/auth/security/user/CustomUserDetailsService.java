@@ -1,4 +1,4 @@
-package com.test.basic.auth.security;
+package com.test.basic.auth.security.user;
 
 import com.test.basic.users.UserEntity;
 import com.test.basic.users.UserRepository;
@@ -30,6 +30,12 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        // 이메일 기반으로 사용자 조회
+        return loadUserByEmail(email);
+    }
+
+    @Transactional
+    public UserDetails loadUserByEmail(String email) throws UsernameNotFoundException {
         // 사용자 정보를 DB에서 조회
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
@@ -41,15 +47,19 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
 
-        // username 대신 email 사용해서 인증
-        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), grantedAuthorities);
+        return new CustomUserDetails(
+                user.getId(),
+                user.getEmail(),
+                user.getPassword(),
+                user.getName(),
+                grantedAuthorities
+        );
     }
 
-
-    private Collection<? extends GrantedAuthority> getAuthorities(UserEntity user) {
+    /*private Collection<? extends GrantedAuthority> getAuthorities(UserEntity user) {
         // 예: DB에 저장된 역할을 기반으로 Authorities 객체 생성
         return Arrays.stream(user.getAuthority().split(","))
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
-    }
+    }*/
 }

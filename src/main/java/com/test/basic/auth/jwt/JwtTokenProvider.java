@@ -1,14 +1,10 @@
 package com.test.basic.auth.jwt;
 
-import com.test.basic.auth.security.CustomUserDetailsService;
+import com.test.basic.auth.security.user.CustomUserDetails;
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseCookie;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Component;
 
@@ -25,8 +21,6 @@ public class JwtTokenProvider {
     private static final long ACCESS_TOKEN_EXPIRY = 3600L;
     private static final long REFRESH_TOKEN_EXPIRY = 3600L;
 
-    /*@Autowired
-    private CustomUserDetailsService customUserDetailsService;*/
 
     public JwtTokenProvider(JwtEncoder encoder, JwtDecoder decoder) throws Exception {
         this.encoder = encoder;
@@ -41,22 +35,34 @@ public class JwtTokenProvider {
 
     public Jwt makeAccessToken(Authentication authentication) {
         Instant now = Instant.now();
-        // @formatter:off
         String scope = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(" "));
 
-        // FIXME CLAIM에 SCOPE 정보 제외시키기
-        //  최소한의 정보만 JWT에 포함시켜야 함. (EX. username)
-        // 클레임(payload)
+        String userId, email, username;
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof CustomUserDetails userDetails) {
+            userId = userDetails.getId().toString();
+            email = userDetails.getEmail();
+            username = userDetails.getUsername();
+        } else if (principal instanceof Jwt jwt) {
+            userId = jwt.getSubject();
+            email = jwt.getClaimAsString("email");
+            username = jwt.getClaimAsString("username");
+        } else {
+            throw new IllegalStateException("Unknown principal type: " + principal.getClass());
+        }
+
         JwtClaimsSet claims = JwtClaimsSet.builder()
-                .issuer("self")	// JWT를 발급한 주체
-                .issuedAt(now)	// JWT가 발급된 시간
-                .expiresAt(now.plusSeconds(ACCESS_TOKEN_EXPIRY))	// JWT의 만료 시간 (현재 시간 + expiry 초)
-                .subject(authentication.getName())	// JWT의 주체 (여기서는 인증된 사용자의 이름)
-                .claim("scope", scope)	// 사용자가 가진 권한
+                .issuer("self")
+                .issuedAt(now)
+                .expiresAt(now.plusSeconds(ACCESS_TOKEN_EXPIRY))
+                .subject(userId)
+                .claim("email", email)
+                .claim("username", username)
+                .claim("scope", scope) // FIXME: 필요한 경우 제외
                 .build();
-        // @formatter:on
 
         return this.encoder.encode(JwtEncoderParameters.from(claims));
     }
@@ -69,7 +75,7 @@ public class JwtTokenProvider {
                 .issuer("self")  // JWT를 발급한 주체
                 .issuedAt(now)    // JWT가 발급된 시간
                 .expiresAt(now.plusSeconds(REFRESH_TOKEN_EXPIRY))  // 리프레시 토큰의 만료 시간 (몇 일 뒤)
-                .subject(authentication.getName())   // 주체 (사용자 정보)
+                .subject(authentication.getName())   // 주체 (사용자 정보). 여기서는 jwt.getClaim("sub") 값 == userId
                 .claim("type", "refresh") // 리프레시 토큰 구분을 위한 "type" 클레임
                 .build();
 
@@ -124,15 +130,4 @@ public class JwtTokenProvider {
             return false;  // 예외 발생 시 토큰이 유효하지 않음
         }
     }
-
-    // jwt 토큰 기반 사용자 검증
-    /*public Authentication getAuthentication(String token) {
-        Jwt jwt = this.decoder.decode(token);
-
-        String username = jwt.getSubject();
-        UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
-
-        return new UsernamePasswordAuthenticationToken(userDetails, token, userDetails.getAuthorities());
-    }*/
-
 }

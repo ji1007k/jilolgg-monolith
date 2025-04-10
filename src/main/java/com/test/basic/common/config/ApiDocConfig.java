@@ -2,7 +2,10 @@ package com.test.basic.common.config;
 
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,8 +27,25 @@ import java.util.List;
 public class ApiDocConfig {
     @Bean
     public OpenAPI customOpenAPI() {
-        // API 요청을 보낼 때 HTTPS를 자동으로 사용
+        Info info = new Info()
+                .title("Demo API")
+//                .version(appVersion)
+                .description("Spring Boot를 이용한 Demo 웹 애플리케이션 API입니다.")
+//                .termsOfService("http://swagger.io/terms/")
+                .contact(new Contact()
+                        .name("jikim")
+//                        .email("ji1007k@gmail.com")
+                        .url("https://ec2-3-36-70-95.ap-northeast-2.compute.amazonaws.com")
+                );
+//                .license(new License()
+//                        .name("Apache License Version 2.0")
+//                        .url("http://www.apache.org/licenses/LICENSE-2.0")
+//                );
+
+        //  Swagger UI에서 보여줄 서버 목록 설정
         return new OpenAPI()
+                .components(new Components())
+                .info(info)
                 .servers(List.of(
                         new Server().url("https://ec2-3-36-70-95.ap-northeast-2.compute.amazonaws.com/api").description("Production Server"),
                         new Server().url("http://localhost:8080").description("Local Server")

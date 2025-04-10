@@ -7,7 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -54,18 +56,45 @@ public class CompService {
                     .path("events");
 
             for (JsonNode event : events) {
-                List<String> teamNames = StreamSupport.stream(
+                /*List<Map<String, String>> teamInfos = StreamSupport.stream(
                                 event.path("match").path("teams").spliterator(), false)
-                        .map(team -> team.path("code").asText())
+                        .map(team -> {
+                            Map<String, String> map = new HashMap<>();
+                            map.put("code", team.path("code").asText());
+                            map.put("outcome", team.path("result").path("outcome").asText());
+                            return map;
+                        })
+                        .collect(Collectors.toList());*/
+
+                List<TeamInfo> teamInfos = StreamSupport.stream(
+                                event.path("match").path("teams").spliterator(), false)
+                        .map(team -> new TeamInfo(
+                                team.path("code").asText(),
+                                team.path("result").path("outcome").asText()
+                        ))
                         .collect(Collectors.toList());
 
-                if (teamNames.stream().anyMatch(name -> name.equalsIgnoreCase(teamCode))) {
+                boolean completed = event.path("state").asText().equalsIgnoreCase("completed");
+                String winningTeamCode;
+                if (!completed) {
+                    winningTeamCode = null;
+                } else {
+                    winningTeamCode = teamInfos.stream()
+                            .filter(team -> "win".equalsIgnoreCase(team.getOutcome()))
+                            .map(TeamInfo::getCode)
+                            .findFirst()
+                            .orElse("Unknown"); // or "T1" if you must
+                }
+
+                if (teamInfos.stream().anyMatch(team -> team.getCode().equalsIgnoreCase(teamCode))) {
                     result.add(new CompDto(
                             event.path("startTime").asText(),
                             event.path("state").asText(),
-                            teamNames
+                            winningTeamCode,
+                            teamInfos.stream().map(TeamInfo::getCode).collect(Collectors.toList()) // 원래 teamNames 대신
                     ));
                 }
+
             }
 
         } catch (Exception e) {

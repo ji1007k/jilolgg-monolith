@@ -14,5 +14,6 @@ import java.util.List;
 public class CompDto {
     private String startTime;
     private String state;
+    private String winner;
     private List<String> teams;
 }

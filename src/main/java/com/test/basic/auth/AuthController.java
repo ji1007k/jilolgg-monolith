@@ -90,7 +90,8 @@ public class AuthController {
 
         Map<String, String> result = Map.of(
                 "expirationTime", expirationTimeKST.toString(),
-                "mainPageUrl", "/"
+                "mainPageUrl", "/",
+                "userId", accessToken.getSubject()
         );
 
         // 상태 코드 200과 함께 빈 응답 반환

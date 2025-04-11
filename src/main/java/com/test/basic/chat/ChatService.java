@@ -23,7 +23,7 @@ public class ChatService {
         this.redisPublisher = redisPublisher;
     }
 
-    public void sendMessage(String roomId, String userId, TextMessage message) {
+    public void sendMessage(String roomId, String userId, String username, TextMessage message) {
         Instant instant = Instant.now();
         // 로컬 시간대 (사용자의 시스템 시간대)로 변환
         LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
@@ -33,8 +33,9 @@ public class ChatService {
 
         // 사용자 정보와 함께 메시지 저장 (여기서는 간단히 JSON 포맷으로 저장)
         String messageWithUser = String.format(
-                "{\"userId\":\"%s\", \"message\":\"%s\", \"time\":\"%s\"}"
+                "{\"userId\":\"%s\", \"username\":\"%s\", \"message\":\"%s\", \"time\":\"%s\"}"
                 , userId
+                , username
                 , message.getPayload()
                 , formattedTime
         );

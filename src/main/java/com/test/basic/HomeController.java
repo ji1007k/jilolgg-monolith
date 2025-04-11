@@ -45,6 +45,7 @@ public class HomeController {
 		}
 
 		if (jwt != null) {
+			model.addAttribute("userId", jwt.getSubject());
 			model.addAttribute("username", jwt.getClaimAsString("username"));
 			// JWT 만료 시간 추출 및 전달 (한국 시간)
 			Instant expirationTime = jwt.getExpiresAt();

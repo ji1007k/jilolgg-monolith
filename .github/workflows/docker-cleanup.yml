@@ -1,0 +1,24 @@
+name: "[OPS] Docker Cleanup on EC2"
+
+on:
+  schedule:
+    - cron: '0 4 * * 0'  # 매주 일요일 새벽 4시
+  workflow_dispatch:  # 수동 실행 가능
+
+jobs:
+  pruneDocker:
+    name: "[OPS] Prune Docker Unused Resources"
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: "[1] SSH 접속 후 Docker system prune 실행"
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIV_KEY }}
+          script: |
+            echo "========= Docker 정리 시작"
+            docker system df
+            docker system prune -a --volumes -f
+            echo "========= Docker 정리 완료"

@@ -61,6 +61,7 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3  # SSH를 통해 서버에 배포
         with:
           host: ${{ secrets.SSH_HOST }}  # 서버 호스트
+          port: ${{ secrets.SSH_PORT }}  # SSH 포트 지정
           username: ${{ secrets.SSH_USER }}  # 서버 사용자
           key: ${{ secrets.SSH_PRIVATE_KEY }}  # 서버 SSH 키
           script: |

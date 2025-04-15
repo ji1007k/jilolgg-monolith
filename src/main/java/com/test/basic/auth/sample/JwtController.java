@@ -24,6 +24,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -107,7 +108,8 @@ public class JwtController {
 	}
 
 	public Jwt makeAccessToken(Authentication authentication) {
-		Instant now = Instant.now();
+		ZonedDateTime seoulNow = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
+		Instant now = seoulNow.toInstant();
 		// @formatter:off
 		String scope = authentication.getAuthorities().stream()
 				.map(GrantedAuthority::getAuthority)
@@ -143,7 +145,8 @@ public class JwtController {
 	}
 
 	public ResponseCookie makeRefreshToken(Authentication authentication) {
-		Instant now = Instant.now();
+		ZonedDateTime seoulNow = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
+		Instant now = seoulNow.toInstant();
 
 		// 리프레시 토큰 클레임(payload)
 		JwtClaimsSet claims = JwtClaimsSet.builder()

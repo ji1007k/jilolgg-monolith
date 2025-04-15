@@ -9,6 +9,8 @@ import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -34,7 +36,9 @@ public class JwtTokenProvider {
     }
 
     public Jwt makeAccessToken(Authentication authentication) {
-        Instant now = Instant.now();
+        ZonedDateTime seoulNow = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
+        Instant now = seoulNow.toInstant();
+
         String scope = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(" "));
@@ -68,7 +72,8 @@ public class JwtTokenProvider {
     }
 
     public ResponseCookie makeRefreshToken(Authentication authentication) {
-        Instant now = Instant.now();
+        ZonedDateTime seoulNow = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
+        Instant now = seoulNow.toInstant();
 
         // 리프레시 토큰 클레임(payload)
         JwtClaimsSet claims = JwtClaimsSet.builder()

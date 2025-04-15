@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 public class FavoriteTeamService {
 
     private final UserFavoriteTeamRepository repository;
-//    private final TeamRepository teamRepository; // 팀 이름 조회용 (있다고 가정)
+//    private final TeamRepository teamRepository; // TODO 팀명, 팀코드 테이블 분리 후 팀 이름 조회
 
     public void addFavoriteTeam(Long userId, String teamCode) {
         if (repository.findByUserIdAndTeamCode(userId, teamCode).isPresent()) {
@@ -28,8 +28,8 @@ public class FavoriteTeamService {
         return favorites.stream()
                 .map(fav -> new FavoriteTeamResponse(
                         fav.getTeamCode(),
-                        "T1", // FIXME DB에서 팀 정보 조회
-//                        teamRepository.findNameById(fav.getTeamId()), // 가정
+                        fav.getTeamCode(),  // TODO 팀명 조회
+//                        teamRepository.findNameByTeamCode(fav.getTeamCode()),
                         fav.getDisplayOrder()))
                 .collect(Collectors.toList());
     }

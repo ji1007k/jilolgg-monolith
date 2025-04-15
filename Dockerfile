@@ -39,6 +39,6 @@ USER appuser
 COPY --from=build /app/build/libs/*.jar app.jar
 
 # 컨테이너 실행 시 JAR 파일 실행
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Duser.timezone=Asia/Seoul", "-jar", "app.jar"]
 
 EXPOSE 8080

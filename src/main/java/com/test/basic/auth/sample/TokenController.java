@@ -17,6 +17,8 @@
 package com.test.basic.auth.sample;
 
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.stream.Collectors;
 
@@ -63,7 +65,9 @@ public class TokenController {
 	@Operation(summary = "JWT 토큰 발급", description = "JWT 토큰을 발급합니다.")
 	@SecurityRequirement(name = "BasicAuth")  // 🔥 Swagger에서 Basic Auth로 인증 가능
 	public String generateTokenSample(Authentication authentication) {
-		Instant now = Instant.now();
+		ZonedDateTime seoulNow = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
+		Instant now = seoulNow.toInstant();
+
 		long expiry = 36000L;
 		// @formatter:off
 		String scope = authentication.getAuthorities().stream()

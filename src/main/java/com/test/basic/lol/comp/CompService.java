@@ -6,12 +6,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+
+
+// TODO
+//  - 리그 ID 별 조회 기능 추가
 
 @Service
 public class CompService {
@@ -26,6 +30,9 @@ public class CompService {
     private static final String HL = "ko-KR";
     private static final String LEAGUE_ID = "98767991310872058";    // LCK ID
 
+    private List<CompDto> allComps = null;
+    private Instant lastFetchedTime = null;
+    private static final Duration TTL = Duration.ofMinutes(10);
 
 //    private static final String API_URL =
 //            "/persisted/gw/getSchedule?hl=ko-KR&leagueId=98767991302996019";
@@ -35,7 +42,13 @@ public class CompService {
         this.webClient = webClientBuilder.baseUrl(esportsApiBaseUrl).build();
     }
 
-    public List<CompDto> getComps(String teamCode) {
+    public List<CompDto> getAllComps() {
+        if (allComps != null && lastFetchedTime != null
+            && Duration.between(lastFetchedTime, Instant.now()).compareTo(TTL) < 0) {
+            return allComps;    // 아직 TTL 안 지났으면 캐시 데이터 사용
+        }
+
+        // TTL 지났거나 최초 요청이면 새로 로딩
         String response = webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/persisted/gw/getSchedule")
@@ -45,7 +58,7 @@ public class CompService {
                 .header("x-api-key", esportsApiKey)
                 .retrieve()
                 .bodyToMono(String.class)
-                .block(); // 여기서 block()으로 동기화 → 필요시 나중에 비동기로 변경 가능
+                .block();
 
         List<CompDto> result = new ArrayList<>();
 
@@ -56,16 +69,6 @@ public class CompService {
                     .path("events");
 
             for (JsonNode event : events) {
-                /*List<Map<String, String>> teamInfos = StreamSupport.stream(
-                                event.path("match").path("teams").spliterator(), false)
-                        .map(team -> {
-                            Map<String, String> map = new HashMap<>();
-                            map.put("code", team.path("code").asText());
-                            map.put("outcome", team.path("result").path("outcome").asText());
-                            return map;
-                        })
-                        .collect(Collectors.toList());*/
-
                 List<TeamInfo> teamInfos = StreamSupport.stream(
                                 event.path("match").path("teams").spliterator(), false)
                         .map(team -> new TeamInfo(
@@ -75,32 +78,37 @@ public class CompService {
                         .collect(Collectors.toList());
 
                 boolean completed = event.path("state").asText().equalsIgnoreCase("completed");
-                String winningTeamCode;
-                if (!completed) {
-                    winningTeamCode = null;
-                } else {
-                    winningTeamCode = teamInfos.stream()
-                            .filter(team -> "win".equalsIgnoreCase(team.getOutcome()))
-                            .map(TeamInfo::getCode)
-                            .findFirst()
-                            .orElse("Unknown"); // or "T1" if you must
-                }
+                String winningTeamCode = completed
+                        ? teamInfos.stream()
+                        .filter(team -> "win".equalsIgnoreCase(team.getOutcome()))
+                        .map(TeamInfo::getCode)
+                        .findFirst()
+                        .orElse("Unknown")
+                        : null;
 
-                if (teamInfos.stream().anyMatch(team -> team.getCode().equalsIgnoreCase(teamCode))) {
-                    result.add(new CompDto(
-                            event.path("startTime").asText(),
-                            event.path("state").asText(),
-                            winningTeamCode,
-                            teamInfos.stream().map(TeamInfo::getCode).collect(Collectors.toList()) // 원래 teamNames 대신
-                    ));
-                }
-
+                result.add(new CompDto(
+                        event.path("startTime").asText(),
+                        event.path("state").asText(),
+                        winningTeamCode,
+                        teamInfos.stream().map(TeamInfo::getCode).collect(Collectors.toList())
+                ));
             }
+
+            allComps = result;
+            lastFetchedTime = Instant.now();
 
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        return result;
+        return allComps;
     }
+
+    public List<CompDto> getComps(String teamCode) {
+        return getAllComps().stream()
+                .filter(dto -> dto.getTeams().stream()
+                        .anyMatch(code -> code.equalsIgnoreCase(teamCode)))
+                .collect(Collectors.toList());
+    }
+
 }

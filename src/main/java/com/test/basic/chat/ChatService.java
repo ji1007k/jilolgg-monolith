@@ -25,8 +25,7 @@ public class ChatService {
 
     public void sendMessage(String roomId, String userId, String username, TextMessage message) {
         Instant instant = Instant.now();
-        // 로컬 시간대 (사용자의 시스템 시간대)로 변환
-        LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+        LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneId.of("Asia/Seoul"));
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("a h:mm"); // "오전 1:30", "오후 5:15" 형식
         // 시간 문자열 포맷팅
         String formattedTime = localDateTime.format(formatter);

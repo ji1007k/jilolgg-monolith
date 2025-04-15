@@ -8,6 +8,7 @@ services:
     ports:
       - "8080:8080"
     environment:
+      - TZ=Asia/Seoul
       # 1) 로컬 db (windows 운영체제)
 #      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/basic
       # 2) 로컬 DB (리눅스 운영체제). ec2의 경우 ip 고정 아니라 변경되면 바꿔야함
@@ -18,6 +19,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD_FILE=/run/secrets/db-password
 #    depends_on:
 #      - docker_db
+#    command: [ "java", "-Duser.timezone=Asia/Seoul", "-jar", "app.jar" ]
     networks:
       - app-network
 

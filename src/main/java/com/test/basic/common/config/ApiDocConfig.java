@@ -35,7 +35,7 @@ public class ApiDocConfig {
                 .contact(new Contact()
                         .name("jikim")
 //                        .email("ji1007k@gmail.com")
-                        .url("https://ec2-3-36-70-95.ap-northeast-2.compute.amazonaws.com")
+                        .url("https://ec2-3-39-239-163.ap-northeast-2.compute.amazonaws.com")
                 );
 //                .license(new License()
 //                        .name("Apache License Version 2.0")
@@ -47,7 +47,7 @@ public class ApiDocConfig {
                 .components(new Components())
                 .info(info)
                 .servers(List.of(
-                        new Server().url("https://ec2-3-36-70-95.ap-northeast-2.compute.amazonaws.com/api").description("Production Server"),
+                        new Server().url("https://ec2-3-39-239-163.ap-northeast-2.compute.amazonaws.com/api").description("Production Server"),
                         new Server().url("http://localhost:8080").description("Local Server")
                 ));
     }

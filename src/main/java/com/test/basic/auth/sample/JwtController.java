@@ -15,7 +15,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,7 +23,6 @@ import java.security.interfaces.RSAPublicKey;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -108,8 +106,7 @@ public class JwtController {
 	}
 
 	public Jwt makeAccessToken(Authentication authentication) {
-		ZonedDateTime seoulNow = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
-		Instant now = seoulNow.toInstant();
+		Instant now = Instant.now();
 		// @formatter:off
 		String scope = authentication.getAuthorities().stream()
 				.map(GrantedAuthority::getAuthority)
@@ -145,8 +142,7 @@ public class JwtController {
 	}
 
 	public ResponseCookie makeRefreshToken(Authentication authentication) {
-		ZonedDateTime seoulNow = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
-		Instant now = seoulNow.toInstant();
+		Instant now = Instant.now();
 
 		// 리프레시 토큰 클레임(payload)
 		JwtClaimsSet claims = JwtClaimsSet.builder()

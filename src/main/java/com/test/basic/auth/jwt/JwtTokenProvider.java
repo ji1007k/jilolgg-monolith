@@ -36,8 +36,8 @@ public class JwtTokenProvider {
     }
 
     public Jwt makeAccessToken(Authentication authentication) {
-        ZonedDateTime seoulNow = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
-        Instant now = seoulNow.toInstant();
+
+        Instant now = Instant.now();
 
         String scope = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -72,8 +72,8 @@ public class JwtTokenProvider {
     }
 
     public ResponseCookie makeRefreshToken(Authentication authentication) {
-        ZonedDateTime seoulNow = ZonedDateTime.now(ZoneId.of("Asia/Seoul"));
-        Instant now = seoulNow.toInstant();
+
+        Instant now = Instant.now();
 
         // 리프레시 토큰 클레임(payload)
         JwtClaimsSet claims = JwtClaimsSet.builder()

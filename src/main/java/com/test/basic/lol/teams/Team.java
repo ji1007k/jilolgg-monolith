@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @Entity
 @Data
 @Table(name = "teams", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"team_code"})
+        @UniqueConstraint(columnNames = {"slug"})
 })
 @RequiredArgsConstructor
 public class Team {

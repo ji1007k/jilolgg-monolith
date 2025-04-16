@@ -1,4 +1,4 @@
-package com.test.basic.lol.favorites;
+package com.test.basic.lol.teams.favorites;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

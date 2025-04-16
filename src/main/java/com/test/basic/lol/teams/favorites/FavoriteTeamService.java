@@ -1,4 +1,4 @@
-package com.test.basic.lol.favorites;
+package com.test.basic.lol.teams.favorites;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

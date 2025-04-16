@@ -11,15 +11,14 @@ import java.util.UUID;
 @Entity
 @Data
 @NoArgsConstructor
-//@RequiredArgsConstructor
-public class TeamInfo {
+public class TeamMatchResult {
     @Id
     @GeneratedValue
     private UUID id;
     private String code;
     private String outcome;
 
-    public TeamInfo(String code, String outcome) {
+    public TeamMatchResult(String code, String outcome) {
         this.code = code;
         this.outcome = outcome;
     }
@@ -27,6 +26,6 @@ public class TeamInfo {
 
     @Override
     public String toString() {
-        return "TeamInfo{code='" + code + "', outcome='" + outcome + "'}";
+        return "TeamMatchResult{code='" + code + "', outcome='" + outcome + "'}";
     }
 }

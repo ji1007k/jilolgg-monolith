@@ -43,11 +43,11 @@ jobs:
 
           # 도커 명령어들 정의
           COMMANDS="[\
-            \"docker login ghcr.io -u $GITHUB_ACTOR -p $GHCR_PAT\", \
+            \"echo $GHCR_PAT | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin", \
             \"docker pull $REPO_URL:latest\", \
-            \"docker stop app || true\", \
-            \"docker rm app || true\", \
-            \"docker run -d --name app -p 8080:8080 $REPO_URL:latest\", \
+            \"docker stop basic-be || true\", \
+            \"docker rm basic-be || true\", \
+            \"docker run -d --name basic-be -p 8080:8080 $REPO_URL:latest\", \
             \"docker ps\"\
           ]"
 

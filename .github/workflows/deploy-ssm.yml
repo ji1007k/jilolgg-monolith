@@ -35,22 +35,47 @@ jobs:
       - name: "[4] Set repository variable"
         run: echo "REPO_URL=ghcr.io/${{ github.repository }}" >> $GITHUB_ENV  # GHCR URL을 환경 변수로 설정
 
-      # 도커 이미지 빌드 및 GHCR에 푸시
-      - name: "[5] Build and push Docker image"
+        # SSM을 통해 원격 EC2 인스턴스에 접속하여 배포 명령 실행
+      - name: "[5] Deploy to EC2 via SSM"
         run: |
-          # Docker 이미지를 빌드하고 GHCR로 푸시
-          docker build -t $REPO_URL:latest .  # GHCR에 태그 붙여서 빌드
-          docker push $REPO_URL:latest  # 이미지를 GHCR로 푸시
+          # 도커 명령 실행할 스크립트 정의
+          COMMANDS='["docker pull ghcr.io/${{ github.repository }}:latest", "docker stop app || true", "docker rm app || true", "docker run -d --name app -p 8080:8080 ghcr.io/${{ github.repository }}:latest", "docker ps"]'
 
-      # SSM을 통해 원격 EC2 인스턴스에 접속하여 배포 명령 실행
-      - name: "[6] Deploy to EC2 via SSM"
-        run: |
-          aws ssm send-command \
+          # SSM 명령 실행 후 CommandId 저장
+          CMD_ID=$(aws ssm send-command \
             --region ${{ secrets.AWS_REGION }} \
             --document-name "AWS-RunShellScript" \
             --instance-ids ${{ secrets.AWS_SSM_INSTANCE_ID }} \
             --comment "Deploy SpringBoot app via SSM" \
-            --parameters 'commands=["docker pull $REPO_URL:latest", "docker stop app || true", "docker rm app || true", "docker run -d --name app -p 8080:8080 $REPO_URL:latest"]' \
+            --parameters commands=$COMMANDS \
+            --query "Command.CommandId" \
+            --output text)
+
+          echo "SSM command sent. CommandId: $CMD_ID"
+
+          # 명령 실행 완료까지 대기 (최대 60초, 5초 간격)
+          for i in {1..12}; do
+            STATUS=$(aws ssm list-command-invocations \
+              --region ${{ secrets.AWS_REGION }} \
+              --command-id $CMD_ID \
+              --details \
+              --query "CommandInvocations[0].Status" \
+              --output text)
+
+            echo "Current SSM command status: $STATUS"
+
+            if [ "$STATUS" == "Success" ] || [ "$STATUS" == "Failed" ]; then
+              break
+            fi
+            sleep 5
+          done
+
+          # 명령 결과 출력
+          aws ssm list-command-invocations \
+            --region ${{ secrets.AWS_REGION }} \
+            --command-id $CMD_ID \
+            --details \
+            --query "CommandInvocations[0].CommandPlugins[0].Output" \
             --output text
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

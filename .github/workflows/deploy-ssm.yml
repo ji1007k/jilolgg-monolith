@@ -42,14 +42,15 @@ jobs:
           source $GITHUB_ENV
 
           # 도커 명령어들 정의
-          COMMANDS="[\
-            \"echo $GHCR_PAT | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin", \
-            \"docker pull $REPO_URL:latest\", \
-            \"docker stop basic-be || true\", \
-            \"docker rm basic-be || true\", \
-            \"docker run -d --name basic-be -p 8080:8080 $REPO_URL:latest\", \
-            \"docker ps\"\
-          ]"
+          # SSM에 넘길 명령어 JSON 배열 생성
+          COMMANDS='[
+            "echo $GHCR_PAT | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin",
+            "docker pull $REPO_URL:latest",
+            "docker stop basic-be || true",
+            "docker rm basic-be || true",
+            "docker run -d --name basic-be -p 8080:8080 $REPO_URL:latest",
+            "docker ps"
+          ]'
 
           # SSM 명령 실행
           CMD_ID=$(aws ssm send-command \

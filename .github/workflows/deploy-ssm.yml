@@ -1,4 +1,4 @@
-name: "[CI] Build Basic BE SpringBoot"
+name: "[CI] Deploy BasicBE SpringBoot via SSM"
 
 on:
   push:
@@ -6,8 +6,8 @@ on:
       - main    # main 브랜치에 푸시될 때마다 실행됨
 
 jobs:
-  build:
-    name: "[CI] Build Basic BE SpringBoot"
+  deployBasicBeSpringBoot:
+    name: "[CI] Deploy Basic BE SpringBoot to AWS EC2"
     runs-on: ubuntu-latest
 
     steps:

@@ -1,9 +1,9 @@
-name: Deploy via SSM
+name: EC2 Connect Test with SSM
 
 on:
-  push:
+  pull_request:
     branches:
-      - main
+      - main  # 'main' 브랜치에 생긴 PR에 대해서 실행
 
 jobs:
   deploy:
@@ -18,13 +18,13 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2 # 서울 리전
+          aws-region: ${{ secrets.AWS_REGION }} # 서울 리전
 
       - name: Run command via SSM
         run: |
           aws ssm send-command \
             --document-name "AWS-RunShellScript" \
-            --instance-ids "i-071ddc48016430b18" \
+            --instance-ids ${{ secrets.AWS_SSM_INSTANCE_ID }} \
             --comment "Deploy app" \
             --parameters commands=["cd /home/ubuntu/app && git pull && ./deploy.sh"] \
             --region ap-northeast-2

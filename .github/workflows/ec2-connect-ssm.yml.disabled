@@ -6,7 +6,7 @@ on:
       - main  # 'main' 브랜치에 생긴 PR에 대해서 실행
 
 jobs:
-  deploy:
+  ssm-connect:
     runs-on: ubuntu-latest
 
     steps:

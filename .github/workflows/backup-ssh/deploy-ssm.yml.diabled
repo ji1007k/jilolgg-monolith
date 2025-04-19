@@ -1,4 +1,4 @@
-name: "[CI] Deploy BasicBE SpringBoot via SSM"
+name: "[CI] Deploy BasicBE SpringBoot via SSM AccessKey"
 
 on:
   push:

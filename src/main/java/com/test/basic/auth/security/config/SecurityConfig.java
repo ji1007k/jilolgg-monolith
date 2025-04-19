@@ -201,8 +201,8 @@ public class SecurityConfig {
 							"https://localhost:3000",
 							"http://localhost:8080",
 							"https://localhost:8080",
-							"http://ec2-43-200-4-84.ap-northeast-2.compute.amazonaws.com",
-							"https://ec2-43-200-4-84.ap-northeast-2.compute.amazonaws.com"
+							"http://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com",
+							"https://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com"
 					) // 허용할 프론트엔드 도메인
 					.allowedMethods(ALLOWED_METHOD_NAMES.split(","))	// 허용할 HTTP 메서드
 					.allowedHeaders("Authorization", "Content-Type")

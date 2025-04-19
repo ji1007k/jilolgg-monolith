@@ -1,0 +1,95 @@
+name: "[CI] Deploy BasicBE SpringBoot via SSM"
+
+on:
+  push:
+    branches:
+      - main    # main 브랜치에 푸시될 때마다 실행됨
+
+jobs:
+  deployBasicBeSpringBoot:
+    name: "[CI]Deploy BasicBE SpringBoot via SSM"
+    runs-on: ubuntu-latest
+
+    steps:
+      # 원격 서버에서 사용할 수 있도록 레포지토리 코드 다운로드
+      - name: "[1] Checkout repository"
+        uses: actions/checkout@v4  # 레포지토리 체크아웃 (git clone)
+
+      # 기본 Docker 빌드보다 더 유연한 빌드를 지원하는
+      # Docker Buildx(멀티 플랫폼 빌드 도구)를 최신 버전으로 설정
+      - name: "[2] Set up Docker Buildx"
+        uses: docker/setup-buildx-action@v2
+        with:
+          version: latest  # 최신 버전으로 설정
+
+      # Github Actions에서 GHCR 로그인
+      - name: "[3] Log in to GitHub Container Registry"
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}  # GitHub Personal Access Token
+
+      # GHCR의 이미지 URL을 환경 변수(REPO_URL)에 저장
+      # 이후 docker build, docker push에서 활용
+      - name: "[4] Set repository variable"
+        run: echo "REPO_URL=ghcr.io/${{ github.repository }}" >> $GITHUB_ENV  # GHCR URL을 환경 변수로 설정
+
+      # SSM을 통해 원격 EC2 인스턴스에 접속하여 배포 명령 실행
+      - name: "[5] Deploy to EC2 via SSM"
+        run: |
+          # 도커 이미지 전체 경로 문자열로 정의
+          REPO_URL="ghcr.io/${{ github.repository }}"
+
+          # 명령어를 완전한 문자열로 작성 (변수 직접 치환)
+          COMMANDS="[
+            \"echo '${{ secrets.GHCR_PAT }}' | docker login ghcr.io -u '${{ github.actor }}' --password-stdin\",
+            \"docker pull $REPO_URL:latest\",
+            \"docker stop basic-be || true\",
+            \"docker rm basic-be || true\",
+            \"docker run -d --name basic-be -p 8080:8080 $REPO_URL:latest\",
+            \"docker ps\"
+          ]"
+
+          # SSM 명령 실행
+          CMD_ID=$(aws ssm send-command \
+            --region ${{ secrets.AWS_REGION }} \
+            --document-name "AWS-RunShellScript" \
+            --instance-ids ${{ secrets.AWS_SSM_INSTANCE_ID }} \
+            --comment "Deploy SpringBoot app via SSM" \
+            --parameters commands="$COMMANDS" \
+            --query "Command.CommandId" \
+            --output text)
+
+          echo "SSM command sent. CommandId: $CMD_ID"
+
+          # 명령 완료 대기
+          for i in {1..12}; do
+            STATUS=$(aws ssm list-command-invocations \
+              --region ${{ secrets.AWS_REGION }} \
+              --command-id $CMD_ID \
+              --details \
+              --query "CommandInvocations[0].Status" \
+              --output text)
+
+            echo "Current SSM command status: $STATUS"
+
+            if [ "$STATUS" == "Success" ] || [ "$STATUS" == "Failed" ]; then
+              break
+            fi
+            sleep 5
+          done
+
+          # 명령 결과 출력
+          aws ssm list-command-invocations \
+            --region ${{ secrets.AWS_REGION }} \
+            --command-id $CMD_ID \
+            --details \
+            --query "CommandInvocations[0].CommandPlugins[0].Output" \
+            --output text
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+
+

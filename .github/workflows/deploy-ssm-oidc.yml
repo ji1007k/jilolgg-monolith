@@ -2,13 +2,17 @@ name: OIDC Test via SSM
 
 on:
   pull_request:
-    branches: [ main ] # 'main' 브랜치에 생긴 PR에 대해서 실행
+    branches: [ main ]
     types:
-      - opened  # PR이 처음 열릴 때만 실행
+      - opened
+
+env:
+  AWS_ROLE_ARN: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-deploy-role
 
 jobs:
   oidc-test:
     runs-on: ubuntu-latest
+
     permissions:
       id-token: write     # OIDC 인증을 위한 필수
       contents: read
@@ -17,16 +21,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Set GHCR Repo URL
+        run: echo "REPO_URL=ghcr.io/${{ github.repository }}" >> $GITHUB_ENV
+
+      - name: Debug GitHub Context
+        run: |
+          echo "REPO: $GITHUB_REPOSITORY"
+          echo "REF: $GITHUB_REF_NAME"
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-deploy-role
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Verify Caller Identity (DEBUG)
+        run: aws sts get-caller-identity
 
       - name: Deploy via SSM
         run: |
           aws ssm send-command \
             --document-name "AWS-RunShellScript" \
             --instance-ids ${{ secrets.AWS_SSM_INSTANCE_ID }} \
-            --parameters commands=["echo '배포 시작'"] \
-            --region ${{ secrets.AWS_REGION }} 
+            --parameters commands=["echo '✅ OIDC 배포 성공!'"] \
+            --region ${{ secrets.AWS_REGION }}

@@ -1,9 +1,11 @@
 name: "[CI] Deploy BasicBE SpringBoot via SSM"
 
 on:
-  push:
+  pull_request:
     branches:
-      - main
+      - main  # 'main' 브랜치에 생긴 PR에 대해서 실행
+    types:
+      - opened  # PR이 처음 열릴 때만 실행
 
 permissions:
   id-token: write   # OIDC를 위해 필수

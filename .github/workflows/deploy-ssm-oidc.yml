@@ -1,11 +1,9 @@
 name: "[CI] Deploy BasicBE SpringBoot via SSM"
 
 on:
-  pull_request:
+  push:
     branches:
-      - main  # 'main' 브랜치에 생긴 PR에 대해서 실행
-    types:
-      - opened  # PR이 처음 열릴 때만 실행
+      - main    # main 브랜치에 푸시될 때마다 실행됨
 
 permissions:
   id-token: write   # OIDC 인증을 위해 필요
@@ -22,7 +20,7 @@ jobs:
       - name: "[2] Configure AWS credentials"
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ec2-ssm-role
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_DEPLOY_ROLE }}
           role-session-name: GitHubActionsDeploy
           aws-region: ${{ secrets.AWS_REGION }}
 

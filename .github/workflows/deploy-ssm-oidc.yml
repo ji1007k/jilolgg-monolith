@@ -7,6 +7,10 @@ on:
     types:
       - opened  # PR이 처음 열릴 때만 실행
 
+permissions:
+  id-token: write   # OIDC 인증을 위해 필요
+  contents: read    # 레포 접근 위해 필요
+
 jobs:
   deployBasicBeSpringBoot:
     runs-on: ubuntu-latest

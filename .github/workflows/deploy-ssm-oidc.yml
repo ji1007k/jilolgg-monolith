@@ -1,52 +1,90 @@
-name: OIDC Test via SSM
+name: "[CI] Deploy BasicBE SpringBoot via SSM"
 
 on:
-  pull_request:
-    branches: [ main ]
-    types:
-      - opened
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write   # OIDC를 위해 필수
+  contents: read
 
 env:
-  AWS_ROLE_ARN: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-deploy-role
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  ROLE_TO_ASSUME: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ec2-ssm-role
 
 jobs:
-  oidc-test:
+  deployBasicBeSpringBoot:
+    name: "[CI] Deploy Basic BE SpringBoot to AWS EC2"
     runs-on: ubuntu-latest
 
-    permissions:
-      id-token: write     # OIDC 인증을 위한 필수
-      contents: read
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: "[1] Checkout repository"
+        uses: actions/checkout@v4
 
-      - name: Set GHCR Repo URL
+      - name: "[2] Set up Docker Buildx"
+        uses: docker/setup-buildx-action@v2
+
+      - name: "[3] Login to GitHub Container Registry"
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: "[4] Set repository variable"
         run: echo "REPO_URL=ghcr.io/${{ github.repository }}" >> $GITHUB_ENV
 
-      - name: Show GitHub OIDC Token Claims
-        run: |
-          curl -sLS -o /tmp/token.json "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN"
-          cat /tmp/token.json | jq
-
-      - name: Debug GitHub Context
-        run: |
-          echo "REPO: $GITHUB_REPOSITORY"
-          echo "REF: $GITHUB_REF_NAME"
-
-      - name: Configure AWS credentials (OIDC)
+      - name: "[5] Configure AWS credentials via OIDC"
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: ${{ env.AWS_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ env.ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
 
-      - name: Verify Caller Identity (DEBUG)
-        run: aws sts get-caller-identity
-
-      - name: Deploy via SSM
+      - name: "[6] Deploy to EC2 via SSM"
         run: |
-          aws ssm send-command \
+          REPO_URL="ghcr.io/${{ github.repository }}"
+
+          COMMANDS="[ 
+            \"echo '${{ secrets.GHCR_PAT }}' | docker login ghcr.io -u '${{ github.actor }}' --password-stdin\",
+            \"docker pull $REPO_URL:latest\",
+            \"docker stop basic-be || true\",
+            \"docker rm basic-be || true\",
+            \"docker run -d --name basic-be -p 8080:8080 $REPO_URL:latest\",
+            \"docker ps\" 
+          ]"
+
+          CMD_ID=$(aws ssm send-command \
+            --region ${{ env.AWS_REGION }} \
             --document-name "AWS-RunShellScript" \
             --instance-ids ${{ secrets.AWS_SSM_INSTANCE_ID }} \
-            --parameters commands=["echo '✅ OIDC 배포 성공!'"] \
-            --region ${{ secrets.AWS_REGION }}
+            --comment "Deploy SpringBoot app via SSM" \
+            --parameters commands="$COMMANDS" \
+            --query "Command.CommandId" \
+            --output text)
+
+          echo "SSM command sent. CommandId: $CMD_ID"
+
+          for i in {1..12}; do
+            STATUS=$(aws ssm list-command-invocations \
+              --region ${{ env.AWS_REGION }} \
+              --command-id $CMD_ID \
+              --details \
+              --query "CommandInvocations[0].Status" \
+              --output text)
+
+            echo "Current SSM command status: $STATUS"
+
+            if [ "$STATUS" == "Success" ] || [ "$STATUS" == "Failed" ]; then
+              break
+            fi
+            sleep 5
+          done
+
+          aws ssm list-command-invocations \
+            --region ${{ env.AWS_REGION }} \
+            --command-id $CMD_ID \
+            --details \
+            --query "CommandInvocations[0].CommandPlugins[0].Output" \
+            --output text

@@ -24,6 +24,11 @@ jobs:
       - name: Set GHCR Repo URL
         run: echo "REPO_URL=ghcr.io/${{ github.repository }}" >> $GITHUB_ENV
 
+      - name: Show GitHub OIDC Token Claims
+        run: |
+          curl -sLS -o /tmp/token.json "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN"
+          cat /tmp/token.json | jq
+
       - name: Debug GitHub Context
         run: |
           echo "REPO: $GITHUB_REPOSITORY"

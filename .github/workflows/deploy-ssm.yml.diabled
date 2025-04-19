@@ -7,7 +7,7 @@ on:
 
 jobs:
   deployBasicBeSpringBoot:
-    name: "[CI] Deploy Basic BE SpringBoot to AWS EC2"
+    name: "[CI]Deploy BasicBE SpringBoot via SSM"
     runs-on: ubuntu-latest
 
     steps:

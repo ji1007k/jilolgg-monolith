@@ -1,0 +1,73 @@
+name: "[OPS] Docker Cleanup on EC2 via SSM"
+
+on:
+  schedule:
+    - cron: '0 4 * * 3,6'  # 매주 수,토요일 새벽 4시
+  workflow_dispatch:  # 수동 실행 가능
+
+permissions:
+  id-token: write   # OIDC 인증을 위해 필요
+  contents: read    # 레포 접근 위해 필요
+
+jobs:
+  pruneDocker:
+    name: "[OPS] Prune Docker Unused Resources"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "[1] SSM 접속 후 미사용 Docker 자원 정리"
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_DEPLOY_ROLE }}
+          role-session-name: GitHubActionsDeploy
+          aws-region: ${{ secrets.AWS_REGION }}
+        run: |
+          COMMANDS="[ 
+            \"echo ========= Docker Cleanup 시작 =========\",
+            \"docker system prune -a --volumes -f\",
+            \"docker system df\",
+            \"echo ========= Docker Cleanup 완료 =========\"
+          ]"
+
+          echo "SSM Command 전송 중..."
+          CMD_ID=$(aws ssm send-command \
+            --region ${{ secrets.AWS_REGION }} \
+            --document-name "AWS-RunShellScript" \
+            --instance-ids ${{ secrets.AWS_SSM_INSTANCE_ID }} \
+            --comment "미사용 Docker 자원 정리 via SSM" \
+            --parameters commands="$COMMANDS" \
+            --query "Command.CommandId" \
+            --output text)
+          
+          echo "Command sent. Command ID: $CMD_ID"
+          echo "결과 대기 중..."
+          
+          # SSM 명령어 실행 결과 상태 확인
+          for i in {1..12}; do
+            STATUS=$(aws ssm list-command-invocations \
+              --region ${{ secrets.AWS_REGION }} \
+              --command-id $CMD_ID \
+              --details \
+              --query "CommandInvocations[0].Status" \
+              --output text)
+
+            echo "현재 상태: $STATUS"
+
+            if [ "$STATUS" = "Success" ]; then
+              echo "명령어 실행 성공!"
+              break
+            elif [ "$STATUS" = "Failed" ]; then
+              echo "명령어 실행 실패!"
+              exit 1  # 명령어 실패 시 작업 종료
+            fi
+            sleep 5
+          done
+
+          # 명령어 실행 후 출력 결과 확인
+          echo "명령어 출력 결과:"
+          aws ssm list-command-invocations \
+            --region ${{ secrets.AWS_REGION }} \
+            --command-id $CMD_ID \
+            --details \
+            --query "CommandInvocations[0].CommandPlugins[0].Output" \
+            --output text

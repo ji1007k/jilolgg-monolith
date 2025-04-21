@@ -25,10 +25,10 @@ jobs:
       - name: "[2] SSM 접속 후 미사용 Docker 자원 정리"
         run: |
           COMMANDS="[ 
-            \"echo ========= Docker Cleanup 시작 =========\",
+            \"echo '========= Docker Cleanup 시작 ========='\",
             \"docker system prune -a --volumes -f\",
             \"docker system df\",
-            \"echo ========= Docker Cleanup 완료 =========\"
+            \"echo '========= Docker Cleanup 완료 ========='\"
           ]"
 
           echo "SSM Command 전송 중..."

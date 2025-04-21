@@ -26,8 +26,8 @@ jobs:
         run: |
           COMMANDS="[ 
             \"echo '========= Docker Cleanup 시작 ========='\",
-            \"docker system prune -a --volumes -f\",
-            \"docker system df\",
+            \"sudo docker system prune -a --volumes -f\",
+            \"sudo docker system df\",
             \"echo '========= Docker Cleanup 완료 ========='\"
           ]"
 

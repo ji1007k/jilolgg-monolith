@@ -26,8 +26,8 @@ jobs:
         run: |
           COMMANDS="[ 
             \"echo '========= Docker Cleanup 시작 ========='\",
-            \"docker system prune -a --volumes -f\",
-            \"docker system df\",
+            \"sudo docker system prune -a --volumes -f\",
+            \"sudo docker system df\",
             \"echo '========= Docker Cleanup 완료 ========='\"
           ]"
 
@@ -55,21 +55,18 @@ jobs:
 
             echo "현재 상태: $STATUS"
 
-            if [ "$STATUS" = "Success" ]; then
-              echo "명령어 실행 성공!"
+            if [ "$STATUS" = "Success" ] || [ "$STATUS" = "Failed" ]; then
+              echo "명령어 실행 종료 상태: $STATUS"
+              
+              echo "명령어 출력 결과:"
+              aws ssm list-command-invocations \
+              --region ${{ secrets.AWS_REGION }} \
+              --command-id $CMD_ID \
+              --details \
+              --query "CommandInvocations[0].CommandPlugins[0].Output" \
+              --output text
+              [ "$STATUS" = "Failed" ] && exit 1
               break
-            elif [ "$STATUS" = "Failed" ]; then
-              echo "명령어 실행 실패!"
-              exit 1  # 명령어 실패 시 작업 종료
             fi
             sleep 5
           done
-
-          # 명령어 실행 후 출력 결과 확인
-          echo "명령어 출력 결과:"
-          aws ssm list-command-invocations \
-            --region ${{ secrets.AWS_REGION }} \
-            --command-id $CMD_ID \
-            --details \
-            --query "CommandInvocations[0].CommandPlugins[0].Output" \
-            --output text

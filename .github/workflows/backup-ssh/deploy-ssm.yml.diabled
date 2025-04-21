@@ -1,4 +1,4 @@
-name: "[CI] Deploy BasicBE SpringBoot via SSM AccessKey"
+name: "[CD] Deploy BasicBE SpringBoot via SSM AccessKey"
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   deployBasicBeSpringBoot:
-    name: "[CI]Deploy BasicBE SpringBoot via SSM"
+    name: "[CD]Deploy BasicBE SpringBoot via SSM"
     runs-on: ubuntu-latest
 
     steps:

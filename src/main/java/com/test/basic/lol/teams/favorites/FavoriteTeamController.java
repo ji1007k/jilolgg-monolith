@@ -19,13 +19,13 @@ public class FavoriteTeamController {
     private final FavoriteTeamService favoriteTeamService;
 
     // 1. 즐겨찾기 등록
-    @PostMapping
-    public ResponseEntity<String> addFavorite(@RequestBody FavoriteTeamRequest request,
+    @PostMapping("/{teamId}")
+    public ResponseEntity<String> addFavorite(@PathVariable String teamId,
                                               @AuthenticationPrincipal Jwt jwt) {
         Long userId = Long.valueOf(jwt.getClaim("sub"));
 
         try {
-            favoriteTeamService.addFavoriteTeam(userId, request.getTeamCode());
+            favoriteTeamService.addFavoriteTeam(userId, Long.parseLong(teamId));
             return ResponseEntity.status(HttpStatus.CREATED).build();
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("즐겨찾는 팀 등록 실패: " + e.getMessage());
@@ -41,11 +41,11 @@ public class FavoriteTeamController {
     }
 
     // 3. 즐겨찾기 삭제
-    @DeleteMapping("/{teamCode}")
-    public ResponseEntity<Void> removeFavorite(@PathVariable String teamCode,
+    @DeleteMapping("/{teamId}")
+    public ResponseEntity<Void> removeFavorite(@PathVariable String teamId,
                                                @AuthenticationPrincipal Jwt jwt) {
         Long userId = Long.valueOf(jwt.getSubject());
-        favoriteTeamService.removeFavoriteTeam(userId, teamCode);
+        favoriteTeamService.removeFavoriteTeam(userId, Long.parseLong(teamId));
         return ResponseEntity.noContent().build();
     }
 

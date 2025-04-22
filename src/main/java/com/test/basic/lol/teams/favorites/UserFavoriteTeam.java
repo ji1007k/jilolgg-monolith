@@ -1,5 +1,6 @@
 package com.test.basic.lol.teams.favorites;
 
+import com.test.basic.lol.teams.Team;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -7,7 +8,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "user_favorite_team", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"user_id", "team_code"})
+        @UniqueConstraint(columnNames = {"user_id", "team_id"})
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -20,23 +21,23 @@ public class UserFavoriteTeam {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "team_code", nullable = false)
-    private String teamCode;
-
     @Column(name = "display_order")
     private Integer displayOrder;
 
-//    @Column(name = "memo")
-//    private String memo;
+    @ManyToOne(fetch = FetchType.LAZY) // Lazy로 하고 fetch join 쓸 예정
+    @JoinColumn(name = "team_id", nullable = false)
+    private Team team;
 
-    public UserFavoriteTeam(Long userId, String teamCode, Integer displayOrder) {
+
+    public UserFavoriteTeam(Long userId, Integer displayOrder, Team team) {
         this.userId = userId;
-        this.teamCode = teamCode;
         this.displayOrder = displayOrder;
+        this.team = team;
     }
 
     public void updateOrder(Integer order) {
         this.displayOrder = order;
     }
+
 }
 

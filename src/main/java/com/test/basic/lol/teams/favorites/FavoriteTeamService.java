@@ -1,10 +1,15 @@
 package com.test.basic.lol.teams.favorites;
 
+import com.test.basic.lol.teams.Team;
+import com.test.basic.lol.teams.TeamRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -12,41 +17,43 @@ import java.util.stream.Collectors;
 public class FavoriteTeamService {
 
     private final UserFavoriteTeamRepository repository;
-//    private final TeamRepository teamRepository; // TODO 팀명, 팀코드 테이블 분리 후 팀 이름 조회
+    private final TeamRepository teamRepository;
 
-    public void addFavoriteTeam(Long userId, String teamCode) {
-        if (repository.findByUserIdAndTeamCode(userId, teamCode).isPresent()) {
+    @Transactional
+    public void addFavoriteTeam(Long userId, Long teamId) {
+        if (repository.findByUserIdAndTeamId(userId, teamId).isPresent()) {
             throw new IllegalStateException("이미 즐겨찾기에 추가된 팀입니다.");
         }
 
+        Optional<Team> team = teamRepository.findById(teamId);
+        if (! team.isPresent()) {
+            throw new EntityNotFoundException("존재하지 않는 팀입니다.");
+        }
+
         int order = repository.findByUserIdOrderByDisplayOrderAsc(userId).size(); // 제일 뒤에 추가
-        repository.save(new UserFavoriteTeam(userId, teamCode, order));
+        repository.save(new UserFavoriteTeam(userId, order, team.get()));
     }
 
     public List<FavoriteTeamResponse> getFavoriteTeams(Long userId) {
-        List<UserFavoriteTeam> favorites = repository.findByUserIdOrderByDisplayOrderAsc(userId);
-        return favorites.stream()
-                .map(fav -> new FavoriteTeamResponse(
-                        fav.getTeamCode(),
-                        fav.getTeamCode(),  // TODO 팀명 조회
-//                        teamRepository.findNameByTeamCode(fav.getTeamCode()),
-                        fav.getDisplayOrder()))
-                .collect(Collectors.toList());
+        List<FavoriteTeamResponse> favorites = repository.findFavoriteTeamsByUserId(userId);
+        return favorites;
     }
 
-    public void removeFavoriteTeam(Long userId, String teamCode) {
-        repository.deleteByUserIdAndTeamCode(userId, teamCode);
+    @Transactional
+    public void removeFavoriteTeam(Long userId, Long teamId) {
+        repository.deleteByUserIdAndTeamId(userId, teamId);
     }
 
-    public void updateFavoriteOrder(Long userId, List<String> orderedTeamCodes) {
+    @Transactional
+    public void updateFavoriteOrder(Long userId, List<Long> orderedTeamIds) {
         List<UserFavoriteTeam> favorites = repository.findByUserIdOrderByDisplayOrderAsc(userId);
 
-        Map<String, UserFavoriteTeam> favMap = favorites.stream()
-                .collect(Collectors.toMap(UserFavoriteTeam::getTeamCode, it -> it));
+        Map<Long, UserFavoriteTeam> favMap = favorites.stream()
+                .collect(Collectors.toMap(fav -> fav.getTeam().getId(), it -> it));
 
-        for (int i = 0; i < orderedTeamCodes.size(); i++) {
-            String teamCode = orderedTeamCodes.get(i);
-            UserFavoriteTeam fav = favMap.get(teamCode);
+        for (int i = 0; i < orderedTeamIds.size(); i++) {
+            Long teamId = orderedTeamIds.get(i);
+            UserFavoriteTeam fav = favMap.get(teamId);
             if (fav != null) {
                 fav.updateOrder(i);
             }

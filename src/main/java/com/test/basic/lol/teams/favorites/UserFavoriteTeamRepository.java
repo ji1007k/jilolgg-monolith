@@ -1,6 +1,8 @@
 package com.test.basic.lol.teams.favorites;
 
+import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
@@ -9,7 +11,22 @@ public interface UserFavoriteTeamRepository extends JpaRepository<UserFavoriteTe
 
     List<UserFavoriteTeam> findByUserIdOrderByDisplayOrderAsc(Long userId);
 
-    Optional<UserFavoriteTeam> findByUserIdAndTeamCode(Long userId, String teamCode);
+    Optional<UserFavoriteTeam> findByUserIdAndTeamId(Long userId, Long teamId);
 
-    void deleteByUserIdAndTeamCode(Long userId, String teamCode);
+    void deleteByUserIdAndTeamId(Long userId, Long teamId);
+
+    @Query("SELECT f FROM UserFavoriteTeam f JOIN FETCH f.team WHERE f.userId = :userId ORDER BY f.displayOrder ASC")
+    List<UserFavoriteTeam> findByUserIdWithTeam(@Param("userId") Long userId);
+
+    @Query("""
+        SELECT new com.test.basic.lol.teams.favorites.FavoriteTeamResponse(
+            t.id, t.teamCode, t.teamName, f.displayOrder
+        )
+        FROM UserFavoriteTeam f
+        JOIN f.team t
+        WHERE f.userId = :userId
+        ORDER BY f.displayOrder ASC
+    """)
+    List<FavoriteTeamResponse> findFavoriteTeamsByUserId(@Param("userId") Long userId);
+
 }

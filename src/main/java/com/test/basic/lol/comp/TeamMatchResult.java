@@ -16,16 +16,17 @@ public class TeamMatchResult {
     @GeneratedValue
     private UUID id;
     private String code;
+    private String name;
     private String outcome;
 
-    public TeamMatchResult(String code, String outcome) {
+    public TeamMatchResult(String code, String name, String outcome) {
         this.code = code;
+        this.name = name;
         this.outcome = outcome;
     }
 
-
     @Override
     public String toString() {
-        return "TeamMatchResult{code='" + code + "', outcome='" + outcome + "'}";
+        return "TeamMatchResult{code='" + code + "', name='" + name + "', outcome='" + outcome + "'}";
     }
 }

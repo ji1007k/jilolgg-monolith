@@ -37,10 +37,10 @@ public class CompService {
         return cachedComps;
     }
 
-    public List<CompDto> getComps(String teamCode) {
+    public List<CompDto> getCompsByName(String teamName) {
         return getAllComps().stream()
-                .filter(dto -> dto.getTeams().stream()
-                        .anyMatch(code -> code.equalsIgnoreCase(teamCode)))
+                .filter(dto -> dto.getParticipants().stream()
+                        .anyMatch(team -> team.getTeamName().equalsIgnoreCase(teamName)))
                 .collect(Collectors.toList());
     }
 

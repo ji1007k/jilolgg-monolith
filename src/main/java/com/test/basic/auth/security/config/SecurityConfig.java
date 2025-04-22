@@ -42,6 +42,8 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -81,7 +83,7 @@ public class SecurityConfig {
 						.requestMatchers( "/css/**", "/js/**", "/images/**", "/html/**").permitAll()	// 정적 리소스 허용
 						.requestMatchers("/api/swagger-ui/**", "/api/v3/api-docs/**").permitAll()  // Swagger 허용
 						.requestMatchers("/auth/login", "/auth/signup").permitAll()  // 로그인, 회원가입 허용
-						.requestMatchers("/lol/**").permitAll()  // 로그인, 회원가입 허용
+						.requestMatchers("/lol/**").permitAll()
 						.requestMatchers("/mypage/manager").hasAuthority("SCOPE_ADMIN")  // 특정 권한 필요
 						.anyRequest().authenticated()  // 나머지 요청은 인증 필요
 				)
@@ -89,13 +91,16 @@ public class SecurityConfig {
 				// 토큰 유효성 검증 필터 등록 (커스텀 필터)
 				// 커스텀 필터가 usesrnamepassword 인증 필터보다 먼저 동작하도록 등록
 				.addFilterBefore(new CustomJwtFilter(jwtTokenProvider()), UsernamePasswordAuthenticationFilter.class)
+//				.addFilterBefore(new CustomCsrfFilter(csrfRequireMatcher()), CustomJwtFilter.class) // CSRF 필터
 
 				// 특정 요청에서 CSRF 해제
 				.csrf((csrf) -> csrf
 						.ignoringRequestMatchers(
 							"/auth/login", "/auth/signup", "/auth/token/refresh"
 						)
-						.requireCsrfProtectionMatcher(new CsrfRequireMatcher())
+						.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) // httpOnly: false (JS에서 읽을 수 있도록)
+						.csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())	// 토큰 해석기 지정(spring security 6~)
+						.requireCsrfProtectionMatcher(csrfRequireMatcher())
 				)
 				// Basic Authentication 인증 설정
 //				.httpBasic(Customizer.withDefaults())	// Basic Authentication 활성화
@@ -210,27 +215,20 @@ public class SecurityConfig {
 		}
 	}
 
+	@Bean
+	public RequestMatcher csrfRequireMatcher() {
+		return new RequestMatcher() {
+			private static final Pattern ALLOWED_METHODS = Pattern.compile("^(GET|HEAD|TRACE|OPTIONS)$");
 
-	// Spring Security의 CSRF 보호 기능이 어떤 요청에 적용될지를 커스터마이징하는 필터 역할
-	// 특정 요청에 대한 csrf 토큰 검사 진행 여부를 true/false로 리턴해줌
-	// 참고) https://jeonyoungho.github.io/posts/Open-API-3.0-Swagger-v3/
-	static class CsrfRequireMatcher implements RequestMatcher {
-		// POST, PUT, DELETE처럼 상태를 바꾸는 메서드만 검사 대상으로 선정
-		private static final Pattern ALLOWED_METHODS = Pattern.compile("^(GET|HEAD|TRACE|OPTIONS)$");
+			@Override
+			public boolean matches(HttpServletRequest request) {
+				if (ALLOWED_METHODS.matcher(request.getMethod()).matches()) {
+					return false;
+				}
 
-		// 모든 요청 하나하나에 대해 호출되며 true -> CSRF 검사 O. false -> 검사 X.
-		@Override
-		public boolean matches(HttpServletRequest request) {
-			if (ALLOWED_METHODS.matcher(request.getMethod()).matches())
-				return false;
-
-			// request를 보낸 페이지 url에 /swagger-ui url이 포함되어있다면 CORS 처리 X
-			final String referer = request.getHeader("Referer");
-			if (referer != null && referer.contains("/swagger-ui")) {
-				return false;
+				String referer = request.getHeader("Referer");
+				return referer == null || !referer.contains("/swagger-ui");
 			}
-			return true;
-		}
+		};
 	}
-
 }

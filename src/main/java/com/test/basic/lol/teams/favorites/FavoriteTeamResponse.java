@@ -7,6 +7,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class FavoriteTeamResponse {
+    private Long teamId;
     private String teamCode;
     private String teamName;
     private Integer displayOrder;

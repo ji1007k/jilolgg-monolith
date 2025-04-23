@@ -286,9 +286,10 @@ header {
 =============================== */
 @media (max-width: 768px) {
     .login-container {
-        padding: 25px;
+        padding: 30px;
         width: 100%;
         max-width: 90%;
+        margin: auto;
     }
 
     .login-container h2 {

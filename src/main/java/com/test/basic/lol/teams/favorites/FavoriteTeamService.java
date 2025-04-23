@@ -30,12 +30,13 @@ public class FavoriteTeamService {
             throw new EntityNotFoundException("존재하지 않는 팀입니다.");
         }
 
-        int order = repository.findByUserIdOrderByDisplayOrderAsc(userId).size(); // 제일 뒤에 추가
+        Integer maxOrder = repository.findMaxDisplayOrderByUserId(userId);
+        int order = (maxOrder == null) ? 0 : maxOrder + 1;
         repository.save(new UserFavoriteTeam(userId, order, team.get()));
     }
 
     public List<FavoriteTeamResponse> getFavoriteTeams(Long userId) {
-        List<FavoriteTeamResponse> favorites = repository.findFavoriteTeamsByUserId(userId);
+        List<FavoriteTeamResponse> favorites = repository.findFavoriteTeamsByUserIdOrderByDisplayOrderDesc(userId);
         return favorites;
     }
 

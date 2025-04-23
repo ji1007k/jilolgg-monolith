@@ -27,6 +27,8 @@ public interface UserFavoriteTeamRepository extends JpaRepository<UserFavoriteTe
         WHERE f.userId = :userId
         ORDER BY f.displayOrder ASC
     """)
-    List<FavoriteTeamResponse> findFavoriteTeamsByUserId(@Param("userId") Long userId);
+    List<FavoriteTeamResponse> findFavoriteTeamsByUserIdOrderByDisplayOrderDesc(@Param("userId") Long userId);
 
+    @Query("SELECT MAX(u.displayOrder) FROM UserFavoriteTeam u WHERE u.userId = :userId")
+    Integer findMaxDisplayOrderByUserId(@Param("userId") Long userId);
 }

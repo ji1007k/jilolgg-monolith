@@ -9,13 +9,13 @@ import java.util.Optional;
 
 public interface UserFavoriteTeamRepository extends JpaRepository<UserFavoriteTeam, Long> {
 
-    List<UserFavoriteTeam> findByUserIdOrderByDisplayOrderAsc(Long userId);
+    List<UserFavoriteTeam> findByUserIdOrderByDisplayOrderDesc(Long userId);
 
     Optional<UserFavoriteTeam> findByUserIdAndTeamId(Long userId, Long teamId);
 
     void deleteByUserIdAndTeamId(Long userId, Long teamId);
 
-    @Query("SELECT f FROM UserFavoriteTeam f JOIN FETCH f.team WHERE f.userId = :userId ORDER BY f.displayOrder ASC")
+    @Query("SELECT f FROM UserFavoriteTeam f JOIN FETCH f.team WHERE f.userId = :userId ORDER BY f.displayOrder DESC")
     List<UserFavoriteTeam> findByUserIdWithTeam(@Param("userId") Long userId);
 
     @Query("""
@@ -25,7 +25,7 @@ public interface UserFavoriteTeamRepository extends JpaRepository<UserFavoriteTe
         FROM UserFavoriteTeam f
         JOIN f.team t
         WHERE f.userId = :userId
-        ORDER BY f.displayOrder ASC
+        ORDER BY f.displayOrder DESC
     """)
     List<FavoriteTeamResponse> findFavoriteTeamsByUserIdOrderByDisplayOrderDesc(@Param("userId") Long userId);
 

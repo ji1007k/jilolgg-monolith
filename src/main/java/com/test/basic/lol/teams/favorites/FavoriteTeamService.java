@@ -47,7 +47,7 @@ public class FavoriteTeamService {
 
     @Transactional
     public void updateFavoriteOrder(Long userId, List<Long> orderedTeamIds) {
-        List<UserFavoriteTeam> favorites = repository.findByUserIdOrderByDisplayOrderAsc(userId);
+        List<UserFavoriteTeam> favorites = repository.findByUserIdOrderByDisplayOrderDesc(userId);
 
         Map<Long, UserFavoriteTeam> favMap = favorites.stream()
                 .collect(Collectors.toMap(fav -> fav.getTeam().getId(), it -> it));

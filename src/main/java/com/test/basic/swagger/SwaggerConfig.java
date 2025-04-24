@@ -1,11 +1,15 @@
-package com.test.basic.common.config;
+package com.test.basic.swagger;
 
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.media.StringSchema;
+import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,7 +28,13 @@ import java.util.List;
         scheme = "bearer",
         bearerFormat = "JWT"
 )
-public class ApiDocConfig {
+@SecurityScheme(
+        name = "IgnoreCSRF",
+        type = SecuritySchemeType.APIKEY,
+        in = SecuritySchemeIn.HEADER,
+        paramName = "X-From-Swagger"
+)
+public class SwaggerConfig {
     @Bean
     public OpenAPI customOpenAPI() {
         Info info = new Info()

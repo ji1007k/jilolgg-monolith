@@ -2,6 +2,7 @@ package com.test.basic.lol.teams;
 
 import com.test.basic.lol.batch.TeamBatchService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
@@ -52,6 +53,7 @@ public class TeamController {
 
     @PostMapping("/sync-teams")
     @PreAuthorize("hasAuthority('ADMIN')")
+    @SecurityRequirement(name = "IgnoreCSRF")
     @Operation(summary = "LOL 팀 정보 수동 동기화", description = "LOL 팀 정보 수동 동기화 API")
     public ResponseEntity<String> syncTeams() {
         logger.info("[DEV][팀 수동 동기화] LoL Esports API로부터 팀 정보 동기화 시작");

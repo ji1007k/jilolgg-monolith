@@ -44,6 +44,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -96,7 +97,9 @@ public class SecurityConfig {
 				// 특정 요청에서 CSRF 해제
 				.csrf((csrf) -> csrf
 						.ignoringRequestMatchers(
-							"/auth/login", "/auth/signup", "/auth/token/refresh"
+							new AntPathRequestMatcher("/auth/login"),
+							new AntPathRequestMatcher("/auth/signup"),
+							new AntPathRequestMatcher("/auth/token/refresh")
 						)
 						.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) // httpOnly: false (JS에서 읽을 수 있도록)
 						.csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())	// 토큰 해석기 지정(spring security 6~)
@@ -210,7 +213,8 @@ public class SecurityConfig {
 							"https://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com"
 					) // 허용할 프론트엔드 도메인
 					.allowedMethods(ALLOWED_METHOD_NAMES.split(","))	// 허용할 HTTP 메서드
-					.allowedHeaders("Authorization", "Content-Type")
+					.allowedHeaders("Content-Type", "Authorization", "X-XSRF-TOKEN", "X-From-Swagger") 	// 클라이언트가 보낼 수 있는 헤더
+					.exposedHeaders("X-XSRF-TOKEN")	// 클라이언트가 응답에서 읽을 수 있는 헤더
 					.allowCredentials(true);	// JWT 등 인증 정보(쿠키) 포함 허용 (credentials: 'include'가 포함된 요청 허용)
 		}
 	}
@@ -226,8 +230,11 @@ public class SecurityConfig {
 					return false;
 				}
 
-				String referer = request.getHeader("Referer");
-				return referer == null || !referer.contains("/swagger-ui");
+				// swagger 전용 헤더가 포함되어있다면 CORS 처리 X
+				if (request.getHeader("X-From-Swagger") != null) {
+					return false;	// CSRF 보호를 건너뜀
+				}
+				return true;	// 나머지 요청은 CSRF 보호 유지
 			}
 		};
 	}

@@ -39,3 +39,14 @@ lol:
       url: https://esports-api.lolesports.com
       key: 0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z
 
+# 쿠키 정책 설정 (로컬 http/https 프론트 <-> 로컬 http 백엔드)
+cookie:
+  secure: true
+  same-site: None
+
+springdoc:
+  swagger-ui:
+    csrf:
+      enabled: true
+    with-credentials: true
+    filter: true

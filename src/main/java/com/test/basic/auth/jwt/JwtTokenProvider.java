@@ -2,6 +2,7 @@ package com.test.basic.auth.jwt;
 
 import com.test.basic.auth.security.user.CustomUserDetails;
 import jakarta.servlet.http.Cookie;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -16,6 +17,13 @@ import java.util.stream.Collectors;
 
 @Component
 public class JwtTokenProvider {
+
+    @Value("${cookie.secure}")
+    private boolean isSecure;
+
+    @Value("${cookie.same-site}")
+    private String sameSite;
+
 
     private static JwtEncoder encoder;
     private static JwtDecoder decoder;
@@ -96,11 +104,10 @@ public class JwtTokenProvider {
         //  그 후의 요청에서 그 쿠키를 자동으로 포함시켜 서버로 보낸다
         ResponseCookie cookie = ResponseCookie.from(key, token)
                 .httpOnly(true)  // 클라이언트 JS에서 접근 불가능. XSS 공격이 JWT를 읽을 수 없으므로 보안성이 향상
-                .secure(true)    // HTTPS에서만 전송. false: HTTP 허용
+                .secure(isSecure)    // true: HTTPS에서만 전송. false: HTTP 허용
                 .path("/")       // 모든 경로에서 쿠키 사용 가능
                 .maxAge(ACCESS_TOKEN_EXPIRY)    // 만료 시간 설정
-                .sameSite("Lax")    // GET 메소드 요청에 한해 CORS 허용
-//                .sameSite("None")  // CORS 환경에서 사용 가능하도록 설정 (필요하면 변경 가능). 크로스 사이트 요청에서 쿠키 전송
+                .sameSite(sameSite)    // Lax: GET 메소드 요청에 한해 CORS 허용. None: 모든 요청에 CORS 허용.
                 .build();
 
         return cookie;

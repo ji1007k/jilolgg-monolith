@@ -11,3 +11,95 @@ CREATE TABLE IF NOT EXISTS "users" (
      "updated_dt" timestamp(6),
      primary key ("id")
 );
+
+
+CREATE TABLE IF NOT EXISTS "user_favorite_team" (
+    "id" BIGSERIAL PRIMARY KEY,
+    "user_id" BIGINT NOT NULL,
+    "team_id" BIGINT,
+    "display_order" INT DEFAULT 0,
+    UNIQUE ("user_id", "team_id")
+);
+
+
+alter table "user_favorite_team"
+    owner to jikim;
+
+CREATE TABLE IF NOT EXISTS "teams"
+(
+    "id"          bigserial primary key,
+    "slug"        varchar(300) not null unique,
+    "team_code"   varchar(100) not null,
+    "team_name"   varchar(300) not null,
+    "image"       text         not null,
+    "home_league" varchar(50)  not null
+);
+
+alter table "teams"
+    owner to jikim;
+
+
+CREATE TABLE IF NOT EXISTS "posts"
+(
+    "id"         bigserial primary key,
+    "title"      varchar(255) not null,
+    "content"    text         not null,
+    "user_id"    bigint       not null,
+    "created_dt" timestamp with time zone default now(),
+    "updated_dt" timestamp with time zone default now(),
+    "view_cnt"   bigint                   default 0,
+    "like_cnt"   bigint                   default 0,
+    "category"   varchar(255),
+    "status"     varchar(100)
+        constraint posts_status_check
+            check ((status)::text = ANY
+                   ((ARRAY ['PUBLIC'::character varying, 'PRIVATE'::character varying, 'DELETED'::character varying])::text[]))
+);
+
+comment on table posts is '게시글';
+comment on column posts.id is '게시글 고유 ID (자동 증가)';
+comment on column posts.title is '게시글 제목 (최대 255자)';
+comment on column posts.content is '게시글 내용 (길이 제한 없음)';
+comment on column posts.user_id is '게시글 작성자 ID (users 테이블과 연관 가능)';
+comment on column posts.created_dt is '게시글 작성 시간 (기본값: 현재 시간)';
+comment on column posts.updated_dt is '게시글 수정 시간';
+comment on column posts.view_cnt is '게시글 조회수';
+comment on column posts.like_cnt is '게시글 좋아요 개수';
+comment on column posts.category is '게시글 분류';
+comment on column posts.status is '게시글 상태 (PUBLIC: 공개, PRIVATE: 비공개, DELETED: 삭제됨)';
+
+alter table "posts"
+    owner to jikim;
+
+CREATE TABLE IF NOT EXISTS "files"
+(
+    "id"         bigserial primary key,
+    "post_id"    bigint       not null,
+    "file_name"  varchar(255) not null,
+    "file_path"  varchar(255) not null,
+    "created_dt" timestamp with time zone default now(),
+    "updated_dt" timestamp with time zone default now(),
+    "status"     varchar(100)
+        constraint files_status_check
+            check ((status)::text = ANY
+                   ((ARRAY ['PUBLIC'::character varying, 'PRIVATE'::character varying, 'DELETED'::character varying])::text[]))
+);
+
+comment on table files is '첨부파일';
+comment on column files.id is '파일ID';
+comment on column files.post_id is '게시글ID';
+comment on column files.file_name is '파일명';
+comment on column files.file_path is '파일경로';
+comment on column files.created_dt is '생성일';
+comment on column files.updated_dt is '수정일';
+comment on column files.status is '상태';
+
+alter table files
+    owner to jikim;
+
+CREATE TABLE IF NOT EXISTS temp_table
+(
+    "id"          bigserial primary key,
+    "tamp_column" bigint not null,
+    UNIQUE ("id", "tamp_column")
+)

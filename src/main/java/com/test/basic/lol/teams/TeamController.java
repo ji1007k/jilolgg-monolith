@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -56,10 +57,19 @@ public class TeamController {
     @SecurityRequirement(name = "IgnoreCSRF")
     @Operation(summary = "LOL 팀 정보 수동 동기화", description = "LOL 팀 정보 수동 동기화 API")
     public ResponseEntity<String> syncTeams() {
-        logger.info("[DEV][팀 수동 동기화] LoL Esports API로부터 팀 정보 동기화 시작");
-        teamBatchService.syncTeamsFromLolEsports();
-        logger.info("[DEV][팀 수동 동기화] 팀 정보 동기화 완료");
-        return ResponseEntity.ok("팀 수동 동기화 성공");
+        logger.info("==================== 팀 정보 수동 동기화 작업 시작 ====================");
+        String result = teamBatchService.syncTeamsFromLolEsports();
+
+        if (result.contains("실패")) {
+            logger.error(">>> 동기화 실패: {}", result);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(result);
+        }
+
+        logger.info(">>> 동기화 결과: {}", result);
+        logger.info("==================== 팀 정보 수동 동기화 작업 완료 ====================");
+        return ResponseEntity.ok(result);
     }
+
+
 
 }

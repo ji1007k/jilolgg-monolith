@@ -19,9 +19,9 @@ public class TeamSyncSchedulerDev {
 
     @Scheduled(cron = "0 */3 * * * *", zone = "Asia/Seoul")
     public void syncTeamsDev() {
-        logger.info("[DEV][팀 동기화] LoL Esports API로부터 팀 정보 동기화 시작");
+        logger.info("==================== 팀 정보 자동 동기화 작업 시작 ====================");
         teamBatchService.syncTeamsFromLolEsports();
-        logger.info("[DEV][팀 동기화] 팀 정보 동기화 완료");
+        logger.info("==================== 팀 정보 자동 동기화 작업 완료 ====================");
     }
 }
 

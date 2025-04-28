@@ -7,10 +7,10 @@ import com.test.basic.lol.matches.TeamMatchResult;
 import com.test.basic.lol.teams.Team;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +22,7 @@ public class LolEsportsApiClient {
 
     private final WebClient webClient;
     private final ObjectMapper objectMapper;
-    private final String esportsApiKey;
+    private final String API_KEY;
 
     private static final String HL = "ko-KR";
     private static final String LEAGUE_ID = "98767991310872058"; // LCK
@@ -34,8 +34,7 @@ public class LolEsportsApiClient {
     @Autowired
     public LolEsportsApiClient(
             WebClient.Builder webClientBuilder,
-            @Value("${lol.esports.api.url}") String apiBaseUrl,
-            @Value("${lol.esports.api.key}") String esportsApiKey
+            LolEsportsApiConfig apiConfig
     ) {
 
         // WebClient가 받아들이는 응답 크기 제한
@@ -46,29 +45,26 @@ public class LolEsportsApiClient {
                 .build();
 
         this.webClient = webClientBuilder
-                .baseUrl(apiBaseUrl)
+                .baseUrl(apiConfig.getUrl())
                 .exchangeStrategies(strategies)
                 .build();
         this.objectMapper = new ObjectMapper();
-        this.esportsApiKey = esportsApiKey;
+        this.API_KEY = apiConfig.getKey();
     }
 
-    public List<MatchDto> fetchScheduleMatches() {
-        String response = webClient.get()
+    public Mono<String> fetchScheduleMatches() {
+        return webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/persisted/gw/getSchedule")
                         .queryParam("hl", HL)
                         .queryParam("leagueId", LEAGUE_ID)
                         .build())
-                .header("x-api-key", esportsApiKey)
+                .header("x-api-key", API_KEY)
                 .retrieve()
-                .bodyToMono(String.class)
-                .block();
-
-        return parseMatchesFromResponse(response);
+                .bodyToMono(String.class);
     }
 
-    private List<MatchDto> parseMatchesFromResponse(String response) {
+    public List<MatchDto> parseMatchesFromResponse(String response) {
         List<MatchDto> result = new ArrayList<>();
 
         try {
@@ -115,7 +111,7 @@ public class LolEsportsApiClient {
                         .path("/persisted/gw/getTeams")
                         .queryParam("hl", HL)
                         .build())
-                .header("x-api-key", esportsApiKey)
+                .header("x-api-key", API_KEY)
                 .retrieve()
                 .bodyToMono(String.class)   // 전체 응답을 스트리밍 방식으로 처리
                 .block();
@@ -130,7 +126,7 @@ public class LolEsportsApiClient {
                         .queryParam("hl", HL)
                         .queryParam("id", slug)
                         .build())
-                .header("x-api-key", esportsApiKey)
+                .header("x-api-key", API_KEY)
                 .retrieve()
                 .bodyToMono(String.class)   // 전체 응답을 스트리밍 방식으로 처리
                 .block();

@@ -1,4 +1,4 @@
-package com.test.basic.lol.comp;
+package com.test.basic.lol.matches;
 
 import com.test.basic.lol.teams.Team;
 import lombok.AllArgsConstructor;
@@ -12,7 +12,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CompDto {
+public class MatchDto {
     private String startTime;
     private String state;
     private String winningTeamCode;

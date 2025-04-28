@@ -1,4 +1,4 @@
-package com.test.basic.lol.comp;
+package com.test.basic.lol.matches;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

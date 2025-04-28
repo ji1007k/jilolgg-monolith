@@ -31,7 +31,8 @@ public class MatchService {
         }
 
         // TTL 지났거나 최초 요청이면 새로 로딩
-        cachedMatches = apiClient.fetchScheduleMatches();
+        String response = apiClient.fetchScheduleMatches().block();
+        cachedMatches = apiClient.parseMatchesFromResponse(response);
         lastFetchedTime = Instant.now();
         return cachedMatches;
     }

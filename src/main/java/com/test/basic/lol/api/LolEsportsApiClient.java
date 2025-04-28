@@ -2,8 +2,8 @@ package com.test.basic.lol.api;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.test.basic.lol.comp.CompDto;
-import com.test.basic.lol.comp.TeamMatchResult;
+import com.test.basic.lol.matches.MatchDto;
+import com.test.basic.lol.matches.TeamMatchResult;
 import com.test.basic.lol.teams.Team;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +53,7 @@ public class LolEsportsApiClient {
         this.esportsApiKey = esportsApiKey;
     }
 
-    public List<CompDto> fetchScheduleComps() {
+    public List<MatchDto> fetchScheduleMatches() {
         String response = webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/persisted/gw/getSchedule")
@@ -65,11 +65,11 @@ public class LolEsportsApiClient {
                 .bodyToMono(String.class)
                 .block();
 
-        return parseCompsFromResponse(response);
+        return parseMatchesFromResponse(response);
     }
 
-    private List<CompDto> parseCompsFromResponse(String response) {
-        List<CompDto> result = new ArrayList<>();
+    private List<MatchDto> parseMatchesFromResponse(String response) {
+        List<MatchDto> result = new ArrayList<>();
 
         try {
             JsonNode events = objectMapper.readTree(response)
@@ -93,7 +93,7 @@ public class LolEsportsApiClient {
                         .findFirst().orElse(null)
                         : null;
 
-                result.add(new CompDto(
+                result.add(new MatchDto(
                         event.path("startTime").asText(),
                         event.path("state").asText(),
                         winningTeamCode,

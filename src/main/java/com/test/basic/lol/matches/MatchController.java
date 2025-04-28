@@ -1,4 +1,4 @@
-package com.test.basic.lol.comp;
+package com.test.basic.lol.matches;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -16,22 +16,22 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping("/lol/comps")
+@RequestMapping("/lol/matches")
 @RequiredArgsConstructor
-public class CompController {
-    private final CompService compService;
+public class MatchController {
+    private final MatchService matchService;
 
     @GetMapping("/{teamName}")
     @Operation(summary = "팀 경기 일정 조회", description = "팀명으로 경기 일정 조회 API")
-    public ResponseEntity<List<CompDto>> getComps(@PathVariable("teamName") String teamName) {
-        List<CompDto> comps = compService.getCompsByName(teamName);
-        return ResponseEntity.ok(comps);
+    public ResponseEntity<List<MatchDto>> getMatches(@PathVariable("teamName") String teamName) {
+        List<MatchDto> matches = matchService.getMatchesByName(teamName);
+        return ResponseEntity.ok(matches);
     }
 
     @GetMapping
     @Operation(summary = "전체 경기 일정 조회", description = "전체 경기 일정 조회 API")
-    public ResponseEntity<List<CompDto>> getAllComps() {
-        List<CompDto> comps = compService.getAllComps();
-        return ResponseEntity.ok(comps);
+    public ResponseEntity<List<MatchDto>> getAllMatches() {
+        List<MatchDto> matches = matchService.getAllMatches();
+        return ResponseEntity.ok(matches);
     }
 }

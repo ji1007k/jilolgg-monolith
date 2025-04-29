@@ -30,6 +30,16 @@ public class Team {
     @Column(name = "home_league", nullable = false)
     private String homeLeague;
 
+    // 테이블에 매핑되지 않는 필드
+    @Transient
+    private String teamId;
+
+    @Transient
+    private String rank;
+
+    @Transient
+    private String record; // "8,0" => 순서대로 win,losses count
+
     public Team(String teamCode, String teamName, String slug, String image, String homeLeague) {
         this.teamCode = teamCode;
         this.teamName = teamName;

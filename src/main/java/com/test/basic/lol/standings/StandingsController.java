@@ -23,7 +23,7 @@ public class StandingsController {
 
     @GetMapping("/{tournamentId}")
     @Operation(summary = "토너먼트별 순위 조회", description = "토너먼트별 순위 조회 API")
-    public ResponseEntity<List> getStandings(@PathVariable String tournamentId) {
+    public ResponseEntity<List<StandingsDto>> getStandings(@PathVariable String tournamentId) {
         List<StandingsDto> standings = standingsService.getStandingsByTournamentId(tournamentId);
         return ResponseEntity.ok(standings);
     }

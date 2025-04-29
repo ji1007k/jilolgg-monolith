@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.*;
  * 실제 HTTP 안 나감
  */
 @ExtendWith(MockitoExtension.class)  // Mockito 확장 기능을 활성화
-public class ExternalExternalApiServiceTest {
+public class ExternalApiServiceTest {
 
     @Mock
     private WebClient.Builder webClientBuilder;  // WebClient.Builder Mock 객체

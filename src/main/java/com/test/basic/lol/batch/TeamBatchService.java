@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Optional;
@@ -66,7 +67,8 @@ public class TeamBatchService {
             // 실제 동기화 작업 실행
             logger.info(">>> LoL Esports API로부터 팀 정보 동기화 시작");
             long syncStartTime = System.currentTimeMillis();
-            List<Team> externalTeams = apiClient.fetchAllTeams();
+            Mono<String> result = apiClient.fetchAllTeams();
+            List<Team> externalTeams = apiClient.parseTeamsFromResponse(result.block());
 
             int successCnt = externalTeams.size();
             for (Team dto : externalTeams) {

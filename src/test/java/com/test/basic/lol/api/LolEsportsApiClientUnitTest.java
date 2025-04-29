@@ -1,10 +1,12 @@
 package com.test.basic.lol.api;
 
 import com.test.basic.lol.matches.MatchDto;
+import com.test.basic.lol.teams.Team;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -18,9 +20,11 @@ import java.util.List;
 import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
+// JUnit5 + Mockito 연동
 @ExtendWith(MockitoExtension.class)  // Mockito 확장 기능을 활성화
 public class LolEsportsApiClientUnitTest {
 
@@ -42,6 +46,7 @@ public class LolEsportsApiClientUnitTest {
     private LolEsportsApiClient lolEsportsApiClient;
 
     private static String MOCK_JSON_RESPONSE;
+    private static String MOCK_JSON_RESPONSE2;
 
     @BeforeAll
     static void setupMockJsonResponse() {
@@ -63,11 +68,73 @@ public class LolEsportsApiClientUnitTest {
                 "    }\n" +
                 "  }\n" +
                 "}";
+
+        MOCK_JSON_RESPONSE2 = "{\n" +
+                "  \"data\": {\n" +
+                "    \"teams\": [\n" +
+                "      {\n" +
+                "        \"id\": \"98767991853197861\",\n" +
+                "        \"slug\": \"t1\",\n" +
+                "        \"name\": \"T1\",\n" +
+                "        \"code\": \"T1\",\n" +
+                "        \"image\": \"http://static.lolesports.com/teams/1726801573959_539px-T1_2019_full_allmode.png\",\n" +
+                "        \"alternativeImage\": \"http://static.lolesports.com/teams/1726801573959_539px-T1_2019_full_allmode.png\",\n" +
+                "        \"backgroundImage\": \"http://static.lolesports.com/teams/1596305556675_T1T1.png\",\n" +
+                "        \"status\": \"active\",\n" +
+                "        \"homeLeague\": {\n" +
+                "          \"name\": \"LCK\",\n" +
+                "          \"region\": \"한국\"\n" +
+                "        },\n" +
+                "        \"players\": [\n" +
+                "          {\n" +
+                "            \"id\": \"102186485482484390\",\n" +
+                "            \"summonerName\": \"Doran\",\n" +
+                "            \"firstName\": \"Hyeonjun\",\n" +
+                "            \"lastName\": \"Choi\",\n" +
+                "            \"image\": \"http://static.lolesports.com/players/1739362891866_image6-2025-02-12T132101.302.png\",\n" +
+                "            \"role\": \"top\"\n" +
+                "          },\n" +
+                "          {\n" +
+                "            \"id\": \"105320682452092471\",\n" +
+                "            \"summonerName\": \"Oner\",\n" +
+                "            \"firstName\": \"HYUNJUN\",\n" +
+                "            \"lastName\": \"MUN\",\n" +
+                "            \"image\": \"http://static.lolesports.com/players/1739362366214_image6-2025-02-12T131208.507.png\",\n" +
+                "            \"role\": \"jungle\"\n" +
+                "          },\n" +
+                "          {\n" +
+                "            \"id\": \"98767991747728851\",\n" +
+                "            \"summonerName\": \"Faker\",\n" +
+                "            \"firstName\": \"Sanghyeok\",\n" +
+                "            \"lastName\": \"Lee\",\n" +
+                "            \"image\": \"http://static.lolesports.com/players/1739362804068_image6-2025-02-12T131922.060.png\",\n" +
+                "            \"role\": \"mid\"\n" +
+                "          },\n" +
+                "          {\n" +
+                "            \"id\": \"108205129774185945\",\n" +
+                "            \"summonerName\": \"Smash\",\n" +
+                "            \"firstName\": \"Gunmjae\",\n" +
+                "            \"lastName\": \"Sin\",\n" +
+                "            \"image\": \"http://static.lolesports.com/players/1739361402664_image6-2025-02-12T125536.193.png\",\n" +
+                "            \"role\": \"bottom\"\n" +
+                "          },\n" +
+                "          {\n" +
+                "            \"id\": \"103495716561790834\",\n" +
+                "            \"summonerName\": \"Keria\",\n" +
+                "            \"firstName\": \"Minseok\",\n" +
+                "            \"lastName\": \"Ryu\",\n" +
+                "            \"image\": \"http://static.lolesports.com/players/1739362613410_image6-2025-02-12T131347.293.png\",\n" +
+                "            \"role\": \"support\"\n" +
+                "          }\n" +
+                "        ]\n" +
+                "      }\n" +
+                "    ]\n" +
+                "  }\n" +
+                "}\n";
     }
 
     @BeforeEach
     public void setup() {
-
         // WebClient.Builder의 메서드 체이닝을 모킹
         when(lolEsportsApiConfig.getUrl()).thenReturn("testUrl");
         when(lolEsportsApiConfig.getKey()).thenReturn("testKey");
@@ -77,7 +144,7 @@ public class LolEsportsApiClientUnitTest {
 
         // Mocking WebClient Builder 및 WebClient 설정
         when(webClient.get()).thenReturn(requestHeadersUriSpec);
-        // uri() 메서드의 Function<UriBuilder, URI> 람다를 **Answer**로 처리
+        // uri() 메서드의 Function<UriBuilder, URI> 람다를 **Answer**로 처리 (Argument Capturing)
         when(requestHeadersUriSpec.uri(Mockito.any(Function.class))).thenAnswer(invocation -> {
             Function<UriBuilder, URI> uriFunction = invocation.getArgument(0);
 
@@ -87,9 +154,12 @@ public class LolEsportsApiClientUnitTest {
             // [핵심] path, queryParam 호출하면 자기 자신 반환하게 설정
             when(uriBuilder.path(anyString())).thenReturn(uriBuilder);
             when(uriBuilder.queryParam(anyString(), anyString())).thenReturn(uriBuilder);
+//            when(uriBuilder.queryParam(eq("hl"), anyString())).thenReturn(uriBuilder);
+//            when(uriBuilder.queryParam(eq("id"), anyString())).thenReturn(uriBuilder);
 
             // [핵심] build() 호출하면 정상 URI 반환
-            when(uriBuilder.build()).thenReturn(URI.create("http://localhost/test"));
+            String url = lolEsportsApiConfig.getUrl();
+            when(uriBuilder.build()).thenReturn(URI.create(url));
 
             // 이제 람다 실행
             URI uri = uriFunction.apply(uriBuilder);
@@ -101,13 +171,14 @@ public class LolEsportsApiClientUnitTest {
 
         when(requestHeadersUriSpec.header("x-api-key", lolEsportsApiConfig.getKey())).thenReturn(requestHeadersUriSpec);
         when(requestHeadersUriSpec.retrieve()).thenReturn(responseSpec);
-        when(responseSpec.bodyToMono(String.class)).thenReturn(Mono.just(MOCK_JSON_RESPONSE));
 
         lolEsportsApiClient = new LolEsportsApiClient(webClientBuilder, lolEsportsApiConfig);
     }
 
     @Test
     void testFetchScheduleMatches() {
+        when(responseSpec.bodyToMono(String.class)).thenReturn(Mono.just(MOCK_JSON_RESPONSE));
+
         // fetchScheduleMatches() 메서드를 호출하여 반환값을 확인
         Mono<String> result = lolEsportsApiClient.fetchScheduleMatches();
 
@@ -121,4 +192,53 @@ public class LolEsportsApiClientUnitTest {
         assertThat(matches).isNotNull();
         assertThat(matches.size()).isGreaterThan(0);
     }
+
+
+    @Test
+    void testFetchAllTeams() {
+        when(responseSpec.bodyToMono(String.class)).thenReturn(Mono.just(MOCK_JSON_RESPONSE2));
+
+        // 실행
+        Mono<String> result = lolEsportsApiClient.fetchAllTeams();
+        List<Team> teams = lolEsportsApiClient.parseTeamsFromResponse(result.block());
+
+        // 검증
+        assertThat(teams).isNotNull();
+        assertThat(teams.size()).isGreaterThan(0);
+
+        // verify() 캡쳐 검증은 여기
+        ArgumentCaptor<Function<UriBuilder, URI>> captor = ArgumentCaptor.forClass(Function.class);
+        verify(requestHeadersUriSpec).uri(captor.capture());
+
+        // 캡쳐된 function을 다시 실행해서 URI를 검증
+        UriBuilder fakeUriBuilder = mock(UriBuilder.class);
+        when(fakeUriBuilder.path(anyString())).thenReturn(fakeUriBuilder);
+        when(fakeUriBuilder.queryParam(anyString(), any(Object.class))).thenReturn(fakeUriBuilder);
+        String testUrl = lolEsportsApiConfig.getUrl();
+        when(fakeUriBuilder.build()).thenReturn(URI.create(testUrl));
+
+        URI capturedUri = captor.getValue().apply(fakeUriBuilder);
+        assertEquals(lolEsportsApiConfig.getUrl(), capturedUri.toString());
+    }
+
+    @Test
+    void testFetchTeamBySlug() {
+        when(responseSpec.bodyToMono(String.class)).thenReturn(Mono.just(MOCK_JSON_RESPONSE2));
+
+        Mono<String> result = lolEsportsApiClient.fetchTeamBySlug("t1");
+        List<Team> teams = lolEsportsApiClient.parseTeamsFromResponse(result.block());
+
+        assertThat(teams).isNotNull();
+        assertThat(teams.size()).isGreaterThan(0);
+        assertThat(teams.get(0).getSlug()).isEqualTo("t1");
+
+        // 없는 결과
+        when(responseSpec.bodyToMono(String.class)).thenReturn(Mono.just(""));
+        Mono<String> result2 = lolEsportsApiClient.fetchTeamBySlug("DoesNotExist");
+        List<Team> teams2 = lolEsportsApiClient.parseTeamsFromResponse(result2.block());
+
+        assertThat(teams2).isNotNull();
+        assertThat(teams2.size()).isEqualTo(0);
+    }
+
 }

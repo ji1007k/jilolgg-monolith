@@ -151,4 +151,29 @@ public class LolEsportsApiClient {
         }
     }
 
+    public Mono<String> fetchTournaments() {
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/persisted/gw/getTournamentsForLeague")
+                        .queryParam("hl", HL)
+                        .queryParam("leagueId", LEAGUE_ID)
+                        .build())
+                .header("x-api-key", API_KEY)
+                .retrieve()
+                .bodyToMono(String.class);
+    }
+
+    // 현재 날짜 기준으로 진행중인 토너먼트 있으면 해당 토너먼트 id 순위 조회
+    public Mono<String> fetchStandins(String tournamentId) {
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/persisted/gw/getStandings")
+                        .queryParam("hl", HL)
+                        .queryParam("tournamentId", tournamentId)
+                        .build())
+                .header("x-api-key", API_KEY)
+                .retrieve()
+                .bodyToMono(String.class);
+    }
+
 }

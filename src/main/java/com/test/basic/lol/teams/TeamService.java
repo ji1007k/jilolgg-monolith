@@ -3,6 +3,7 @@ package com.test.basic.lol.teams;
 import com.test.basic.lol.api.LolEsportsApiClient;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -63,11 +64,19 @@ public class TeamService {
 
     // FIXME API 응답 데이터 DTO 따로 생성
     public Team getTeamBySlugFromExternalApi(String slug) {
-        return lolEsportsApiClient.fetchTeamBySlug(slug);
+        Mono<String> result = lolEsportsApiClient.fetchTeamBySlug(slug);
+        List<Team> teams = lolEsportsApiClient.parseTeamsFromResponse(result.block());
+
+        if (teams == null || teams.isEmpty()) {
+            throw new EntityNotFoundException("Team not found with slug: " + slug);
+        }
+
+        return teams.get(0);
     }
 
     public List<Team> getAllTeamsFromExternalApi() {
-        return lolEsportsApiClient.fetchAllTeams();
+        Mono<String> result = lolEsportsApiClient.fetchAllTeams();
+        return lolEsportsApiClient.parseTeamsFromResponse(result.block());
     }
 
 }

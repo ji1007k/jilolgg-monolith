@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.test.basic.lol.matches.MatchDto;
 import com.test.basic.lol.matches.TeamMatchResult;
 import com.test.basic.lol.teams.Team;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
@@ -105,43 +104,31 @@ public class LolEsportsApiClient {
         return result;
     }
 
-    public List<Team> fetchAllTeams() {
-        String response = webClient.get()
+    public Mono<String> fetchAllTeams() {
+        return webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/persisted/gw/getTeams")
                         .queryParam("hl", HL)
                         .build())
                 .header("x-api-key", API_KEY)
                 .retrieve()
-                .bodyToMono(String.class)   // 전체 응답을 스트리밍 방식으로 처리
-                .block();
-
-        return parseTeamsFromResponse(response);
+                .bodyToMono(String.class);
     }
 
-    public Team fetchTeamBySlug(String slug) {
-        String response = webClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/persisted/gw/getTeams")
-                        .queryParam("hl", HL)
-                        .queryParam("id", slug)
-                        .build())
-                .header("x-api-key", API_KEY)
-                .retrieve()
-                .bodyToMono(String.class)   // 전체 응답을 스트리밍 방식으로 처리
-                .block();
-
-        // FIXME API의 팀 정보 전체 속성 가진 DTO 클래스로 관리 (선수 정보 포함)
-        List<Team> teams = parseTeamsFromResponse(response);
-
-        if (teams == null || teams.isEmpty()) {
-            throw new EntityNotFoundException("Team not found with slug: " + slug);
-        }
-
-        return teams.get(0);
+    public Mono<String> fetchTeamBySlug(String slug) {
+        return webClient.get()
+            .uri(uriBuilder -> uriBuilder
+                    .path("/persisted/gw/getTeams")
+                    .queryParam("hl", HL)
+                    .queryParam("id", slug)
+                    .build())
+            .header("x-api-key", API_KEY)
+            .retrieve()
+            .bodyToMono(String.class);
     }
 
-    private List<Team> parseTeamsFromResponse(String response) {
+    // FIXME API의 팀 정보 전체 속성 가진 DTO 클래스로 관리 (선수 정보 포함)
+    public List<Team> parseTeamsFromResponse(String response) {
         try {
             JsonNode teamsNode = objectMapper.readTree(response)
                     .path("data").path("teams");

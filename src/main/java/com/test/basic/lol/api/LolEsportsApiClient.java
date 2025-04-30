@@ -164,7 +164,7 @@ public class LolEsportsApiClient {
     }
 
     // 현재 날짜 기준으로 진행중인 토너먼트 있으면 해당 토너먼트 id 순위 조회
-    public Mono<String> fetchStandins(String tournamentId) {
+    public Mono<String> fetchStandings(String tournamentId) {
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/persisted/gw/getStandings")

@@ -23,7 +23,7 @@ public class StandingsService {
     }
 
     public List<StandingsDto> getStandingsByTournamentId(String tournamentId) {
-        Mono<String> result = lolEsportsApiClient.fetchStandins(tournamentId);
+        Mono<String> result = lolEsportsApiClient.fetchStandings(tournamentId);
 
         try {
             JsonNode standingsNodes = objectMapper.readTree(result.block())

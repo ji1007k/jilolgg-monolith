@@ -23,7 +23,8 @@ public class TournamentService {
     }
 
     public List<TournamentDto> getTournamentsForCurrentYear() {
-        int currentYear = LocalDate.now().getYear();
+        LocalDate today = LocalDate.now();
+        int currentYear = today.getYear();
 
         Mono<String> result = lolEsportsApiClient.fetchTournaments();
 
@@ -35,12 +36,20 @@ public class TournamentService {
             List<TournamentDto> tournaments = new ArrayList<>();
 
             for (JsonNode tournament : tournamentNodes) {
-                tournaments.add(objectMapper.treeToValue(tournament, TournamentDto.class));
+                TournamentDto dto = objectMapper.treeToValue(tournament, TournamentDto.class);
+
+                if (dto.getStartDate().getYear() != currentYear) continue;
+
+                // 현재 날짜가 startDate ~ endDate 사이에 있으면 isActive 설정
+                if (dto.getStartDate() != null && dto.getEndDate() != null) {
+                    boolean isActive = !today.isBefore(dto.getStartDate()) && !today.isAfter(dto.getEndDate());
+                    dto.setActive(isActive); // ← 여기가 핵심
+                }
+
+                tournaments.add(dto);
             }
 
-            return tournaments.stream().filter(tournament ->
-                tournament.getStartDate().getYear() == currentYear
-            ).toList();
+            return tournaments;
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse data", e);

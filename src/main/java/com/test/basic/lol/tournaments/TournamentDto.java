@@ -18,4 +18,5 @@ public class TournamentDto {
     private String slug;
     private LocalDate startDate;
     private LocalDate endDate;
+    private boolean active;
 }

@@ -1,6 +1,7 @@
 package com.test.basic.lol.matches;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/lol/matches")
 @RequiredArgsConstructor
+@Tag(name = "[LOL] 경기 일정 API", description = "경기 일정 API")
 public class MatchController {
     private final MatchService matchService;
 

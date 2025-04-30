@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@Tag(name = "토너먼트 API", description = "토너먼트 관련 API")
 @RequestMapping("/lol/tournaments")
+@Tag(name = "[LOL] 토너먼트 API", description = "토너먼트 관련 API")
 public class TournamentController {
 
     private final TournamentService tournamentService;

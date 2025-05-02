@@ -13,7 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/lol/favorites")
 @RequiredArgsConstructor
-@Tag(name = "팀 즐겨찾기 API", description = "팀 즐겨찾기 관련 API")
+@Tag(name = "[LOL] 팀 즐겨찾기 API", description = "팀 즐겨찾기 관련 API")
 public class FavoriteTeamController {
 
     private final FavoriteTeamService favoriteTeamService;

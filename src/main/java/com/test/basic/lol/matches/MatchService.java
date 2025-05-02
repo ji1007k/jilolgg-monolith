@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,4 +45,11 @@ public class MatchService {
                 .collect(Collectors.toList());
     }
 
+    public List<MatchDto> getMatchesByYear(String year) {
+        if (year == null) {
+            year = String.valueOf(LocalDate.now().getYear());
+        }
+
+        return apiClient.fetchScheduleByYear(year);
+    }
 }

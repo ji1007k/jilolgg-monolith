@@ -38,7 +38,7 @@ public class Team {
     private String rank;
 
     @Transient
-    private String record; // "8,0" => 순서대로 win,losses count
+    private String record; // "8,0,10" => 순서대로 win,losses,gameDiff count. 승리/패배 경기수, 득실차
 
     public Team(String teamCode, String teamName, String slug, String image, String homeLeague) {
         this.teamCode = teamCode;

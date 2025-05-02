@@ -23,17 +23,24 @@ import java.util.List;
 public class MatchController {
     private final MatchService matchService;
 
-    @GetMapping("/{teamName}")
-    @Operation(summary = "팀 경기 일정 조회", description = "팀명으로 경기 일정 조회 API")
-    public ResponseEntity<List<MatchDto>> getMatches(@PathVariable("teamName") String teamName) {
-        List<MatchDto> matches = matchService.getMatchesByName(teamName);
-        return ResponseEntity.ok(matches);
-    }
-
     @GetMapping
     @Operation(summary = "전체 경기 일정 조회", description = "전체 경기 일정 조회 API")
     public ResponseEntity<List<MatchDto>> getAllMatches() {
         List<MatchDto> matches = matchService.getAllMatches();
+        return ResponseEntity.ok(matches);
+    }
+
+    @GetMapping("/year/{year}")
+    @Operation(summary = "연도별 경기 일정 조회", description = "연도별 경기 일정 조회 API")
+    public ResponseEntity<List<MatchDto>> getMatchesByYear(@PathVariable(name = "year", required = false) String year) {
+        List<MatchDto> matches = matchService.getMatchesByYear(year);
+        return ResponseEntity.ok(matches);
+    }
+
+    @GetMapping("/team/{teamName}")
+    @Operation(summary = "팀별 경기 일정 조회", description = "팀명으로 경기 일정 조회 API")
+    public ResponseEntity<List<MatchDto>> getMatches(@PathVariable("teamName") String teamName) {
+        List<MatchDto> matches = matchService.getMatchesByName(teamName);
         return ResponseEntity.ok(matches);
     }
 }

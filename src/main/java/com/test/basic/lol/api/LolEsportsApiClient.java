@@ -11,10 +11,14 @@ import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+
+// TODO
+//  - response를 DTO로 받는 것 고려
+//  - LeagueId 조건 추가
+//  - 연도별 경기 일정 배치 처리 + DB 저장(2022~)
 
 @Component
 public class LolEsportsApiClient {
@@ -78,7 +82,7 @@ public class LolEsportsApiClient {
                                 team.path("name").asText(),
                                 team.path("result").path("outcome").asText()
                         ))
-                        .collect(Collectors.toList());
+                        .toList();
 
                 boolean completed = event.path("state").asText().equalsIgnoreCase("completed");
                 String winningTeamCode = completed
@@ -99,6 +103,90 @@ public class LolEsportsApiClient {
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse schedule data", e);
+        }
+
+        return result;
+    }
+
+    public List<MatchDto> fetchScheduleByYear(String year) {
+        List<MatchDto> allMatches = new ArrayList<>();
+        String nextPageToken = null;
+
+        do {
+            String finalToken = nextPageToken;
+            Mono<String> response = webClient.get()
+                    .uri(uriBuilder -> {
+                        uriBuilder.path("/persisted/gw/getSchedule");
+                        uriBuilder.queryParam("hl", HL);
+                        uriBuilder.queryParam("leagueId", LEAGUE_ID);
+                        if (finalToken != null) {
+                            uriBuilder.queryParam("pageToken", finalToken);
+                        }
+                        return uriBuilder.build();
+                    })
+                    .header("x-api-key", API_KEY)
+                    .retrieve()
+                    .bodyToMono(String.class);
+
+            if (response == null) break;
+
+            try {
+                JsonNode root = objectMapper.readTree(response.block());
+                JsonNode schedule = root.path("data").path("schedule");
+                JsonNode events = schedule.path("events");
+
+                List<MatchDto> pageMatches = parseMatchesFromEvents(events, year);
+                allMatches.addAll(pageMatches);
+
+                // 중단 조건: 더 이상 해당 연도의 이벤트가 없음
+                boolean allBeforeTargetYear = StreamSupport.stream(events.spliterator(), false)
+                        .allMatch(event -> !event.path("startTime").asText().startsWith(year));
+                if (allBeforeTargetYear) break;
+
+                JsonNode pages = schedule.path("pages");
+                nextPageToken = pages.path("older").asText(null);
+
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to parse response", e);
+            }
+
+        } while (nextPageToken != null);
+
+        return allMatches;
+    }
+
+    public List<MatchDto> parseMatchesFromEvents(JsonNode events, String year) {
+        List<MatchDto> result = new ArrayList<>();
+
+        for (JsonNode event : events) {
+            String startTime = event.path("startTime").asText();
+            if (!startTime.startsWith(year)) continue;
+
+            List<TeamMatchResult> matchResult = StreamSupport.stream(
+                            event.path("match").path("teams").spliterator(), false)
+                    .map(team -> new TeamMatchResult(
+                            team.path("code").asText(),
+                            team.path("name").asText(),
+                            team.path("result").path("outcome").asText()
+                    ))
+                    .toList();
+
+            boolean completed = event.path("state").asText().equalsIgnoreCase("completed");
+            String winningTeamCode = completed
+                    ? matchResult.stream()
+                    .filter(team -> "win".equalsIgnoreCase(team.getOutcome()))
+                    .map(TeamMatchResult::getCode)
+                    .findFirst().orElse(null)
+                    : null;
+
+            result.add(new MatchDto(
+                    startTime,
+                    event.path("state").asText(),
+                    winningTeamCode,
+                    matchResult.stream()
+                            .map(team -> new Team(team.getCode(), team.getName(), null, null, LEAGUE_ID))
+                            .toList()
+            ));
         }
 
         return result;

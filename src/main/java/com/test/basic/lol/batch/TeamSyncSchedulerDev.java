@@ -17,7 +17,7 @@ public class TeamSyncSchedulerDev {
         this.teamBatchService = teamBatchService;
     }
 
-    @Scheduled(cron = "0 */3 * * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 0 * * * *", zone = "Asia/Seoul")
     public void syncTeamsDev() {
         logger.info("==================== 팀 정보 자동 동기화 작업 시작 ====================");
         teamBatchService.syncTeamsFromLolEsports();

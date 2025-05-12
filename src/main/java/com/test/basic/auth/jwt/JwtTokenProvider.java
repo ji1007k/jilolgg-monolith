@@ -10,14 +10,14 @@ import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
 @Component
 public class JwtTokenProvider {
 
+    // *** @Value로 주입되는 시점은 생성자 호출 이후임!
+    // 생성자 파라미터로 전달 시 생성자 호출 시점에 @Value 파라미터 사용 가능
     @Value("${cookie.secure}")
     private boolean isSecure;
 

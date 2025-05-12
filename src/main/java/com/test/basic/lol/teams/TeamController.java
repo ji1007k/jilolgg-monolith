@@ -35,10 +35,10 @@ public class TeamController {
 
     // 리스트 필터 조회
     @GetMapping
-    public ResponseEntity<List<Team>> getTeams(@RequestParam(required = false) String homeLeague,
+    public ResponseEntity<List<TeamDto>> getTeams(@RequestParam(required = false) String leagueId,
                                                // GET /teams?slugs=slug1,slug2 자동 파싱됨
                                                @RequestParam(required = false) List<String> slugs) {
-        List<Team> teams = teamService.getTeamsFromDB(homeLeague, slugs);
+        List<TeamDto> teams = teamService.getTeamsFromDB(leagueId, slugs);
         return ResponseEntity.ok(teamService.filterLCKFirstTeams(teams));
     }
 
@@ -52,13 +52,13 @@ public class TeamController {
         }
     }
 
-    @PostMapping("/sync-teams")
+    @PostMapping("/sync")
     @PreAuthorize("hasAuthority('ADMIN')")
     @SecurityRequirement(name = "IgnoreCSRF")
     @Operation(summary = "LOL 팀 정보 수동 동기화", description = "LOL 팀 정보 수동 동기화 API")
     public ResponseEntity<String> syncTeams() {
         logger.info("==================== 팀 정보 수동 동기화 작업 시작 ====================");
-        String result = teamBatchService.syncTeamsFromLolEsports();
+        String result = teamBatchService.syncTeamsFromLolEsportsApi();
 
         if (result.contains("실패")) {
             logger.error(">>> 동기화 실패: {}", result);

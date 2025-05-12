@@ -1,13 +1,18 @@
 package com.test.basic.lol.teams;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.test.basic.lol.leagues.League;
+import com.test.basic.lol.matchteams.MatchTeam;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
+import java.util.List;
+
 @Entity
 @Data
 @Table(name = "teams", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"slug"})
+        @UniqueConstraint(columnNames = {"team_id"})
 })
 @RequiredArgsConstructor
 public class Team {
@@ -15,11 +20,15 @@ public class Team {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "team_code", nullable = false)
-    private String teamCode;
+    @Column(name = "team_id", unique = true, nullable = false)
+    @JsonProperty("id")
+    private String teamId;
 
-    @Column(name = "team_name", nullable = false)
-    private String teamName;
+    @Column(name = "code", nullable = false)
+    private String code;
+
+    @Column(name = "name", nullable = false)
+    private String name;
 
     @Column(name = "slug", nullable = false)
     private String slug;
@@ -27,24 +36,19 @@ public class Team {
     @Column(nullable = false)
     private String image;
 
-    @Column(name = "home_league", nullable = false)
-    private String homeLeague;
+    @OneToOne
+    @JoinColumn(name = "league_id", referencedColumnName = "league_id", nullable = false)
+    private League league;
 
-    // 테이블에 매핑되지 않는 필드
-    @Transient
-    private String teamId;
+    @OneToMany(mappedBy = "team")
+    private List<MatchTeam> matchTeams;
 
-    @Transient
-    private String rank;
-
-    @Transient
-    private String record; // "8,0,10" => 순서대로 win,losses,gameDiff count. 승리/패배 경기수, 득실차
-
-    public Team(String teamCode, String teamName, String slug, String image, String homeLeague) {
-        this.teamCode = teamCode;
-        this.teamName = teamName;
+    public Team(String teamId, String code, String name, String slug, String image, League league) {
+        this.teamId = teamId;
+        this.code = code;
+        this.name = name;
         this.slug = slug;   // url 라우팅용
         this.image = image;
-        this.homeLeague = homeLeague;
+        this.league = league;
     }
 }

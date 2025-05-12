@@ -9,15 +9,19 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class TournamentService {
 
+    private final TournamentRepository tournamentRepository;
     private final LolEsportsApiClient lolEsportsApiClient;
     private final ObjectMapper objectMapper;
 
-    public TournamentService(LolEsportsApiClient lolEsportsApiClient,
+    public TournamentService(TournamentRepository tournamentRepository,
+                             LolEsportsApiClient lolEsportsApiClient,
                              ObjectMapper objectMapper) {
+        this.tournamentRepository = tournamentRepository;
         this.lolEsportsApiClient = lolEsportsApiClient;
         this.objectMapper = objectMapper;
     }
@@ -26,7 +30,7 @@ public class TournamentService {
         LocalDate today = LocalDate.now();
         int currentYear = today.getYear();
 
-        Mono<String> result = lolEsportsApiClient.fetchTournaments();
+        Mono<String> result = lolEsportsApiClient.fetchTournamentsJson();
 
         try {
             // 파싱
@@ -55,5 +59,17 @@ public class TournamentService {
             throw new RuntimeException("Failed to parse data", e);
         }
 
+    }
+
+    public List<TournamentDto> getAllTournaments() {
+        return tournamentRepository.findAll()
+                .stream()
+                .map(t -> new TournamentDto(
+                        t.getTournamentId(),
+                        t.getSlug(),
+                        t.getStartDate(),
+                        t.getEndDate()
+                ))
+                .collect(Collectors.toList());
     }
 }

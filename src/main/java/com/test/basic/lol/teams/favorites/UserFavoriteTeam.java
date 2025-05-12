@@ -25,7 +25,7 @@ public class UserFavoriteTeam {
     private Integer displayOrder;
 
     @ManyToOne(fetch = FetchType.LAZY) // Lazy로 하고 fetch join 쓸 예정
-    @JoinColumn(name = "team_id", nullable = false)
+    @JoinColumn(name = "team_id", referencedColumnName = "team_id", nullable = false)
     private Team team;
 
 

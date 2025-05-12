@@ -1,8 +1,12 @@
 package com.test.basic.lol.batch;
 
 import com.test.basic.lol.api.LolEsportsApiClient;
+import com.test.basic.lol.leagues.League;
+import com.test.basic.lol.leagues.LeagueRepository;
 import com.test.basic.lol.teams.Team;
 import com.test.basic.lol.teams.TeamRepository;
+import com.test.basic.lol.teams.TeamService;
+import com.test.basic.lol.teams.TeamSyncDto;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
@@ -22,19 +26,24 @@ public class TeamBatchService {
     private final TeamRepository teamRepository;
     private final LolEsportsApiClient apiClient;
     private final RedissonClient redissonClient;
+    private final LeagueRepository leagueRepository;
+    private final TeamService teamService;
 
     public TeamBatchService(TeamRepository teamRepository,
                             LolEsportsApiClient apiClient,
-                            RedissonClient redissonClient) {
+                            RedissonClient redissonClient, LeagueRepository leagueRepository,
+                            TeamService teamService) {
         this.teamRepository = teamRepository;
         this.apiClient = apiClient;
         this.redissonClient = redissonClient;
+        this.leagueRepository = leagueRepository;
+        this.teamService = teamService;
     }
 
     // RLock은 자동적으로 락 타임아웃을 처리. 
     // 락을 획득한 스레드가 락을 해제하지 않더라도, 일정 시간이 지나면 자동으로 락을 해제함
     @Transactional
-    public String syncTeamsFromLolEsports() {
+    public String syncTeamsFromLolEsportsApi() {
         RLock lock = redissonClient.getLock("sync-teams-lock");
         boolean isLocked = false;
 
@@ -68,19 +77,25 @@ public class TeamBatchService {
             logger.info(">>> LoL Esports API로부터 팀 정보 동기화 시작");
             long syncStartTime = System.currentTimeMillis();
             Mono<String> result = apiClient.fetchAllTeams();
-            List<Team> externalTeams = apiClient.parseTeamsFromResponse(result.block());
+            List<TeamSyncDto> externalTeams = teamService.parseTeamsFromResponse(result.block());
 
             int successCnt = externalTeams.size();
-            for (Team dto : externalTeams) {
+            StringBuilder errorLog = new StringBuilder();
+            for (TeamSyncDto dto : externalTeams) {
                 try {
                     saveOrUpdate(dto);
                 } catch (Exception e) {
-                    logger.error(">>> ❌ 팀 동기화 실패: {} - {}", dto.getTeamName(), e.getMessage());
+                    errorLog.append(String.format("팀 동기화 실패 - 이름: %s, 이유: %s%n", dto.getName(), e.getMessage()));
                     successCnt--;
                 }
             }
             long syncEndTime = System.currentTimeMillis();
-            logger.info(">>> 팀 동기화 완료 ({}/{}개)", successCnt, externalTeams.size());
+
+            if (errorLog.length() > 0) {
+                logger.error(">>> ❌ 동기화 중 실패한 팀 목록:\n{}", errorLog);
+            }
+
+            logger.info(">>> 팀 동기화 완료 (성공 {}건 / 전체 {}건)", successCnt, externalTeams.size());
             logger.info(">>> LoL Esports API로부터 팀 정보 동기화 완료, 소요 시간: {}ms", (syncEndTime - syncStartTime));
 
             return "팀 수동 동기화 성공";
@@ -99,29 +114,23 @@ public class TeamBatchService {
         }
     }
 
-    public void saveOrUpdate(Team dto) {
+    public void saveOrUpdate(TeamSyncDto dto) {
+        if (dto.getHomeLeague().isEmpty())
+            throw new RuntimeException("League is Empty");
+
+        League league = leagueRepository.findByName(dto.getHomeLeague())
+                .orElseThrow(() -> new RuntimeException("League not found: " + dto.getHomeLeague()));
+
         Optional<Team> existing = teamRepository.findBySlug(dto.getSlug());
+        Team team = existing.orElseGet(Team::new);
 
-        if (existing.isPresent()) {
-            // 이미 존재하면 업데이트
-            Team team = existing.get();
-            team.setTeamName(dto.getTeamName());
-            team.setSlug(dto.getSlug());
-            team.setImage(dto.getImage());
-            team.setHomeLeague(dto.getHomeLeague());
-            teamRepository.save(team);
-        } else {
-            // 존재하지 않으면 새로 저장
-            Team newTeam = new Team(
-                    dto.getTeamCode(),
-                    dto.getTeamName(),
-                    dto.getSlug(),
-                    dto.getImage(),
-                    dto.getHomeLeague()
-            );
-            teamRepository.save(newTeam);
-        }
+        team.setTeamId(dto.getTeamId());
+        team.setCode(dto.getCode());
+        team.setName(dto.getName());
+        team.setSlug(dto.getSlug());
+        team.setImage(dto.getImage());
+        team.setLeague(league);
+
+        teamRepository.save(team);
     }
-
-
 }

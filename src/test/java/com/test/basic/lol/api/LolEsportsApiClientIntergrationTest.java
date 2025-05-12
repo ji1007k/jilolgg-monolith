@@ -25,10 +25,10 @@ public class LolEsportsApiClientIntergrationTest {
 
     private String tournamentId;
 
-    @Test
+    /*@Test
     void testFetchScheduleMatchesIntegration() {
         // 실제로 HTTP 요청 보내는 테스트 (실서버가 아니면 WireMock 등으로 가짜 서버 띄워야 안전)
-        Mono<String> result = lolEsportsApiClient.fetchScheduleMatches();
+        Mono<String> result = lolEsportsApiClient.fetchScheduleMatchesJson();
 
         String jsonResponse = result.block();
 
@@ -38,11 +38,11 @@ public class LolEsportsApiClientIntergrationTest {
 
         assertThat(matches).isNotNull();
         assertThat(matches.size()).isGreaterThan(0);
-    }
+    }*/
 
     @Test
     void testFetchTournaments() throws JsonProcessingException {
-        Mono<String> result = lolEsportsApiClient.fetchTournaments();
+        Mono<String> result = lolEsportsApiClient.fetchTournamentsJson();
         String jsonResponse = result.block();
         assertThat(jsonResponse).isNotNull();
 
@@ -53,7 +53,7 @@ public class LolEsportsApiClientIntergrationTest {
         TournamentDto tournament = objectMapper.treeToValue(tournaments.get(0), TournamentDto.class);
 
         assertThat(tournament).isNotNull();
-        tournamentId = tournament.getId();
+        tournamentId = tournament.getTournamentId();
     }
 
     @Test

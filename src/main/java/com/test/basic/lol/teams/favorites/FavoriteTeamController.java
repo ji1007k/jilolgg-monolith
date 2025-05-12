@@ -48,14 +48,4 @@ public class FavoriteTeamController {
         favoriteTeamService.removeFavoriteTeam(userId, Long.parseLong(teamId));
         return ResponseEntity.noContent().build();
     }
-
-    // 4. 즐겨찾기 순서 변경
-    /*@PatchMapping("/order")
-    public ResponseEntity<Void> updateOrder(@RequestBody FavoriteOrderRequest request,
-                                            @AuthenticationPrincipal Jwt jwt) {
-        Long userId = Long.valueOf(jwt.getSubject());
-        favoriteTeamService.updateFavoriteOrder(userId, request.getTeamCodeList());
-        return ResponseEntity.ok().build();
-    }
-*/
 }

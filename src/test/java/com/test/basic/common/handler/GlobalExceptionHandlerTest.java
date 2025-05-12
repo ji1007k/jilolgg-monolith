@@ -1,4 +1,4 @@
-package com.test.basic.handler;
+package com.test.basic.common.handler;
 
 import com.test.basic.auth.security.config.SecurityConfig;
 import com.test.basic.users.UserEntity;

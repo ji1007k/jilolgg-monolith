@@ -1,5 +1,7 @@
 package com.test.basic.lol.tournaments;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.Transient;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,9 +16,20 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 public class TournamentDto {
-    private String id;
+
+    @JsonProperty("id")
+    private String tournamentId;
     private String slug;
     private LocalDate startDate;
     private LocalDate endDate;
+
+    @Transient
     private boolean active;
+
+    public TournamentDto(String tournamentId, String slug, LocalDate startDate, LocalDate endDate) {
+        this.tournamentId = tournamentId;
+        this.slug = slug;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
 }

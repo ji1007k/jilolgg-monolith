@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// TODO 외부 API 데이터 바로 가져오는 로직 분리
 @Service
 public class TeamService {
 

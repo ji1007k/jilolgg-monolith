@@ -1,5 +1,6 @@
 package com.test.basic.lol.tournaments;
 
+import com.test.basic.lol.sync.LolSyncService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +16,11 @@ import java.util.List;
 public class TournamentController {
 
     private final TournamentService tournamentService;
+    private final LolSyncService lolSyncService;
 
-    public TournamentController(TournamentService tournamentService) {
+    public TournamentController(TournamentService tournamentService, LolSyncService lolSyncService) {
         this.tournamentService = tournamentService;
+        this.lolSyncService = lolSyncService;
     }
 
     @GetMapping
@@ -25,5 +28,11 @@ public class TournamentController {
     public ResponseEntity<List<TournamentDto>> getTournamentsForCurrentYear() {
         List<TournamentDto> tournaments = tournamentService.getTournamentsForCurrentYear();
         return ResponseEntity.ok(tournaments);
+    }
+
+    @GetMapping("/sync")
+    public ResponseEntity<List<TournamentDto>> getAllTournamentsByLeagueIdFromApi() {
+        lolSyncService.syncTournaments();
+        return ResponseEntity.ok(tournamentService.getAllTournaments());
     }
 }

@@ -1,10 +1,12 @@
 package com.test.basic.lol.matches;
 
+import com.test.basic.lol.sync.LolSyncService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -15,6 +17,7 @@ import java.util.List;
 @Tag(name = "[LOL] 경기 일정 API", description = "경기 일정 API")
 public class MatchController {
     private final MatchService matchService;
+    private final LolSyncService lolSyncService;
 
     // TODO 연도 -> 날짜 검색
     @GetMapping
@@ -29,6 +32,25 @@ public class MatchController {
     public ResponseEntity<List<MatchDto>> getMatchesByTeamName(@PathVariable("name") String name) {
         List<MatchDto> matches = matchService.getMatchesByTeamName(name);
         return ResponseEntity.ok(matches);
+    }
+
+    // TODO 전체 리그 데이터 동기화
+    @GetMapping("/sync")
+    public Mono<ResponseEntity<List<MatchDto>>> getAllMatchesByLeagueIdFromApi() {
+        // LCK, LCK CL, FIRST STAND, MSI, WORLDS
+        List<String> leagueIds = List.of(
+                "98767991310872058",
+//                "98767991335774713",
+                "113464388705111224",
+                "98767991325878492",
+                "98767975604431411");
+
+        return lolSyncService.syncMatchesByLeagueIds(leagueIds)
+                .then(Mono.fromCallable(() -> {
+                        List<MatchDto> matches = matchService.getMatchesByLeagueId(leagueIds.get(0));
+                        return ResponseEntity.ok(matches);
+                    })
+                );
     }
 
 }

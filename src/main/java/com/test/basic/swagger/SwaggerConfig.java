@@ -23,13 +23,13 @@ import java.util.List;
         scheme = "basic"             // Basic Auth 방식 사용
 )
 @SecurityScheme(
-        name = "BearerAuth",
+        name = "BearerAuth",    // Swagger 인증용: Bearer Token (JWT)
         type = SecuritySchemeType.HTTP,
         scheme = "bearer",
         bearerFormat = "JWT"
 )
 @SecurityScheme(
-        name = "IgnoreCSRF",
+        name = "IgnoreCSRF",    // Swagger API 테스트 시 CSRF 인증 우회용
         type = SecuritySchemeType.APIKEY,
         in = SecuritySchemeIn.HEADER,
         paramName = "X-From-Swagger"
@@ -38,27 +38,26 @@ public class SwaggerConfig {
     @Bean
     public OpenAPI customOpenAPI() {
         Info info = new Info()
-                .title("Demo API")
-//                .version(appVersion)
-                .description("Spring Boot를 이용한 Demo 웹 애플리케이션 API입니다.")
-//                .termsOfService("http://swagger.io/terms/")
+                .title("JIKIM.GG API")
+                .version("1.0.0")
+                .description("Spring Boot를 이용한 Demo 웹 애플리케이션 API 문서입니다.")
                 .contact(new Contact()
-                        .name("jikim")
-//                        .email("ji1007k@gmail.com")
-                        .url("https://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com")
+                        .name("JIKIM.GG")
+                        .email("ji1007k@gmail.com")
+                        .url("https://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com/jikimi")
                 );
-//                .license(new License()
-//                        .name("Apache License Version 2.0")
-//                        .url("http://www.apache.org/licenses/LICENSE-2.0")
-//                );
 
         //  Swagger UI에서 보여줄 서버 목록 설정
         return new OpenAPI()
                 .components(new Components())
                 .info(info)
                 .servers(List.of(
-                        new Server().url("https://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com/api").description("Production Server"),
-                        new Server().url("http://localhost:8080").description("Local Server")
+                        new Server()
+                                .url("https://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com/api")
+                                .description("Production Server"),
+                        new Server()
+                                .url("http://localhost:8080")
+                                .description("Local Server")
                 ));
     }
 

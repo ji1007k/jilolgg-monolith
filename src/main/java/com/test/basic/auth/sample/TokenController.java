@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
  * @author Josh Cummings
  */
 
-@Tag(name = "JWT 토큰 발급 테스트 API", description = "JWT 토큰 발급 테스트 API")
+@Tag(name = "[TEST] JWT 토큰 발급 API", description = "JWT 토큰 발급 테스트 API")
 @RestController
 @RequestMapping("/token")
 public class TokenController {

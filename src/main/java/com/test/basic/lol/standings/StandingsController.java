@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/lol/standings")
-@Tag(name = "[LOL] 리그 순위 API", description = "리그 순위 API")
+@Tag(name = "[LOL] Standings API", description = "리그 순위 API")
 public class StandingsController {
 
     private final StandingsService standingsService;

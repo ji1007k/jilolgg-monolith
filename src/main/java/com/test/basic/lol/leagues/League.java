@@ -1,5 +1,6 @@
 package com.test.basic.lol.leagues;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.test.basic.lol.matches.Match;
 import com.test.basic.lol.tournaments.Tournament;
@@ -16,6 +17,7 @@ import java.util.List;
 public class League {
 
     @Id
+    @JsonIgnore
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 

@@ -28,7 +28,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Map;
 
-@Tag(name = "Auth API", description = "권한 관리 API")
+@Tag(name = "[AUTH] 인증/인가 API", description = "사용자 인증/인가 관련 API")
 @RequestMapping("/auth")
 @Controller
 public class AuthController {

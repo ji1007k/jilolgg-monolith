@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/csrf")
-@Tag(name = "CSRF API", description = "CSRF 토큰 발급 API")
+@Tag(name = "[TEST] CSRF API", description = "CSRF 토큰 발급 API")
 public class CsrfTokenController {
 
     // RestTemplate이나 테스트 환경에선 CSRF 자동 관리가 안돼서 테스트용으로 만든 API

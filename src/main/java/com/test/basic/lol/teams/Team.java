@@ -1,5 +1,6 @@
 package com.test.basic.lol.teams;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.test.basic.lol.leagues.League;
 import com.test.basic.lol.matchteams.MatchTeam;
@@ -17,6 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class Team {
     @Id
+    @JsonIgnore
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 

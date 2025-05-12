@@ -12,30 +12,83 @@ CREATE TABLE IF NOT EXISTS "users" (
      primary key ("id")
 );
 
-
-CREATE TABLE IF NOT EXISTS "user_favorite_team" (
-    "id" BIGSERIAL PRIMARY KEY,
-    "user_id" BIGINT NOT NULL,
-    "team_id" BIGINT,
-    "display_order" INT DEFAULT 0,
-    UNIQUE ("user_id", "team_id")
+CREATE TABLE IF NOT EXISTS "leagues"
+(
+    id               BIGSERIAL PRIMARY KEY,
+    league_id        VARCHAR(64)  NOT NULL UNIQUE,
+    slug             VARCHAR(300) NOT NULL,
+    name             VARCHAR(300) NOT NULL,
+    region           VARCHAR(50),
+    image            TEXT,
+    priority         INT,
+    display_position INT,
+    display_status   VARCHAR(50),
+    created_at       TIMESTAMP,
+    updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS "tournaments"
+(
+    id            BIGSERIAL PRIMARY KEY,
+    tournament_id VARCHAR(64) NOT NULL UNIQUE,
+    slug          VARCHAR(300),
+    start_date    TIMESTAMP,
+    end_date      TIMESTAMP,
+    league_id     VARCHAR(64) NOT NULL
+    -- 외래키 추가 가능: REFERENCES leagues(league_id)
+);
 
-alter table "user_favorite_team"
-    owner to jikim;
+CREATE TABLE IF NOT EXISTS "matches"
+(
+    id         BIGSERIAL PRIMARY KEY,
+    match_id   VARCHAR(64) NOT NULL UNIQUE,
+    league_id  VARCHAR(64) NOT NULL,
+    tournament_id  VARCHAR(64),
+    start_time TIMESTAMP,
+    state      VARCHAR(50),
+    block_name VARCHAR(100),
+    game_count INT,
+    strategy   VARCHAR(50)
+    -- 외래키 추가 가능: REFERENCES leagues(league_id)
+);
+
+CREATE TABLE IF NOT EXISTS "match_teams"
+(
+    id        BIGSERIAL PRIMARY KEY,
+    match_id  VARCHAR(64) NOT NULL,
+    team_id   VARCHAR(64) NOT NULL,
+    outcome    VARCHAR(20),
+    game_wins INT,
+    CONSTRAINT unique_match_team UNIQUE (match_id, team_id)
+    -- 외래키 추가 가능: REFERENCES matches(match_id), teams(team_code)
+);
 
 CREATE TABLE IF NOT EXISTS "teams"
 (
-    "id"          bigserial primary key,
-    "slug"        varchar(300) not null unique,
-    "team_code"   varchar(100) not null,
-    "team_name"   varchar(300) not null,
-    "image"       text         not null,
-    "home_league" varchar(50)  not null
+    id          BIGSERIAL PRIMARY KEY,
+    team_id     VARCHAR(64) NOT NULL,
+    slug        VARCHAR(150) NOT NULL,
+    code        VARCHAR(64)  NOT NULL,
+    name        VARCHAR(150) NOT NULL,
+    image       TEXT         NOT NULL,
+    league_id VARCHAR(64),
+    unique (team_id)
 );
 
 alter table "teams"
+    owner to jikim;
+
+
+----------------------
+CREATE TABLE IF NOT EXISTS "user_favorite_team" (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    team_id VARCHAR(64) NOT NULL,
+    display_order INT DEFAULT 0,        -- 즐겨찾기 순서
+    UNIQUE (user_id, team_id)          -- 중복 즐겨찾기 방지
+);
+
+alter table "user_favorite_team"
     owner to jikim;
 
 

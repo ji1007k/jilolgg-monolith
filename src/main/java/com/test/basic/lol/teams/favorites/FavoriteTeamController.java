@@ -25,7 +25,7 @@ public class FavoriteTeamController {
         Long userId = Long.valueOf(jwt.getClaim("sub"));
 
         try {
-            favoriteTeamService.addFavoriteTeam(userId, Long.parseLong(teamId));
+            favoriteTeamService.addFavoriteTeam(userId, teamId);
             return ResponseEntity.status(HttpStatus.CREATED).build();
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("즐겨찾는 팀 등록 실패: " + e.getMessage());
@@ -45,7 +45,7 @@ public class FavoriteTeamController {
     public ResponseEntity<Void> removeFavorite(@PathVariable String teamId,
                                                @AuthenticationPrincipal Jwt jwt) {
         Long userId = Long.valueOf(jwt.getSubject());
-        favoriteTeamService.removeFavoriteTeam(userId, Long.parseLong(teamId));
+        favoriteTeamService.removeFavoriteTeam(userId, teamId);
         return ResponseEntity.noContent().build();
     }
 }

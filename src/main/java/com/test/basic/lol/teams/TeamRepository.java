@@ -25,6 +25,9 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
 
     Optional<Team> findByCodeAndName(String code, String name);
 
+    @Query("SELECT t FROM Team t WHERE t.teamId = :teamId")
+    Optional<Team> findByTeam_TeamId(String teamId);
+
 
     //
 //    findByTeamName(String name)

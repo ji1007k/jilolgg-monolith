@@ -20,12 +20,12 @@ public class FavoriteTeamService {
     private final TeamRepository teamRepository;
 
     @Transactional
-    public void addFavoriteTeam(Long userId, Long teamId) {
-        if (repository.findByUserIdAndTeamId(userId, teamId).isPresent()) {
+    public void addFavoriteTeam(Long userId, String teamId) {
+        if (repository.findByUserIdAndTeam_TeamId(userId, teamId).isPresent()) {
             throw new IllegalStateException("이미 즐겨찾기에 추가된 팀입니다.");
         }
 
-        Optional<Team> team = teamRepository.findById(teamId);
+        Optional<Team> team = teamRepository.findByTeam_TeamId(teamId);
         if (! team.isPresent()) {
             throw new EntityNotFoundException("존재하지 않는 팀입니다.");
         }
@@ -41,8 +41,8 @@ public class FavoriteTeamService {
     }
 
     @Transactional
-    public void removeFavoriteTeam(Long userId, Long teamId) {
-        repository.deleteByUserIdAndTeamId(userId, teamId);
+    public void removeFavoriteTeam(Long userId, String teamId) {
+        repository.deleteByUserIdAndTeam_TeamId(userId, teamId);
     }
 
     @Transactional

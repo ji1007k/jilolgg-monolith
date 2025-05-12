@@ -11,9 +11,9 @@ public interface UserFavoriteTeamRepository extends JpaRepository<UserFavoriteTe
 
     List<UserFavoriteTeam> findByUserIdOrderByDisplayOrderDesc(Long userId);
 
-    Optional<UserFavoriteTeam> findByUserIdAndTeamId(Long userId, Long teamId);
+    Optional<UserFavoriteTeam> findByUserIdAndTeam_TeamId(Long userId, String teamId);
 
-    void deleteByUserIdAndTeamId(Long userId, Long teamId);
+    void deleteByUserIdAndTeam_TeamId(Long userId, String teamId);
 
     @Query("SELECT f FROM UserFavoriteTeam f JOIN FETCH f.team WHERE f.userId = :userId ORDER BY f.displayOrder DESC")
     List<UserFavoriteTeam> findByUserIdWithTeam(@Param("userId") Long userId);

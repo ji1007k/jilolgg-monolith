@@ -3,7 +3,7 @@ package com.test.basic.lol.standings;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.test.basic.lol.api.LolEsportsApiClient;
-import com.test.basic.lol.teams.Team;
+import com.test.basic.lol.teams.TournamentTeamRankingDto;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -56,7 +56,7 @@ public class StandingsService {
 
                         if (section.path("rankings").isEmpty()) continue;
 
-                        List<Team> teamList = new ArrayList<>();
+                        List<TournamentTeamRankingDto> teamList = new ArrayList<>();
 
                         // 섹션별 경기 상세 정보 파싱
                         JsonNode matches = section.path("matches");
@@ -92,13 +92,13 @@ public class StandingsService {
 
                             JsonNode teamNodes = rankingNode.path("teams");
                             for (JsonNode teamNode : teamNodes) {   // 공동 순위
-                                Team team = new Team();
+                                TournamentTeamRankingDto team = new TournamentTeamRankingDto();
 
                                 team.setRank(rank);
                                 team.setTeamId(teamNode.path("id").asText());
                                 team.setSlug(teamNode.path("slug").asText());
-                                team.setTeamName(teamNode.path("name").asText());
-                                team.setTeamCode(teamNode.path("code").asText());
+                                team.setName(teamNode.path("name").asText());
+                                team.setCode(teamNode.path("code").asText());
                                 team.setImage(teamNode.path("image").asText());
 
                                 // record 파싱

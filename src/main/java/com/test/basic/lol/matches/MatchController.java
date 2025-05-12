@@ -4,16 +4,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
-// TODO
-//  - 비동기 처리 (컨트롤러에서도 @Async나 WebFlux로 비동기 처리 가능)
-//  - .block() 대신 .subscribe()나 Mono<List<MatchDto>>로 리턴
 
 
 @RestController
@@ -23,24 +16,19 @@ import java.util.List;
 public class MatchController {
     private final MatchService matchService;
 
+    // TODO 연도 -> 날짜 검색
     @GetMapping
-    @Operation(summary = "전체 경기 일정 조회", description = "전체 경기 일정 조회 API")
-    public ResponseEntity<List<MatchDto>> getAllMatches() {
-        List<MatchDto> matches = matchService.getAllMatches();
+    public ResponseEntity<List<MatchDto>> getMatches(@RequestParam(required = false) String year,
+                                                     @RequestParam(required = false) String leagueId) {
+        List<MatchDto> matches = matchService.getMatches(year, leagueId);
         return ResponseEntity.ok(matches);
     }
 
-    @GetMapping("/year/{year}")
-    @Operation(summary = "연도별 경기 일정 조회", description = "연도별 경기 일정 조회 API")
-    public ResponseEntity<List<MatchDto>> getMatchesByYear(@PathVariable(name = "year", required = false) String year) {
-        List<MatchDto> matches = matchService.getMatchesByYear(year);
-        return ResponseEntity.ok(matches);
-    }
-
-    @GetMapping("/team/{teamName}")
+    @GetMapping("/team/{name}")
     @Operation(summary = "팀별 경기 일정 조회", description = "팀명으로 경기 일정 조회 API")
-    public ResponseEntity<List<MatchDto>> getMatches(@PathVariable("teamName") String teamName) {
-        List<MatchDto> matches = matchService.getMatchesByName(teamName);
+    public ResponseEntity<List<MatchDto>> getMatchesByTeamName(@PathVariable("name") String name) {
+        List<MatchDto> matches = matchService.getMatchesByTeamName(name);
         return ResponseEntity.ok(matches);
     }
+
 }

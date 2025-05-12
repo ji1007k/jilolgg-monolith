@@ -26,7 +26,7 @@ public class TournamentService {
         LocalDate today = LocalDate.now();
         int currentYear = today.getYear();
 
-        Mono<String> result = lolEsportsApiClient.fetchTournaments();
+        Mono<String> result = lolEsportsApiClient.fetchTournamentsJson();
 
         try {
             // 파싱

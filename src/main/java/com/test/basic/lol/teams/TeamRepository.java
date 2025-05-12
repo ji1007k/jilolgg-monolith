@@ -10,22 +10,24 @@ import java.util.Optional;
 
 @Repository
 public interface TeamRepository extends JpaRepository<Team, Long> {
-    Optional<Team> findByTeamCode(String teamCode);
+    Optional<Team> findByCode(String code);
     Optional<Team> findBySlug(String slug);
-    @Query("SELECT t.teamCode FROM Team t WHERE t.id = :id")
-    String findTeamCodeById(@Param("id") Long id);
-    @Query("SELECT t.teamName FROM Team t WHERE t.id = :id")
+    @Query("SELECT t.code FROM Team t WHERE t.id = :id")
+    String findCodeById(@Param("id") Long id);
+    @Query("SELECT t.name FROM Team t WHERE t.id = :id")
     String findTeamNameById(@Param("id") Long id);
 
-    List<Team> findByHomeLeague(String homeLeague);
+    List<Team> findByLeague_LeagueId(String leagueId);
     // SELECT * FROM team WHERE slug IN ('slug1', 'slug2', 'slug3');
     List<Team> findBySlugIn(List<String> slugs);
-    List<Team> findByHomeLeagueAndSlugIn(String homeLeague, List<String> slugs);
+    List<Team> findByLeague_LeagueIdAndSlugIn(String leagueId, List<String> slugs);
     List<Team> findBySlugContaining(String slug);
+
+    Optional<Team> findByCodeAndName(String code, String name);
 
 
     //
-//    findByTeamName(String teamName)
+//    findByTeamName(String name)
 // WHERE team_name = ?
 
 //    findByTeamNameAndLeague(String name, String league)

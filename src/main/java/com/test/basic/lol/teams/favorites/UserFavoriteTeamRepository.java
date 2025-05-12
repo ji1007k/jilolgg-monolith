@@ -20,7 +20,7 @@ public interface UserFavoriteTeamRepository extends JpaRepository<UserFavoriteTe
 
     @Query("""
         SELECT new com.test.basic.lol.teams.favorites.FavoriteTeamResponse(
-            t.id, t.teamCode, t.teamName, f.displayOrder
+            t.teamId, t.code, t.name, f.displayOrder
         )
         FROM UserFavoriteTeam f
         JOIN f.team t

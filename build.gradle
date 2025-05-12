@@ -49,6 +49,10 @@ dependencies {
     implementation 'org.projectlombok:lombok:1.18.22'
     annotationProcessor 'org.projectlombok:lombok:1.18.22'
 
+    // Entity <-> DTO 매핑 프레임워크
+    implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+
     // WAR는 외부 Tomcat
 //    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
     // JAR 는 내부 Tomcat
@@ -64,6 +68,8 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.projectlombok:lombok:1.18.22'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
 }
 
 // Spring Boot 3.x 버전부터 기본적으로 JUnit 5(Jupiter) 해서 설정 불필요

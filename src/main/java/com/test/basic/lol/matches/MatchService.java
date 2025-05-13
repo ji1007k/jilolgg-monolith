@@ -19,9 +19,6 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 
-// TODO
-//  - 리그 ID 별 조회 기능 추가
-
 @Service
 public class MatchService {
     private final LolEsportsApiClient apiClient;
@@ -210,7 +207,7 @@ public class MatchService {
             jpql.append(" AND FUNCTION('date_part', 'year', m.startTime) = :year");
         }
         if (leagueId != null) {
-            jpql.append(" AND m.leagueId = :leagueId");
+            jpql.append(" AND m.league.leagueId = :leagueId");
         }
 
         // JPQL 쿼리 생성

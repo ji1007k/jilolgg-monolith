@@ -1,6 +1,6 @@
 package com.test.basic.lol.matches;
 
-import com.test.basic.lol.sync.LolSyncService;
+import com.test.basic.lol.sync.SyncLolEsportsApiService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ import java.util.List;
 @Tag(name = "[LOL] Match API", description = "경기 일정 API")
 public class MatchController {
     private final MatchService matchService;
-    private final LolSyncService lolSyncService;
+    private final SyncLolEsportsApiService syncLolEsportsApiService;
 
     // TODO 연도 -> 날짜 검색
     @GetMapping
@@ -40,12 +40,12 @@ public class MatchController {
         // LCK, LCK CL, FIRST STAND, MSI, WORLDS
         List<String> leagueIds = List.of(
                 "98767991310872058",
-//                "98767991335774713",
+                "98767991335774713",
                 "113464388705111224",
                 "98767991325878492",
                 "98767975604431411");
 
-        return lolSyncService.syncMatchesByLeagueIds(leagueIds)
+        return syncLolEsportsApiService.syncMatchesByLeagueIds(leagueIds)
                 .then(Mono.fromCallable(() -> {
                         List<MatchDto> matches = matchService.getMatchesByLeagueId(leagueIds.get(0));
                         return ResponseEntity.ok(matches);

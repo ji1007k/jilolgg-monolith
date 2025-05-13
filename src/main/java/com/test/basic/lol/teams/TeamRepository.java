@@ -12,6 +12,23 @@ import java.util.Optional;
 public interface TeamRepository extends JpaRepository<Team, Long> {
     Optional<Team> findByCode(String code);
     Optional<Team> findBySlug(String slug);
+
+    Optional<Team> findByCodeAndName(String code, String name);
+
+    @Query("SELECT t FROM Team t WHERE t.teamId = :teamId")
+    Optional<Team> findByTeam_TeamId(String teamId);
+
+    @Query("SELECT DISTINCT t FROM Team t WHERE t.teamId IN (SELECT DISTINCT mt.team.teamId FROM MatchTeam mt)")
+    List<Team> findTeamsWithMatches();
+
+    @Query("SELECT DISTINCT t FROM Team t WHERE t.teamId IN (SELECT DISTINCT mt.team.teamId FROM MatchTeam mt) " +
+            "AND (:leagueId IS NULL OR t.league.leagueId = :leagueId) " +
+            "AND (:slugs IS NULL OR t.slug IN :slugs)")
+    List<Team> findTeamsWithMatchesFiltered(@Param("leagueId") String leagueId,
+                                           @Param("slugs") List<String> slugs);
+
+
+// TODO 삭제 ------------------------------------------------------
     @Query("SELECT t.code FROM Team t WHERE t.id = :id")
     String findCodeById(@Param("id") Long id);
     @Query("SELECT t.name FROM Team t WHERE t.id = :id")
@@ -22,13 +39,6 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     List<Team> findBySlugIn(List<String> slugs);
     List<Team> findByLeague_LeagueIdAndSlugIn(String leagueId, List<String> slugs);
     List<Team> findBySlugContaining(String slug);
-
-    Optional<Team> findByCodeAndName(String code, String name);
-
-    @Query("SELECT t FROM Team t WHERE t.teamId = :teamId")
-    Optional<Team> findByTeam_TeamId(String teamId);
-
-
     //
 //    findByTeamName(String name)
 // WHERE team_name = ?

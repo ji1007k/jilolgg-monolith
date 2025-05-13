@@ -1,6 +1,6 @@
 package com.test.basic.lol.teams;
 
-import com.test.basic.lol.batch.TeamBatchService;
+import com.test.basic.lol.sync.SyncTeamService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,11 +21,11 @@ public class TeamController {
     private static final Logger logger = LoggerFactory.getLogger(TeamController.class);
 
     private final TeamService teamService;
-    private final TeamBatchService teamBatchService;
+    private final SyncTeamService syncTeamService;
 
-    public TeamController(TeamService teamService, TeamBatchService teamBatchService) {
+    public TeamController(TeamService teamService, SyncTeamService syncTeamService) {
         this.teamService = teamService;
-        this.teamBatchService = teamBatchService;
+        this.syncTeamService = syncTeamService;
     }
 
 //    @GetMapping
@@ -39,7 +39,7 @@ public class TeamController {
                                                // GET /teams?slugs=slug1,slug2 자동 파싱됨
                                                @RequestParam(required = false) List<String> slugs) {
         List<TeamDto> teams = teamService.getTeamsFromDB(leagueId, slugs);
-        return ResponseEntity.ok(teamService.filterLCKFirstTeams(teams));
+        return ResponseEntity.ok(teams);
     }
 
     @GetMapping("/{slug}")
@@ -58,7 +58,7 @@ public class TeamController {
     @Operation(summary = "LOL 팀 정보 수동 동기화", description = "LOL 팀 정보 수동 동기화 API")
     public ResponseEntity<String> syncTeams() {
         logger.info("==================== 팀 정보 수동 동기화 작업 시작 ====================");
-        String result = teamBatchService.syncTeamsFromLolEsportsApi();
+        String result = syncTeamService.syncTeamsFromLolEsportsApi();
 
         if (result.contains("실패")) {
             logger.error(">>> 동기화 실패: {}", result);

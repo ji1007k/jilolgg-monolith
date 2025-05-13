@@ -3,7 +3,6 @@ package com.test.basic.lol.teams;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.test.basic.lol.api.LolEsportsApiClient;
-import com.test.basic.lol.leagues.LeagueRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -22,10 +21,10 @@ public class TeamService {
     private final ObjectMapper objectMapper;
 
     // LCK 1군 팀 코드 (활동중)
-    private final List<String> lckFirstTeamCodes = List.of(
+    /*private final List<String> lckFirstTeamCodes = List.of(
             "T1", "GEN", "HLE", "DK", "DRX", "KT", "BRO",
             "NS", "BFX", "DNF"
-    );
+    );*/
 
     public TeamService(TeamRepository teamRepository, LolEsportsApiClient lolEsportsApiClient, TeamMapper teamMapper, ObjectMapper objectMapper) {
         this.teamRepository = teamRepository;
@@ -43,32 +42,24 @@ public class TeamService {
 
         // 둘 다 null 또는 비어있으면 전체 조회
         if ((leagueId == null || leagueId.isBlank()) && (slugs == null || slugs.isEmpty())) {
-            teams = getAllTeamsFromDB();
-        } else if (slugs == null || slugs.isEmpty()) {
-            // leagueId만 있을 경우
-            teams = teamRepository.findByLeague_LeagueId(leagueId);
-        } else if (leagueId == null || leagueId.isBlank()) {
-            // slugs만 있을 경우
-            teams = teamRepository.findBySlugIn(slugs);
+            teams = teamRepository.findTeamsWithMatches();
         } else {
-            // 둘 다 있을 경우
-            teams = teamRepository.findByLeague_LeagueIdAndSlugIn(leagueId, slugs);
+            teams = teamRepository.findTeamsWithMatchesFiltered(leagueId, slugs);
         }
 
         return teams.stream().map(teamMapper::teamToTeamDto).toList();
     }
-
 
     public Team getTeamBySlugFromDB(String slug) {
         return teamRepository.findBySlug(slug)
                 .orElseThrow(() -> new EntityNotFoundException("Team not found: " + slug));
     }
 
-    public List<TeamDto> filterLCKFirstTeams(List<TeamDto> teams) {
+    /*public List<TeamDto> filterLCKFirstTeams(List<TeamDto> teams) {
         return teams.stream()
                 .filter(team -> lckFirstTeamCodes.contains(team.getCode()))
                 .collect(Collectors.toList());
-    }
+    }*/
 
     // FIXME API 응답 데이터 DTO 따로 생성
     public TeamSyncDto getTeamBySlugFromExternalApi(String slug) {

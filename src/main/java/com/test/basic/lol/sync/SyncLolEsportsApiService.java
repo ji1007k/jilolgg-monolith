@@ -9,7 +9,6 @@ import com.test.basic.lol.matches.MatchRepository;
 import com.test.basic.lol.matches.MatchScheduleResponse;
 import com.test.basic.lol.matchteams.MatchTeam;
 import com.test.basic.lol.matchteams.MatchTeamRepository;
-import com.test.basic.lol.teams.Team;
 import com.test.basic.lol.teams.TeamRepository;
 import com.test.basic.lol.tournaments.Tournament;
 import com.test.basic.lol.tournaments.TournamentRepository;
@@ -27,9 +26,9 @@ import java.util.Optional;
 
 // TODO 일정 주기 간격으로 동기화 기능 구현 (배치)
 @Service
-public class LolSyncService {
+public class SyncLolEsportsApiService {
 
-    private static Logger logger = LoggerFactory.getLogger(LolSyncService.class);
+    private static Logger logger = LoggerFactory.getLogger(SyncLolEsportsApiService.class);
 
     private final LolEsportsApiClient lolEsportsApiClient;
     private final LeagueRepository leagueRepository;
@@ -38,7 +37,7 @@ public class LolSyncService {
     private final TeamRepository teamRepository;
     private final MatchTeamRepository matchTeamRepository;
 
-    public LolSyncService(LolEsportsApiClient lolEsportsApiClient, LeagueRepository leagueRepository, TournamentRepository tournamentRepository, MatchRepository matchRepository, TeamRepository teamRepository, MatchTeamRepository matchTeamRepository) {
+    public SyncLolEsportsApiService(LolEsportsApiClient lolEsportsApiClient, LeagueRepository leagueRepository, TournamentRepository tournamentRepository, MatchRepository matchRepository, TeamRepository teamRepository, MatchTeamRepository matchTeamRepository) {
         this.lolEsportsApiClient = lolEsportsApiClient;
         this.leagueRepository = leagueRepository;
         this.tournamentRepository = tournamentRepository;

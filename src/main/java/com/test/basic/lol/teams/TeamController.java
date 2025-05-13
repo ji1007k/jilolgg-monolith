@@ -39,7 +39,7 @@ public class TeamController {
                                                // GET /teams?slugs=slug1,slug2 자동 파싱됨
                                                @RequestParam(required = false) List<String> slugs) {
         List<TeamDto> teams = teamService.getTeamsFromDB(leagueId, slugs);
-        return ResponseEntity.ok(teamService.filterLCKFirstTeams(teams));
+        return ResponseEntity.ok(teams);
     }
 
     @GetMapping("/{slug}")

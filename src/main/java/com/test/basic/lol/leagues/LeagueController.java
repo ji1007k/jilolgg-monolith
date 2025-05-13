@@ -17,14 +17,27 @@ public class LeagueController {
     public final LeagueService leagueService;
     private final LolSyncService lolSyncService;
 
+    // LCK, LCK CL, LPL, LEC, ...
+    private static final List<String> MAJOR_LEAGUE_IDS = List.of(
+            "98767991310872058",
+            "98767991335774713",
+            "98767991314006698",
+            "98767991302996019",
+            "98767991349978712",
+            "98767991299243165");
+
+
     public LeagueController(LeagueService leagueService, LolSyncService lolSyncService) {
         this.leagueService = leagueService;
         this.lolSyncService = lolSyncService;
     }
 
     @GetMapping
-    public ResponseEntity<List> getAllLeagues() {
-        return ResponseEntity.ok(leagueService.getAllLeagues());
+    public ResponseEntity<List<LeagueDto>> getAllLeagues() {
+        return ResponseEntity.ok(leagueService.getAllLeagues().stream()
+                .filter(league -> MAJOR_LEAGUE_IDS.contains(league.getLeagueId()))
+                .toList()
+        );
     }
 
     @GetMapping("/sync")

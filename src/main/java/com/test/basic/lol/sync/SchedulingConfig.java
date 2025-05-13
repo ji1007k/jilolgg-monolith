@@ -1,4 +1,4 @@
-package com.test.basic.lol.batch;
+package com.test.basic.lol.sync;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;

@@ -1,4 +1,4 @@
-package com.test.basic.lol.batch;
+package com.test.basic.lol.sync;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,19 +8,19 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 @Configuration
 @Profile("prod")
-public class TeamSyncSchedulerProd {
-    private static final Logger logger = LoggerFactory.getLogger(TeamSyncSchedulerProd.class);
+public class SyncTeamSchedulerProd {
+    private static final Logger logger = LoggerFactory.getLogger(SyncTeamSchedulerProd.class);
 
-    private final TeamBatchService teamBatchService;
+    private final SyncTeamService syncTeamService;
 
-    public TeamSyncSchedulerProd(TeamBatchService teamBatchService) {
-        this.teamBatchService = teamBatchService;
+    public SyncTeamSchedulerProd(SyncTeamService syncTeamService) {
+        this.syncTeamService = syncTeamService;
     }
 
     @Scheduled(cron = "0 0 3 ? * SUN", zone = "Asia/Seoul")
     public void syncTeamsProd() {
         logger.info("==================== 팀 정보 자동 동기화 작업 시작 ====================");
-        teamBatchService.syncTeamsFromLolEsportsApi();
+        syncTeamService.syncTeamsFromLolEsportsApi();
         logger.info("==================== 팀 정보 자동 동기화 작업 완료 ====================");
     }
 }

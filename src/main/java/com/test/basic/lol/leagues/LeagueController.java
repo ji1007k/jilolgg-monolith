@@ -1,6 +1,6 @@
 package com.test.basic.lol.leagues;
 
-import com.test.basic.lol.sync.LolSyncService;
+import com.test.basic.lol.sync.SyncLolEsportsApiService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,7 +15,7 @@ import java.util.List;
 public class LeagueController {
 
     public final LeagueService leagueService;
-    private final LolSyncService lolSyncService;
+    private final SyncLolEsportsApiService syncLolEsportsApiService;
 
     // LCK, LCK CL, LPL, LEC, ...
     private static final List<String> MAJOR_LEAGUE_IDS = List.of(
@@ -27,9 +27,9 @@ public class LeagueController {
             "98767991299243165");
 
 
-    public LeagueController(LeagueService leagueService, LolSyncService lolSyncService) {
+    public LeagueController(LeagueService leagueService, SyncLolEsportsApiService syncLolEsportsApiService) {
         this.leagueService = leagueService;
-        this.lolSyncService = lolSyncService;
+        this.syncLolEsportsApiService = syncLolEsportsApiService;
     }
 
     @GetMapping
@@ -42,7 +42,7 @@ public class LeagueController {
 
     @GetMapping("/sync")
     public ResponseEntity<List<LeagueDto>> getAllLeaguesFromApi() {
-        lolSyncService.syncLeaguesFromLolEsportsApi();
+        syncLolEsportsApiService.syncLeaguesFromLolEsportsApi();
         return ResponseEntity.ok(leagueService.getAllLeagues());
     }
 

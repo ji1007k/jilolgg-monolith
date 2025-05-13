@@ -1,4 +1,4 @@
-package com.test.basic.lol.batch;
+package com.test.basic.lol.sync;
 
 import com.test.basic.lol.api.LolEsportsApiClient;
 import com.test.basic.lol.leagues.League;
@@ -20,8 +20,8 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
-public class TeamBatchService {
-    private static final Logger logger = LoggerFactory.getLogger(TeamBatchService.class);
+public class SyncTeamService {
+    private static final Logger logger = LoggerFactory.getLogger(SyncTeamService.class);
 
     private final TeamRepository teamRepository;
     private final LolEsportsApiClient apiClient;
@@ -29,10 +29,10 @@ public class TeamBatchService {
     private final LeagueRepository leagueRepository;
     private final TeamService teamService;
 
-    public TeamBatchService(TeamRepository teamRepository,
-                            LolEsportsApiClient apiClient,
-                            RedissonClient redissonClient, LeagueRepository leagueRepository,
-                            TeamService teamService) {
+    public SyncTeamService(TeamRepository teamRepository,
+                           LolEsportsApiClient apiClient,
+                           RedissonClient redissonClient, LeagueRepository leagueRepository,
+                           TeamService teamService) {
         this.teamRepository = teamRepository;
         this.apiClient = apiClient;
         this.redissonClient = redissonClient;

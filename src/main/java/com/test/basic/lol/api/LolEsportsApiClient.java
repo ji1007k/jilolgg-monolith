@@ -101,25 +101,34 @@ public class LolEsportsApiClient {
                 .bodyToMono(String.class);
     }
 
-    public Mono<String> fetchScheduleByLeagueIdAndPageToken(String leagueId, String finalToken) {
-
-        Mono<String> response = webClient.get()
+    public Mono<MatchScheduleResponse> fetchScheduleByLeagueIdAndPageToken(String leagueId, String finalToken) {
+        return webClient.get()
                 .uri(uriBuilder -> {
                     uriBuilder.path("/persisted/gw/getSchedule");
                     uriBuilder.queryParam("hl", HL);
                     uriBuilder.queryParam("leagueId", leagueId);
-                    if (finalToken != null) {
-                        uriBuilder.queryParam("pageToken", finalToken);
-                    }
+                    uriBuilder.queryParam("pageToken", finalToken);
+                    return uriBuilder.build();
+                })
+                .header("x-api-key", API_KEY)
+                .retrieve()
+                .bodyToMono(MatchScheduleResponse.class);
+    }
+
+    /*public Mono<String> fetchScheduleJsonByLeagueIdAndPageToken(String leagueId, String finalToken) {
+        return webClient.get()
+                .uri(uriBuilder -> {
+                    uriBuilder.path("/persisted/gw/getSchedule");
+                    uriBuilder.queryParam("hl", HL);
+                    uriBuilder.queryParam("leagueId", leagueId);
+                    uriBuilder.queryParam("pageToken", finalToken);
                     return uriBuilder.build();
                 })
                 .header("x-api-key", API_KEY)
                 .retrieve()
                 .bodyToMono(String.class);
-
-        return response;
     }
-
+*/
 
     public Mono<String> fetchAllTeams() {
         return webClient.get()

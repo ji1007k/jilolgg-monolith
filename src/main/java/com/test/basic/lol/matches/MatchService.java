@@ -3,18 +3,29 @@ package com.test.basic.lol.matches;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.test.basic.lol.api.LolEsportsApiClient;
+import com.test.basic.lol.leagues.League;
+import com.test.basic.lol.leagues.LeagueRepository;
+import com.test.basic.lol.matchteams.MatchTeam;
 import com.test.basic.lol.matchteams.MatchTeamDto;
+import com.test.basic.lol.matchteams.MatchTeamRepository;
+import com.test.basic.lol.teams.Team;
 import com.test.basic.lol.teams.TeamDto;
+import com.test.basic.lol.teams.TeamRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -24,6 +35,10 @@ public class MatchService {
     private final LolEsportsApiClient apiClient;
     private final MatchMapper matchMapper;
     private final ObjectMapper objectMapper;
+    private final MatchRepository matchRepository;
+    private final TeamRepository teamRepository;
+    private final MatchTeamRepository matchTeamRepository;
+    private final LeagueRepository leagueRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -32,10 +47,14 @@ public class MatchService {
     private Instant lastFetchedTime = null;
     private static final Duration TTL = Duration.ofMinutes(10);
 
-    public MatchService(LolEsportsApiClient apiClient, MatchMapper matchMapper, ObjectMapper objectMapper) {
+    public MatchService(LolEsportsApiClient apiClient, MatchMapper matchMapper, ObjectMapper objectMapper, MatchRepository matchRepository, TeamRepository teamRepository, MatchTeamRepository matchTeamRepository, LeagueRepository leagueRepository) {
         this.apiClient = apiClient;
         this.matchMapper = matchMapper;
         this.objectMapper = objectMapper;
+        this.matchRepository = matchRepository;
+        this.teamRepository = teamRepository;
+        this.matchTeamRepository = matchTeamRepository;
+        this.leagueRepository = leagueRepository;
     }
 
     public List<MatchDto> getAllMatches() {
@@ -73,7 +92,94 @@ public class MatchService {
                 .collect(Collectors.toList());
     }
 
-    public List<MatchDto> getMatchesByLeagueIdAndYear(String leagueId, String year) {
+    // 리그id, 연도별 데이터 동기화 (블로킹 방식)
+    public void syncMatchesByExternalApi(List<String> leagueIds, String year) {
+        leagueIds.forEach(
+                leagueId -> syncMatchesByLeagueIdAndYearExternalApi(leagueId, year)
+        );
+    }
+
+    public void syncMatchesByLeagueIdAndYearExternalApi(String leagueId, String year) {
+        Optional<League> leagueOpt = leagueRepository.findByLeagueId(leagueId);
+
+        // 리그가 없다면 에러 반환
+        if (leagueOpt.isEmpty()) {
+            throw new RuntimeException("League not found with id: " + leagueId);
+        }
+
+        String nextPageToken = null;
+
+        do {
+            String finalToken = nextPageToken;
+
+            MatchScheduleResponse response = apiClient
+                    .fetchScheduleByLeagueIdAndPageToken(leagueId, finalToken)
+                    .block(); // blocking call
+
+            if (response == null || response.getData() == null || response.getData().getSchedule() == null) {
+                break;
+            }
+
+            List<MatchScheduleResponse.EventDto> events = response.getData()
+                    .getSchedule()
+                    .getEvents();
+
+            boolean allBeforeTargetYear = true;
+
+            for (MatchScheduleResponse.EventDto event : events) {
+                if (event.getMatch() == null) continue;
+
+                String startTime = event.getStartTime();
+                if (startTime != null && startTime.startsWith(year)) {
+                    allBeforeTargetYear = false;
+
+                    MatchScheduleResponse.MatchDto matchDto = event.getMatch();
+
+                    // [1] Match 저장
+                    Match match = matchRepository.findByMatchId(matchDto.getId()).orElseGet(Match::new);
+                    match.setMatchId(matchDto.getId());
+                    match.setLeague(leagueOpt.get());
+                    match.setStartTime(OffsetDateTime.parse(startTime)
+                            .atZoneSameInstant(ZoneId.of("Asia/Seoul"))
+                            .toLocalDateTime());
+                    match.setState(event.getState());
+                    match.setBlockName(event.getBlockName());
+                    match.setGameCount(matchDto.getStrategy().getCount());
+                    match.setStrategy(matchDto.getStrategy().getType() + matchDto.getStrategy().getCount());
+
+                    Match savedMatch = matchRepository.save(match);
+
+                    // [2] MatchTeam 저장
+                    for (MatchScheduleResponse.TeamDto teamDto : matchDto.getTeams()) {
+                        Optional<Team> teamOpt = teamRepository.findByCodeAndName(teamDto.getCode(), teamDto.getName());
+                        if (teamOpt.isEmpty()) continue;
+
+                        Team team = teamOpt.get();
+                        MatchTeam matchTeam = matchTeamRepository
+                                .findByMatch_MatchIdAndTeam_TeamId(savedMatch.getMatchId(), team.getTeamId())
+                                .orElseGet(MatchTeam::new);
+
+                        matchTeam.setMatch(savedMatch);
+                        matchTeam.setTeam(team);
+                        matchTeam.setOutcome(teamDto.getResult().getOutcome());
+                        matchTeam.setGameWins(teamDto.getResult().getGameWins());
+
+                        matchTeamRepository.save(matchTeam);
+                    }
+                }
+            }
+
+            // 더 이상 해당 연도의 데이터가 없으면 중단
+            if (allBeforeTargetYear) break;
+
+            nextPageToken = response.getData().getSchedule().getPages().getOlder();
+
+        } while (nextPageToken != null);
+    }
+
+
+    // 리그id, 연도별 데이터 동기화
+    /*public List<MatchDto> getMatchesByLeagueIdAndYearFromExternalApi(String leagueId, String year) {
 
         List<MatchDto> allMatches = new ArrayList<>();
         String nextPageToken = null;
@@ -81,7 +187,7 @@ public class MatchService {
         do {
             String finalToken = nextPageToken;
 
-            Mono<String> response = apiClient.fetchScheduleByLeagueIdAndPageToken(leagueId, finalToken);
+            Mono<String> response = apiClient.fetchScheduleJsonByLeagueIdAndPageToken(leagueId, finalToken);
 
             try {
                 JsonNode root = objectMapper.readTree(response.block());
@@ -92,9 +198,8 @@ public class MatchService {
                 allMatches.addAll(pageMatches);
 
                 // 중단 조건: 더 이상 해당 연도의 이벤트가 없음
-                String finalYear = year;
                 boolean allBeforeTargetYear = StreamSupport.stream(events.spliterator(), false)
-                        .allMatch(event -> !event.path("startTime").asText().startsWith(finalYear));
+                        .noneMatch(event -> event.path("startTime").asText().startsWith(year));
                 if (allBeforeTargetYear) break;
 
                 JsonNode pages = schedule.path("pages");
@@ -104,12 +209,10 @@ public class MatchService {
                 throw new RuntimeException("Failed to parse response", e);
             }
 
-            if (response == null) break;
-
         } while (nextPageToken != null);
 
         return allMatches;
-    }
+    }*/
 
     public List<MatchDto> parseMatchesFromResponse(String response, String leagueId) {
         List<MatchDto> result = new ArrayList<>();
@@ -200,7 +303,7 @@ public class MatchService {
     }
 
     // TODO 양방향 연관관계로 인한 순환참조 이슈 해결 방법 더 알아보기
-    public List<MatchDto> getMatches(String year, String leagueId) {
+    public List<MatchDto> getMatchesFromDB(String year, String leagueId) {
         StringBuilder jpql = new StringBuilder("SELECT m FROM Match m WHERE 1 = 1");
 
         if (year != null) {

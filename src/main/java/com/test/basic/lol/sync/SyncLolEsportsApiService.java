@@ -89,7 +89,9 @@ public class SyncLolEsportsApiService {
         }
     }
 
-    public Mono<Void> syncMatchesByLeagueIds(List<String> leagueIds) {
+
+
+    /*public Mono<Void> syncMatchesByLeagueIds(List<String> leagueIds) {
         // 여러 개의 leagueId를 처리하는 Flux 생성
         return Flux.fromIterable(leagueIds)
                 // 각 leagueId에 대해 syncMatchesByLeagueId 메서드를 비동기적으로 호출
@@ -144,23 +146,23 @@ public class SyncLolEsportsApiService {
                                             List<Mono<Void>> saveTeamMonos = matchDto.getTeams().stream()
                                                     .map(teamDto -> Mono.fromCallable(() ->
                                                                     teamRepository.findByCodeAndName(teamDto.getCode(), teamDto.getName()))
-                                                            .filter(Optional::isPresent)  // 팀이 있으면
-                                                            .map(Optional::get)
-                                                            .flatMap(team -> Mono.fromCallable(() -> {
-                                                                // MatchTeam 객체 생성 및 저장
+                                                        .filter(Optional::isPresent)  // 팀이 있으면
+                                                        .map(Optional::get)
+                                                        .flatMap(team -> Mono.fromCallable(() -> {
+                                                            // MatchTeam 객체 생성 및 저장
 
-                                                                Optional<MatchTeam> matchTeamOpt = matchTeamRepository
-                                                                        .findByMatch_MatchIdAndTeam_TeamId(savedMatch.getMatchId(), team.getTeamId());
-                                                                MatchTeam mTeam = matchTeamOpt.orElseGet(MatchTeam::new);
+                                                            Optional<MatchTeam> matchTeamOpt = matchTeamRepository
+                                                                    .findByMatch_MatchIdAndTeam_TeamId(savedMatch.getMatchId(), team.getTeamId());
+                                                            MatchTeam mTeam = matchTeamOpt.orElseGet(MatchTeam::new);
 
-                                                                mTeam.setMatch(savedMatch);
-                                                                mTeam.setTeam(team);
-                                                                mTeam.setOutcome(teamDto.getResult().getOutcome());
-                                                                mTeam.setGameWins(teamDto.getResult().getGameWins());
-                                                                matchTeamRepository.save(mTeam); // 저장
+                                                            mTeam.setMatch(savedMatch);
+                                                            mTeam.setTeam(team);
+                                                            mTeam.setOutcome(teamDto.getResult().getOutcome());
+                                                            mTeam.setGameWins(teamDto.getResult().getGameWins());
+                                                            matchTeamRepository.save(mTeam); // 저장
 
-                                                                return (Void) null;
-                                                            }))
+                                                            return (Void) null;
+                                                        }))
                                                     )
                                                     .toList(); // 모든 팀 저장 작업을 리스트로 모음
 
@@ -170,6 +172,6 @@ public class SyncLolEsportsApiService {
                             })
                             .then(); // 모든 이벤트 처리 후 완료
                 });
-    }
+    }*/
 
 }

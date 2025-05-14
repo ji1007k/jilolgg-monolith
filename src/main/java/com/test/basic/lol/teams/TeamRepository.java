@@ -27,6 +27,8 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     List<Team> findTeamsWithMatchesFiltered(@Param("leagueId") String leagueId,
                                            @Param("slugs") List<String> slugs);
 
+    Optional<Team> findByName(String name);
+
 
 // TODO 삭제 ------------------------------------------------------
     @Query("SELECT t.code FROM Team t WHERE t.id = :id")

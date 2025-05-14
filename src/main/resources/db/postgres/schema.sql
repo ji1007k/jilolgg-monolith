@@ -58,8 +58,7 @@ CREATE TABLE IF NOT EXISTS "match_teams"
     match_id  VARCHAR(64) NOT NULL,
     team_id   VARCHAR(64) NOT NULL,
     outcome    VARCHAR(20),
-    game_wins INT,
-    CONSTRAINT unique_match_team UNIQUE (match_id, team_id)
+    game_wins INT
     -- 외래키 추가 가능: REFERENCES matches(match_id), teams(team_code)
 );
 

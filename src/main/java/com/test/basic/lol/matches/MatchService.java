@@ -156,10 +156,14 @@ public class MatchService {
 
                 Match savedMatch = matchRepository.save(match);
 
-                // [2] MatchTeam 저장
+                // [2] MatchTeam 저장.
                 for (MatchScheduleResponse.TeamDto teamDto : matchDto.getTeams()) {
-                    Optional<Team> teamOpt = teamRepository.findByCodeAndName(teamDto.getCode(), teamDto.getName());
-                    if (teamOpt.isEmpty()) continue;
+                    Optional<Team> teamOpt;
+                    if (teamDto.getName().equalsIgnoreCase("TBD")) {    // TBD (To Be Determined)
+                        teamOpt = teamRepository.findByName(teamDto.getName());
+                    } else {
+                        teamOpt = teamRepository.findByCodeAndName(teamDto.getCode(), teamDto.getName());
+                    }
 
                     Team team = teamOpt.get();
                     MatchTeam matchTeam = matchTeamRepository
@@ -168,8 +172,11 @@ public class MatchService {
 
                     matchTeam.setMatch(savedMatch);
                     matchTeam.setTeam(team);
-                    matchTeam.setOutcome(teamDto.getResult().getOutcome());
-                    matchTeam.setGameWins(teamDto.getResult().getGameWins());
+
+                    if (teamDto.getResult() != null) {
+                        matchTeam.setOutcome(teamDto.getResult().getOutcome());
+                        matchTeam.setGameWins(teamDto.getResult().getGameWins());
+                    }
 
                     matchTeamRepository.save(matchTeam);
                 }

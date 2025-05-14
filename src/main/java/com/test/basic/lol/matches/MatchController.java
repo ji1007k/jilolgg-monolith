@@ -18,6 +18,21 @@ public class MatchController {
     private final MatchService matchService;
 //    private final SyncLolEsportsApiService syncLolEsportsApiService;
 
+    private static final List<String> MAJOR_LEAGUE_IDS = List.of(
+            // LCK, LCK CL
+            "98767991310872058",
+            "98767991335774713",
+            // 국제 대회 (FIRST STAND, MSI, WORLDS)
+            "113464388705111224",
+            "98767991325878492",
+            "98767975604431411",
+            // LPL, LEC, ...
+            "98767991314006698",
+            "98767991302996019",
+            "98767991349978712",
+            "98767991299243165");
+
+
     // TODO 연도 -> 날짜 검색
     @GetMapping
     public ResponseEntity<List<MatchDto>> getMatches(@RequestParam(required = false) String year,
@@ -37,17 +52,7 @@ public class MatchController {
     @GetMapping("/sync")
     @Operation(summary = "리그별 경기일정 동기화", description = "리그별 경기일정 동기화 API")
     public ResponseEntity syncAllMatchesByLeagueIdFromApi(@RequestParam(required = false) String year) {
-        // LCK, LCK CL, FIRST STAND, MSI, WORLDS, LPL
-        List<String> leagueIds = List.of(
-                "98767991310872058",
-                "98767991335774713",
-                "113464388705111224",
-                "98767991325878492",
-                "98767975604431411",
-                "98767991314006698");
-
-        matchService.syncMatchesByExternalApi(leagueIds, year);
-
+        matchService.syncMatchesByExternalApi(MAJOR_LEAGUE_IDS, year);
         return ResponseEntity.ok("리그별 경기 일정 동기화 완료");
 
     }

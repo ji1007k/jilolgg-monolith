@@ -17,10 +17,15 @@ public class LeagueController {
     public final LeagueService leagueService;
     private final SyncLolEsportsApiService syncLolEsportsApiService;
 
-    // LCK, LCK CL, LPL, LEC, ...
     private static final List<String> MAJOR_LEAGUE_IDS = List.of(
+            // LCK, LCK CL
             "98767991310872058",
             "98767991335774713",
+            // 국제 대회 (FIRST STAND, MSI, WORLDS)
+            "113464388705111224",
+            "98767991325878492",
+            "98767975604431411",
+            // LPL, LEC, ...
             "98767991314006698",
             "98767991302996019",
             "98767991349978712",

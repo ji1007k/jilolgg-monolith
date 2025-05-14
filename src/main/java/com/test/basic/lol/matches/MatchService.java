@@ -15,14 +15,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -99,14 +93,15 @@ public class MatchService {
         );
     }
 
+    // 파라미터로 전달된 YEAR 데이터까지만 갱신.
+    // EX) 2022를 전달한 경우, 금년 2025부터~2024,2023,2022 데이터 갱신
     public void syncMatchesByLeagueIdAndYearExternalApi(String leagueId, String year) {
         Optional<League> leagueOpt = leagueRepository.findByLeagueId(leagueId);
-
-        // 리그가 없다면 에러 반환
         if (leagueOpt.isEmpty()) {
             throw new RuntimeException("League not found with id: " + leagueId);
         }
 
+        int targetYear = Integer.parseInt(year);
         String nextPageToken = null;
 
         do {
@@ -114,7 +109,7 @@ public class MatchService {
 
             MatchScheduleResponse response = apiClient
                     .fetchScheduleByLeagueIdAndPageToken(leagueId, finalToken)
-                    .block(); // blocking call
+                    .block();
 
             if (response == null || response.getData() == null || response.getData().getSchedule() == null) {
                 break;
@@ -124,53 +119,61 @@ public class MatchService {
                     .getSchedule()
                     .getEvents();
 
-            boolean allBeforeTargetYear = true;
+            // 1️⃣ 페이지 내 모든 이벤트가 targetYear보다 이전이면 종료
+            boolean allBeforeTargetYear = events.stream()
+                    .filter(event -> event.getStartTime() != null)
+                    .map(event -> OffsetDateTime.parse(event.getStartTime())
+                            .atZoneSameInstant(ZoneId.of("Asia/Seoul"))
+                            .toLocalDateTime()
+                            .getYear())
+                    .allMatch(eventYear -> eventYear < targetYear);
+
+            if (allBeforeTargetYear) break;
 
             for (MatchScheduleResponse.EventDto event : events) {
-                if (event.getMatch() == null) continue;
+                if (event.getMatch() == null || event.getStartTime() == null) continue;
 
-                String startTime = event.getStartTime();
-                if (startTime != null && startTime.startsWith(year)) {
-                    allBeforeTargetYear = false;
+                LocalDateTime eventDateTime = OffsetDateTime.parse(event.getStartTime())
+                        .atZoneSameInstant(ZoneId.of("Asia/Seoul"))
+                        .toLocalDateTime();
 
-                    MatchScheduleResponse.MatchDto matchDto = event.getMatch();
+                int eventYear = eventDateTime.getYear();
 
-                    // [1] Match 저장
-                    Match match = matchRepository.findByMatchId(matchDto.getId()).orElseGet(Match::new);
-                    match.setMatchId(matchDto.getId());
-                    match.setLeague(leagueOpt.get());
-                    match.setStartTime(OffsetDateTime.parse(startTime)
-                            .atZoneSameInstant(ZoneId.of("Asia/Seoul"))
-                            .toLocalDateTime());
-                    match.setState(event.getState());
-                    match.setBlockName(event.getBlockName());
-                    match.setGameCount(matchDto.getStrategy().getCount());
-                    match.setStrategy(matchDto.getStrategy().getType() + matchDto.getStrategy().getCount());
+                // 2️⃣ 연도가 타겟보다 작으면 무시 (스킵)
+                if (eventYear < targetYear) continue;
 
-                    Match savedMatch = matchRepository.save(match);
+                MatchScheduleResponse.MatchDto matchDto = event.getMatch();
 
-                    // [2] MatchTeam 저장
-                    for (MatchScheduleResponse.TeamDto teamDto : matchDto.getTeams()) {
-                        Optional<Team> teamOpt = teamRepository.findByCodeAndName(teamDto.getCode(), teamDto.getName());
-                        if (teamOpt.isEmpty()) continue;
+                // [1] Match 저장
+                Match match = matchRepository.findByMatchId(matchDto.getId()).orElseGet(Match::new);
+                match.setMatchId(matchDto.getId());
+                match.setLeague(leagueOpt.get());
+                match.setStartTime(eventDateTime);
+                match.setState(event.getState());
+                match.setBlockName(event.getBlockName());
+                match.setGameCount(matchDto.getStrategy().getCount());
+                match.setStrategy(matchDto.getStrategy().getType() + matchDto.getStrategy().getCount());
 
-                        Team team = teamOpt.get();
-                        MatchTeam matchTeam = matchTeamRepository
-                                .findByMatch_MatchIdAndTeam_TeamId(savedMatch.getMatchId(), team.getTeamId())
-                                .orElseGet(MatchTeam::new);
+                Match savedMatch = matchRepository.save(match);
 
-                        matchTeam.setMatch(savedMatch);
-                        matchTeam.setTeam(team);
-                        matchTeam.setOutcome(teamDto.getResult().getOutcome());
-                        matchTeam.setGameWins(teamDto.getResult().getGameWins());
+                // [2] MatchTeam 저장
+                for (MatchScheduleResponse.TeamDto teamDto : matchDto.getTeams()) {
+                    Optional<Team> teamOpt = teamRepository.findByCodeAndName(teamDto.getCode(), teamDto.getName());
+                    if (teamOpt.isEmpty()) continue;
 
-                        matchTeamRepository.save(matchTeam);
-                    }
+                    Team team = teamOpt.get();
+                    MatchTeam matchTeam = matchTeamRepository
+                            .findByMatch_MatchIdAndTeam_TeamId(savedMatch.getMatchId(), team.getTeamId())
+                            .orElseGet(MatchTeam::new);
+
+                    matchTeam.setMatch(savedMatch);
+                    matchTeam.setTeam(team);
+                    matchTeam.setOutcome(teamDto.getResult().getOutcome());
+                    matchTeam.setGameWins(teamDto.getResult().getGameWins());
+
+                    matchTeamRepository.save(matchTeam);
                 }
             }
-
-            // 더 이상 해당 연도의 데이터가 없으면 중단
-            if (allBeforeTargetYear) break;
 
             nextPageToken = response.getData().getSchedule().getPages().getOlder();
 

@@ -49,7 +49,7 @@ public class SyncTeamService {
 
         try {
             long startTime = System.currentTimeMillis();  // 락 획득 시도 시작 시간 기록
-            isLocked = lock.tryLock(1, 600, TimeUnit.SECONDS); // 1초 대기 후 최대 6분 간 락 유지
+            isLocked = lock.tryLock(1, 600, TimeUnit.SECONDS); // 1초 대기 후 최대 600초(10분)간 락 유지
             long endTime = System.currentTimeMillis();  // 락 획득 시도 종료 시간 기록
 
             // 락 획득 시도 결과 로그
@@ -62,7 +62,7 @@ public class SyncTeamService {
                 return "이미 동기화 작업이 진행 중입니다.";
             }
 
-            // 락을 획득한 후 5초 대기
+            // 락을 획득한 후 5초 대기 (테스트용)
             try {
                 logger.info(">>> 락 획득 후 5초 대기 시작");
                 Thread.sleep(5000); // 5초 대기

@@ -2,6 +2,7 @@ package com.test.basic.lol.api;
 
 import com.test.basic.lol.leagues.LeagueDto;
 import com.test.basic.lol.leagues.LeagueResponse;
+import com.test.basic.lol.matches.MatchDetailResponse;
 import com.test.basic.lol.matches.MatchScheduleResponse;
 import com.test.basic.lol.tournaments.TournamentDto;
 import com.test.basic.lol.tournaments.TournamentResponse;
@@ -178,4 +179,15 @@ public class LolEsportsApiClient {
                 .bodyToMono(String.class);
     }
 
+    public Mono<MatchDetailResponse> fetchMatchDetailFromApi(String matchId) {
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/persisted/gw/getEventDetails")
+                        .queryParam("hl", HL)
+                        .queryParam("id", matchId)
+                        .build())
+                .header("x-api-key", API_KEY)
+                .retrieve()
+                .bodyToMono(MatchDetailResponse.class);
+    }
 }

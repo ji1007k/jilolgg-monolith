@@ -31,7 +31,7 @@ public class SyncLolEsportsSchedulerProd {
     }
 
 
-    @Scheduled(cron = "0 0/30 * * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 0/10 * * * *", zone = "Asia/Seoul")
     private void syncTodaysMatchesFromApiDev() {
         logger.info("==================== 금일 경기 정보 자동 동기화 작업 시작 ====================");
         // [1] 오늘 경기 목록 조회

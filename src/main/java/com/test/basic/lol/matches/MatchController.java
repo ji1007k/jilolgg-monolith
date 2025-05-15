@@ -48,9 +48,8 @@ public class MatchController {
         return ResponseEntity.ok(matches);
     }
 
-    //  TODO 금일 경기가 있는 리그 데이터 30분 ~ 1시간 간격으로 동기화
     @GetMapping("/sync")
-    @Operation(summary = "리그별 경기일정 동기화", description = "리그별 경기일정 동기화 API")
+    @Operation(summary = "리그별 경기일정 수동 동기화", description = "리그별 경기일정 수동 동기화 API")
     public ResponseEntity syncAllMatchesByLeagueIdFromApi(@RequestParam(required = false) String year) {
         matchService.syncMatchesByExternalApi(MAJOR_LEAGUE_IDS, year);
         return ResponseEntity.ok("리그별 경기 일정 동기화 완료");

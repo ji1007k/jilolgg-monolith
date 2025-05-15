@@ -340,8 +340,9 @@ public class MatchService {
         return matches.stream()
                 .map(matchMapper::entityToDto)
                 .toList();
-
     }
 
-
+    public List<Match> getMatchesByDate(LocalDateTime startOfDay, LocalDateTime endOfDay) {
+        return matchRepository.findMatchesByDate(startOfDay, endOfDay);
+    }
 }

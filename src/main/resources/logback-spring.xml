@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true" scanPeriod="30 seconds">
 
-    <property name="LOG_PATH" value="./logs"/>
+    <property name="LOG_PATH" value="logs"/>
     <property name="APP_NAME" value="myapp"/>
 
     <!-- 패턴 공통 설정 -->

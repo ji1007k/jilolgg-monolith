@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -23,10 +24,18 @@ public class TournamentController {
         this.syncLolEsportsApiService = syncLolEsportsApiService;
     }
 
-    @GetMapping
+    /*@GetMapping
     @Operation(summary = "금년도 토너먼트 목록 조회", description = "금년도 토너먼트 목록 조회 API")
     public ResponseEntity<List<TournamentDto>> getTournamentsForCurrentYear() {
         List<TournamentDto> tournaments = tournamentService.getTournamentsForCurrentYear();
+        return ResponseEntity.ok(tournaments);
+    }*/
+
+    @GetMapping
+    @Operation(summary = "토너먼트 목록 조회", description = "토너먼트 목록 조회 API")
+    public ResponseEntity<List<TournamentDto>> getTournamentsByYear(@RequestParam(name = "leagueId") String leagueId,
+                                                                    @RequestParam(name = "year") String year) {
+        List<TournamentDto> tournaments = tournamentService.getTournamentsByLeagueIdAndYear(leagueId, year);
         return ResponseEntity.ok(tournaments);
     }
 

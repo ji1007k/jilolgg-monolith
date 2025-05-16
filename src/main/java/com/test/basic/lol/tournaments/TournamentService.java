@@ -26,7 +26,7 @@ public class TournamentService {
         this.objectMapper = objectMapper;
     }
 
-    public List<TournamentDto> getTournamentsForCurrentYear() {
+   /* public List<TournamentDto> getTournamentsForCurrentYear() {
         LocalDate today = LocalDate.now();
         int currentYear = today.getYear();
 
@@ -59,7 +59,7 @@ public class TournamentService {
             throw new RuntimeException("Failed to parse data", e);
         }
 
-    }
+    }*/
 
     public List<TournamentDto> getAllTournaments() {
         return tournamentRepository.findAll()
@@ -71,5 +71,39 @@ public class TournamentService {
                         t.getEndDate()
                 ))
                 .collect(Collectors.toList());
+    }
+
+    public List<TournamentDto> getTournamentsByLeagueIdAndYear(String leagueId, String targetYear) {
+        LocalDate today = LocalDate.now();
+
+        Mono<String> result = lolEsportsApiClient.fetchTournamentsJson(leagueId);
+
+        try {
+            // 파싱
+            JsonNode tournamentNodes = objectMapper.readTree(result.block())
+                    .path("data").path("leagues").get(0).path("tournaments");
+
+            List<TournamentDto> tournaments = new ArrayList<>();
+
+            for (JsonNode tournament : tournamentNodes) {
+                TournamentDto dto = objectMapper.treeToValue(tournament, TournamentDto.class);
+
+                if (dto.getStartDate().getYear() != Integer.parseInt(targetYear)) continue;
+
+                // 현재 날짜가 startDate ~ endDate 사이에 있으면 isActive 설정
+                if (dto.getEndDate() != null) {
+                    boolean isActive = !today.isBefore(dto.getStartDate()) && !today.isAfter(dto.getEndDate());
+                    dto.setActive(isActive); // ← 여기가 핵심
+                }
+
+                tournaments.add(dto);
+            }
+
+            return tournaments;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse data", e);
+        }
+
     }
 }

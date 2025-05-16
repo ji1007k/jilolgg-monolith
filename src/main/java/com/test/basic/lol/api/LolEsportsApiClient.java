@@ -154,12 +154,12 @@ public class LolEsportsApiClient {
             .bodyToMono(String.class);
     }
 
-    public Mono<String> fetchTournamentsJson() {
+    public Mono<String> fetchTournamentsJson(String leagueId) {
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/persisted/gw/getTournamentsForLeague")
                         .queryParam("hl", HL)
-                        .queryParam("leagueId", LEAGUE_ID)
+                        .queryParam("leagueId", leagueId)
                         .build())
                 .header("x-api-key", API_KEY)
                 .retrieve()

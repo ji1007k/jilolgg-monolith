@@ -16,6 +16,7 @@ public class MatchDto {
     private String matchId;
     private String startTime;
     private String state;
+    private String strategy;
     private String winningTeamCode;
 
     private List<MatchTeamDto> participants;

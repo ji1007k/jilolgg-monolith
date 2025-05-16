@@ -254,6 +254,7 @@ public class MatchService {
                         event.path("match").path("id").asText(),
                         event.path("startTime").asText(),
                         event.path("state").asText(),
+                        event.path("strategy").path("type").asText(),
                         winningTeamCode,
                         matchTeamDtos.stream()
                                 .map(team -> {
@@ -299,6 +300,7 @@ public class MatchService {
                     event.path("match").path("id").asText(),
                     startTime,
                     event.path("state").asText(),
+                    event.path("strategy").path("type").asText(),
                     winningTeamCode,
                     matchTeamDtos.stream()
                             .map(team -> {

@@ -33,8 +33,7 @@ public class SyncMatchService {
     private final TeamRepository teamRepository;
     private final MatchTeamRepository matchTeamRepository;
 
-    // TODO 
-    //  - 경기 시간과 현재시각 비교해서 시작 1시간쯤 전부터만 갱신하기
+
     @Transactional
     public String syncTodaysMatchesFromLolEsportsApi(List<Match> matches) {
         // Redisson Lock 획득

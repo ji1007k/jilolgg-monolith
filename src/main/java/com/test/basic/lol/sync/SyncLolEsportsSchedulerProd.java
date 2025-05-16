@@ -56,22 +56,8 @@ public class SyncLolEsportsSchedulerProd {
             return;
         }
 
-        // 현재 시각 기준으로 1시간 전후 경기만 갱신 대상으로 선정
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime oneHourAgo = now.minusHours(2);
-        LocalDateTime oneHourLater = now.plusHours(1);
-        List<Match> matches = todayMatches.stream()
-                .filter(m -> m.getStartTime().isAfter(oneHourAgo) && m.getStartTime().isBefore(oneHourLater))
-                .toList();
-
-        if (matches.isEmpty()) {
-            logger.info(">>> 동기화 작업을 건너뜁니다.");
-            logger.info("==================== [금일 경기 정보 자동 동기화 작업 종료] ====================");
-            return;
-        }
-
-        logger.info(">>> 동기화 대상 경기 수: {}", matches.size());
-        syncMatchService.syncTodaysMatchesFromLolEsportsApi(matches);
+        logger.info(">>> 동기화 대상 경기 수: {}", todayMatches.size());
+        syncMatchService.syncTodaysMatchesFromLolEsportsApi(todayMatches);
         logger.info("==================== [금일 경기 정보 자동 동기화 작업 완료] ====================");
     }
 

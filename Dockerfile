@@ -23,7 +23,10 @@ FROM eclipse-temurin:17-jre-alpine AS runtime
 
 WORKDIR /app
 
-# Create a non-privileged user
+# 로그 디렉토리 생성
+RUN mkdir logs
+
+# Create a non-privileged user & 로그 디렉토리 소유자 변경
 ARG UID=10001
 RUN adduser \
     --disabled-password \
@@ -32,14 +35,12 @@ RUN adduser \
     --shell "/sbin/nologin" \
     --no-create-home \
     --uid "${UID}" \
-    appuser
+    appuser \
+ && chown -R ${UID}:${UID} /app/logs
 USER appuser
 
 # JAR 파일을 복사
 COPY --from=build /app/build/libs/*.jar app.jar
-
-# 로그 디렉토리 생성 및 소유자 변경
-RUN mkdir logs && chown -R 10001:10001 logs
 
 # 컨테이너 실행 시 JAR 파일 실행
 ENTRYPOINT ["java", "-Duser.timezone=Asia/Seoul", "-jar", "app.jar"]

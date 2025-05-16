@@ -29,6 +29,8 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
 
     Optional<Team> findByName(String name);
 
+    List<Team> findByTeamIdIn(List<String> teamIds);
+
 
 // TODO 삭제 ------------------------------------------------------
     @Query("SELECT t.code FROM Team t WHERE t.id = :id")

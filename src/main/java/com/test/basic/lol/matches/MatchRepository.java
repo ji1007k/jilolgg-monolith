@@ -19,4 +19,7 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
             @Param("startOfDay") LocalDateTime startOfDay,
             @Param("startOfNextDay") LocalDateTime startOfNextDay
     );
+
+    @Query("SELECT m.matchId FROM Match m WHERE m.league.leagueId = :leagueId")
+    List<String> findMatchIdByLeague_LeagueId(String leagueId);
 }

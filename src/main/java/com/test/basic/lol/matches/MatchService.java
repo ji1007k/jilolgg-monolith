@@ -345,4 +345,8 @@ public class MatchService {
     public List<Match> getMatchesByDate(LocalDateTime startOfDay, LocalDateTime endOfDay) {
         return matchRepository.findMatchesByDate(startOfDay, endOfDay);
     }
+
+    public Optional<LocalDateTime> getFirstMatchTimeOfDay(LocalDateTime startOfDay, LocalDateTime endOfDay) {
+        return matchRepository.findFirstMatchTimeOfDay(startOfDay, endOfDay);
+    }
 }

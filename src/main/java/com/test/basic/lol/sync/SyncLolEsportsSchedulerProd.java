@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Configuration
 @Profile("prod")
@@ -33,22 +34,60 @@ public class SyncLolEsportsSchedulerProd {
 
     @Scheduled(cron = "0 0/10 * * * *", zone = "Asia/Seoul")
     private void syncTodaysMatchesFromApiDev() {
-        logger.info("==================== 금일 경기 정보 자동 동기화 작업 시작 ====================");
-        // [1] 오늘 경기 목록 조회
-        logger.info(">>> 금일 경기 목록 조회 중.");
+        logger.info("==================== [금일 경기 정보 자동 동기화 작업 시작] ====================");
         LocalDate today = LocalDate.now();
-        LocalDateTime startOfDay = today.atStartOfDay();                    // 2025-05-15T00:00
-        LocalDateTime startOfNextDay = today.plusDays(1).atStartOfDay();    // 2025-05-16T00:00
-        List<Match> matches = matchService.getMatchesByDate(startOfDay, startOfNextDay);
 
-        // [2] 금일 경기 없으면 동기화 작업 종료
-        if (matches.isEmpty()) {
-            logger.info(">>> 금일 경기가 없습니다. 동기화 작업을 종료합니다.");
+        // [1] 동기화 타이밍 검사
+        if (!isUpdateTime(today)) {
+            logger.info(">>> 동기화 작업을 건너뜁니다.");
+            logger.info("==================== [금일 경기 정보 자동 동기화 작업 종료] ====================");
+            return;
         }
 
-        // [3] 금일 경기 있는 경우 동기화 작업 계속
-        logger.info(">>> 금일 경기 개수: {}", matches.size());
+        // [2] 경기 조회 및 처리
+        logger.info(">>> 금일 전체 경기 목록 조회 중...");
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime startOfNextDay = today.plusDays(1).atStartOfDay();
+        List<Match> todayMatches = matchService.getMatchesByDate(startOfDay, startOfNextDay);
+
+        if (todayMatches.isEmpty()) {
+            logger.info(">>> 금일 예정된 경기가 없습니다. 동기화 작업을 종료합니다.");
+            logger.info("==================== [금일 경기 정보 자동 동기화 작업 종료] ====================");
+            return;
+        }
+
+        // 현재 시각 기준으로 1시간 전후 경기만 갱신 대상으로 선정
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime oneHourAgo = now.minusHours(2);
+        LocalDateTime oneHourLater = now.plusHours(1);
+        List<Match> matches = todayMatches.stream()
+                .filter(m -> m.getStartTime().isAfter(oneHourAgo) && m.getStartTime().isBefore(oneHourLater))
+                .toList();
+
+        if (matches.isEmpty()) {
+            logger.info(">>> 동기화 작업을 건너뜁니다.");
+            logger.info("==================== [금일 경기 정보 자동 동기화 작업 종료] ====================");
+            return;
+        }
+
+        logger.info(">>> 동기화 대상 경기 수: {}", matches.size());
         syncMatchService.syncTodaysMatchesFromLolEsportsApi(matches);
-        logger.info("==================== 금일 경기 정보 자동 동기화 작업 완료 ====================");
+        logger.info("==================== [금일 경기 정보 자동 동기화 작업 완료] ====================");
+    }
+
+    public boolean isUpdateTime(LocalDate date) {
+        // 1. 해당 날짜 경기 중 가장 이른 시간 조회
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
+
+        Optional<LocalDateTime> firstMatchTime = matchService.getFirstMatchTimeOfDay(startOfDay, endOfDay);
+
+        if (firstMatchTime.isEmpty()) return false;
+
+        // 2. 첫 경기 시작시간 -1시간 전부터 갱신 시작
+        LocalDateTime updateStartTime = firstMatchTime.get().minusHours(1);
+
+        // 3. 현재 시각이 그 시간 이후면 true
+        return LocalDateTime.now().isAfter(updateStartTime);
     }
 }

@@ -18,12 +18,9 @@ spring:
     cache: false
     check-template-location: true
 
+# logging 설정
 logging:
-  level:
-    root: INFO
-    org.springframework.web: INFO
-    org.springframework.security: INFO
-    # org.springframework.boot.autoconfigure: DEBUG
+  config: classpath:logback-spring.xml
 
 jwt:
   private:

@@ -3,13 +3,16 @@ package com.test.basic.lol.teams;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.test.basic.lol.api.LolEsportsApiClient;
+import com.test.basic.lol.leagues.League;
+import com.test.basic.lol.leagues.LeagueRepository;
+import com.test.basic.lol.matchteams.MatchTeamService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 // TODO 외부 API 데이터 바로 가져오는 로직 분리
 @Service
@@ -19,18 +22,17 @@ public class TeamService {
     private final LolEsportsApiClient lolEsportsApiClient;
     private final TeamMapper teamMapper;
     private final ObjectMapper objectMapper;
+    private final LeagueRepository leagueRepository;
+    private final MatchTeamService matchTeamService;
 
-    // LCK 1군 팀 코드 (활동중)
-    /*private final List<String> lckFirstTeamCodes = List.of(
-            "T1", "GEN", "HLE", "DK", "DRX", "KT", "BRO",
-            "NS", "BFX", "DNF"
-    );*/
 
-    public TeamService(TeamRepository teamRepository, LolEsportsApiClient lolEsportsApiClient, TeamMapper teamMapper, ObjectMapper objectMapper) {
+    public TeamService(TeamRepository teamRepository, LolEsportsApiClient lolEsportsApiClient, TeamMapper teamMapper, ObjectMapper objectMapper, LeagueRepository leagueRepository, MatchTeamService matchTeamService) {
         this.teamRepository = teamRepository;
         this.lolEsportsApiClient = lolEsportsApiClient;
         this.teamMapper = teamMapper;
         this.objectMapper = objectMapper;
+        this.leagueRepository = leagueRepository;
+        this.matchTeamService = matchTeamService;
     }
 
     public List<Team> getAllTeamsFromDB() {
@@ -44,7 +46,15 @@ public class TeamService {
         if ((leagueId == null || leagueId.isBlank()) && (slugs == null || slugs.isEmpty())) {
             teams = teamRepository.findTeamsWithMatches();
         } else {
-            teams = teamRepository.findTeamsWithMatchesFiltered(leagueId, slugs);
+            Optional<League> league = leagueRepository.findByLeagueId(leagueId);
+
+            if (league.get().getRegion().equals("국제 대회")) {
+                // 국제 대회 경기 일정이 있는 팀 목록 조회
+                List<String> teamIds = matchTeamService.findTeamIdsByLeagueId(leagueId);
+                teams = teamRepository.findByTeamIdIn(teamIds);
+            } else {
+                teams = teamRepository.findTeamsWithMatchesFiltered(leagueId, slugs);
+            }
         }
 
         return teams.stream().map(teamMapper::teamToTeamDto).toList();
@@ -54,12 +64,6 @@ public class TeamService {
         return teamRepository.findBySlug(slug)
                 .orElseThrow(() -> new EntityNotFoundException("Team not found: " + slug));
     }
-
-    /*public List<TeamDto> filterLCKFirstTeams(List<TeamDto> teams) {
-        return teams.stream()
-                .filter(team -> lckFirstTeamCodes.contains(team.getCode()))
-                .collect(Collectors.toList());
-    }*/
 
     // FIXME API 응답 데이터 DTO 따로 생성
     public TeamSyncDto getTeamBySlugFromExternalApi(String slug) {

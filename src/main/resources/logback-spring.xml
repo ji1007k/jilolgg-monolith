@@ -57,6 +57,7 @@
     <!-- 배포: 파일 출력 -->
     <springProfile name="prod">
         <root level="ERROR">
+            <appender-ref ref="INFO_FILE"/>
             <appender-ref ref="ERROR_FILE"/>
         </root>
     </springProfile>

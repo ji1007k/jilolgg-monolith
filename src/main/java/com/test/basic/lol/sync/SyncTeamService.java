@@ -7,6 +7,7 @@ import com.test.basic.lol.teams.Team;
 import com.test.basic.lol.teams.TeamRepository;
 import com.test.basic.lol.teams.TeamService;
 import com.test.basic.lol.teams.TeamSyncDto;
+import jakarta.annotation.PreDestroy;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
@@ -23,11 +24,13 @@ import java.util.concurrent.TimeUnit;
 public class SyncTeamService {
     private static final Logger logger = LoggerFactory.getLogger(SyncTeamService.class);
 
+    private final TeamService teamService;
     private final TeamRepository teamRepository;
+    private final LeagueRepository leagueRepository;
+
     private final LolEsportsApiClient apiClient;
     private final RedissonClient redissonClient;
-    private final LeagueRepository leagueRepository;
-    private final TeamService teamService;
+    private RLock lock;
 
     public SyncTeamService(TeamRepository teamRepository,
                            LolEsportsApiClient apiClient,
@@ -44,12 +47,12 @@ public class SyncTeamService {
     // 락을 획득한 스레드가 락을 해제하지 않더라도, 일정 시간이 지나면 자동으로 락을 해제함
     @Transactional
     public String syncTeamsFromLolEsportsApi() {
-        RLock lock = redissonClient.getLock("sync-teams-lock");
+        lock = redissonClient.getLock("sync-teams-lock");
         boolean isLocked = false;
 
         try {
             long startTime = System.currentTimeMillis();  // 락 획득 시도 시작 시간 기록
-            isLocked = lock.tryLock(1, 600, TimeUnit.SECONDS); // 1초 대기 후 최대 600초(10분)간 락 유지
+            isLocked = lock.tryLock(1, TimeUnit.SECONDS); // 1초 대기
             long endTime = System.currentTimeMillis();  // 락 획득 시도 종료 시간 기록
 
             // 락 획득 시도 결과 로그
@@ -105,12 +108,7 @@ public class SyncTeamService {
             logger.error(">>> 락 획득 중 예외 발생: {}", e.getMessage());
             return "락 획득 실패";
         } finally {
-            if (isLocked && lock.isHeldByCurrentThread()) {
-                lock.unlock();
-                logger.warn(">>> 락 해제 완료");
-            } else {
-                logger.warn(">>> 락 해제 시도 없음 (락 획득 실패 또는 타임아웃에 의한 자동 해제)");
-            }
+            cleanup(isLocked);
         }
     }
 
@@ -132,5 +130,16 @@ public class SyncTeamService {
         team.setLeague(league);
 
         teamRepository.save(team);
+    }
+
+    // 애플리케이션이 종료되거나 컨테이너가 닫히기 전에 자원 정리
+    @PreDestroy
+    private void cleanup(boolean isLocked) {
+        if (isLocked && lock.isHeldByCurrentThread()) {
+            lock.unlock();
+            logger.warn(">>> 락 해제 완료");
+        } else {
+            logger.warn(">>> 락 해제 시도 없음 (락 획득 실패 또는 타임아웃에 의한 자동 해제)");
+        }
     }
 }

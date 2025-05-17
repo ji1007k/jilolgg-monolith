@@ -8,6 +8,7 @@ import com.test.basic.lol.matchteams.MatchTeam;
 import com.test.basic.lol.matchteams.MatchTeamRepository;
 import com.test.basic.lol.teams.Team;
 import com.test.basic.lol.teams.TeamRepository;
+import jakarta.annotation.PreDestroy;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
@@ -27,22 +28,29 @@ import java.util.concurrent.TimeUnit;
 public class SyncMatchService {
     private static Logger logger = LoggerFactory.getLogger(SyncMatchService.class);
 
-    private final LolEsportsApiClient apiClient;
-    private final RedissonClient redissonClient;
     private final MatchRepository matchRepository;
     private final TeamRepository teamRepository;
     private final MatchTeamRepository matchTeamRepository;
+
+    private final LolEsportsApiClient apiClient;
+    private final RedissonClient redissonClient;
+    private RLock lock;
 
 
     @Transactional
     public String syncTodaysMatchesFromLolEsportsApi(List<Match> matches) {
         // Redisson Lock 획득
-        RLock lock = redissonClient.getLock("sync-matches-lock");
+        lock = redissonClient.getLock("sync-matches-lock"); // lightweight 프록시 객체
         boolean isLocked = false;
 
         try {
             long startTime = System.currentTimeMillis();
-            isLocked = lock.tryLock(1, 600, TimeUnit.SECONDS);  // 1분 대기 및 최대 600초(10분)간 락 유지
+            // 도중에 컨테이너가 죽으면 락이 leaseTime(10분)간 Redis에 계속 남음
+            //  -> 다른 인스턴스가 tryLock 시도 시 "다른 애가 락 잡고 있음" -> 오래된 락
+//            isLocked = lock.tryLock(1, 600, TimeUnit.SECONDS);  // 1분 대기 및 최대 600초(10분)간 락 유지
+            // leaseTime 생략 → watchdog 활성화
+            //  -> Redisson이 백그라운드에서 락을 유지하고, 컨테이너/JVM 죽으면 watchdog도 종료 → 락 자동 해제
+            isLocked = lock.tryLock(1, TimeUnit.SECONDS);
             long endTime = System.currentTimeMillis();
             logger.info(">>> 락 획득 결과: {}, 대기 시간: {}ms", isLocked, (endTime - startTime));
 
@@ -159,12 +167,18 @@ public class SyncMatchService {
             logger.error(">> 락 획득 중 예외 발생: {}", e.getMessage());
             return "락 획득 실패";
         } finally {
-            if (isLocked && lock.isHeldByCurrentThread()) {
-                lock.unlock();
-                logger.warn(">>> 락 해제 완료");
-            } else {
-                logger.warn(">>> 락 해제 시도 없음 (락 획득 실패 또는 타임아웃에 의한 자동 해제)");
-            }
+            cleanup();
+        }
+    }
+
+    @PreDestroy
+    public void cleanup() {
+        // 현재 스레드가 잡은 락인지 보장하기 위해 isHeldByCurrentThread() 꼭 확인
+        if (lock != null && lock.isHeldByCurrentThread()) {
+            lock.unlock();
+            logger.info(">>> 락 해제 완료");
+        } else {
+            logger.warn(">>> 락 해제 시도 없음 (락 획득 실패 또는 타임아웃에 의한 자동 해제)");
         }
     }
 }

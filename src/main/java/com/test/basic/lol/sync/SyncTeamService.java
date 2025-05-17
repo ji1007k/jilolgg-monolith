@@ -108,7 +108,7 @@ public class SyncTeamService {
             logger.error(">>> 락 획득 중 예외 발생: {}", e.getMessage());
             return "락 획득 실패";
         } finally {
-            cleanup(isLocked);
+            cleanup();
         }
     }
 
@@ -134,8 +134,8 @@ public class SyncTeamService {
 
     // 애플리케이션이 종료되거나 컨테이너가 닫히기 전에 자원 정리
     @PreDestroy
-    private void cleanup(boolean isLocked) {
-        if (isLocked && lock.isHeldByCurrentThread()) {
+    private void cleanup() {
+        if (lock != null && lock.isHeldByCurrentThread()) {
             lock.unlock();
             logger.warn(">>> 락 해제 완료");
         } else {

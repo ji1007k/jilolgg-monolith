@@ -16,7 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -83,19 +85,32 @@ public class SyncTeamService {
             List<TeamSyncDto> externalTeams = teamService.parseTeamsFromResponse(result.block());
 
             int successCnt = externalTeams.size();
-            StringBuilder errorLog = new StringBuilder();
+            Map<String, StringBuilder> errorLogMap = new HashMap<>();
             for (TeamSyncDto dto : externalTeams) {
                 try {
                     saveOrUpdate(dto);
                 } catch (Exception e) {
-                    errorLog.append(String.format("팀 동기화 실패 - 이름: %s, 이유: %s%n", dto.getName(), e.getMessage()));
+                    // 에러 메시지를 키로 사용
+                    errorLogMap
+                            .computeIfAbsent(e.getMessage(), k -> new StringBuilder())
+                            .append(dto.getName()).append(", ");
                     successCnt--;
                 }
             }
             long syncEndTime = System.currentTimeMillis();
 
-            if (errorLog.length() > 0) {
-                logger.error(">>> ❌ 동기화 중 실패한 팀 목록:\n{}", errorLog);
+            // 에러 로그 출력
+            if (!errorLogMap.isEmpty()) {
+                StringBuilder groupedErrorLog = new StringBuilder(">>> 동기화 중 실패한 팀 목록:\n");
+                errorLogMap.forEach((reason, names) -> {
+                    if (names.length() >= 2) {
+                        names.setLength(names.length() - 2);  // 마지막 ", " 제거
+                    }
+
+                    groupedErrorLog.append(String.format("원인: %s%n", reason));
+                    groupedErrorLog.append("- ").append(names).append("\n");
+                });
+                logger.error("{}", groupedErrorLog);
             }
 
             logger.info(">>> 팀 동기화 완료 (성공 {}건 / 전체 {}건)", successCnt, externalTeams.size());

@@ -53,7 +53,7 @@
     <!-- 루트 로거 -->
     <!-- 배포: 파일 출력 -->
     <springProfile name="prod">
-        <root level="ERROR">
+        <root level="INFO">
             <appender-ref ref="INFO_FILE"/>
             <appender-ref ref="ERROR_FILE"/>
         </root>

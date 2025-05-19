@@ -1,5 +1,7 @@
 package com.test.basic.chat;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Description;
@@ -19,12 +21,14 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private static final Logger logger = LoggerFactory.getLogger(ChatWebSocketHandler.class);
 
     private final ChatService chatService;  // Redis로 메시지를 전송할 서비스
+    private final ObjectMapper om;
 
     // 여러 사용자의 WebSocket 연결 관리
     private static final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
 
-    public ChatWebSocketHandler(ChatService chatService) {
+    public ChatWebSocketHandler(ChatService chatService, ObjectMapper om) {
         this.chatService = chatService;
+        this.om = om;
     }
 
     @Override
@@ -52,10 +56,17 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     @Description("클라이언트가 보낸 메시지를 받아서 다른 클라이언트에 브로드캐스트")
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) {
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws JsonProcessingException {
         String userId = getUserIdFromSession(session);
         String username = getUserNameFromSession(session);
-        String messageContent = message.getPayload();
+        String payload = message.getPayload();
+
+        String messageType = om.readTree(payload).get("type").asText();
+
+        // ping 무시
+        if (messageType.equals("ping")) return;
+
+        String messageContent = om.readTree(payload).get("message").asText();
         logger.info("📩 메시지 수신: [{}] {}", userId, messageContent);
 
         // 메시지를 Redis로 전송

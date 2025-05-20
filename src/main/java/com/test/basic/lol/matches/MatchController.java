@@ -1,12 +1,12 @@
 package com.test.basic.lol.matches;
 
-import com.test.basic.lol.sync.SyncLolEsportsApiService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 
@@ -33,11 +33,15 @@ public class MatchController {
             "98767991299243165");
 
 
-    // TODO 연도 -> 날짜 검색
     @GetMapping
-    public ResponseEntity<List<MatchDto>> getMatches(@RequestParam(required = false) String year,
-                                                     @RequestParam(required = false) String leagueId) {
-        List<MatchDto> matches = matchService.getMatchesFromDB(year, leagueId);
+    public ResponseEntity<List<MatchDto>> getMatches(@RequestParam(required = false) String leagueId,
+                                                     @RequestParam(required = false) LocalDate startDate,
+                                                     @RequestParam(required = false) LocalDate endDate) {
+        List<MatchDto> matches = matchService.getMatchesByLeagueIdAndDate(
+                leagueId,
+                startDate,
+                endDate
+        );
         return ResponseEntity.ok(matches);
     }
 
@@ -53,8 +57,8 @@ public class MatchController {
     public ResponseEntity syncAllMatchesByLeagueIdFromApi(@RequestParam(required = false) String year) {
         matchService.syncMatchesByExternalApi(MAJOR_LEAGUE_IDS, year);
         return ResponseEntity.ok("리그별 경기 일정 동기화 완료");
-
     }
+
 
     // 해당 API는 단일 페이지 데이터만 동기화함
     /*@GetMapping("/sync")

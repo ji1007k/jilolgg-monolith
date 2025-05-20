@@ -33,11 +33,17 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
         SELECT MIN(m.startTime)
         FROM Match m
         WHERE m.startTime >= :startOfDay AND m.startTime < :endOfDay
-          AND m.state NOT IN ('completed', 'unneeded')
+            AND m.state NOT IN ('completed', 'unneeded')
     """)
     Optional<LocalDateTime> findFirstMatchTimeOfDay(
             @Param("startOfDay") LocalDateTime startOfDay,
             @Param("endOfDay") LocalDateTime endOfDay
     );
 
+    @Query("""
+        SELECT m FROM Match m
+        WHERE m.league.leagueId = :leagueId
+            AND m.startTime BETWEEN :startOfDay AND :endOfDay
+    """)
+    List<Match> findMatchByLeagueIdAndDate(String leagueId, LocalDateTime startOfDay, LocalDateTime endOfDay);
 }

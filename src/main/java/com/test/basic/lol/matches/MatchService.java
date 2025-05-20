@@ -351,4 +351,21 @@ public class MatchService {
     public Optional<LocalDateTime> getFirstMatchTimeOfDay(LocalDateTime startOfDay, LocalDateTime endOfDay) {
         return matchRepository.findFirstMatchTimeOfDay(startOfDay, endOfDay);
     }
+
+    public List<MatchDto> getMatchesByLeagueIdAndDate(String leagueId, LocalDate startDate, LocalDate endDate) {
+        LocalDateTime startOfDay = startDate.atStartOfDay();
+        LocalDateTime endOfDay;
+
+        if (startDate.equals(endDate)) {
+            // 하루만 조회할 경우: 해당 날짜의 끝까지
+            endOfDay = startDate.plusDays(1).atStartOfDay().minusNanos(1);
+        } else {
+            // 여러 날 조회할 경우: endDate의 끝까지 포함
+            endOfDay = endDate.plusDays(1).atStartOfDay().minusNanos(1);
+        }
+
+        List<Match> matches = matchRepository.findMatchByLeagueIdAndDate(leagueId, startOfDay, endOfDay);
+        return matches.stream().map(matchMapper::entityToDto).toList();
+    }
+
 }

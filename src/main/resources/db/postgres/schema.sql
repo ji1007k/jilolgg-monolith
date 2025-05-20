@@ -51,6 +51,10 @@ CREATE TABLE IF NOT EXISTS "matches"
     strategy   VARCHAR(50)
     -- 외래키 추가 가능: REFERENCES leagues(league_id)
 );
+-- 날짜 비교 조회 시 인덱스 범위 스캔 목적
+DROP INDEX IF EXISTS idx_match_start_time;
+CREATE INDEX idx_match_start_time ON "matches" ("start_time");
+
 
 CREATE TABLE IF NOT EXISTS "match_teams"
 (

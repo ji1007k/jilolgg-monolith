@@ -1,4 +1,4 @@
-package com.test.basic.lol.matches;
+package com.test.basic.lol.api.dto.matches;
 
 
 import lombok.Data;

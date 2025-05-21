@@ -4,10 +4,7 @@ import com.test.basic.lol.api.LolEsportsApiClient;
 import com.test.basic.lol.leagues.League;
 import com.test.basic.lol.leagues.LeagueDto;
 import com.test.basic.lol.leagues.LeagueRepository;
-import com.test.basic.lol.matches.Match;
 import com.test.basic.lol.matches.MatchRepository;
-import com.test.basic.lol.matches.MatchScheduleResponse;
-import com.test.basic.lol.matchteams.MatchTeam;
 import com.test.basic.lol.matchteams.MatchTeamRepository;
 import com.test.basic.lol.teams.TeamRepository;
 import com.test.basic.lol.tournaments.Tournament;
@@ -15,12 +12,8 @@ import com.test.basic.lol.tournaments.TournamentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 

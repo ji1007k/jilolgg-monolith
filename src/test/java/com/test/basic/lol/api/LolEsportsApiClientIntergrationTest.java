@@ -58,7 +58,7 @@ public class LolEsportsApiClientIntergrationTest {
 
     @Test
     void testFetchStandings() throws JsonProcessingException {
-        Mono<String> result = lolEsportsApiClient.fetchStandings(tournamentId);
+        Mono<String> result = lolEsportsApiClient.fetchStandingsJson(tournamentId);
         String jsonResponse = result.block();
         assertThat(jsonResponse).isNotNull();
 

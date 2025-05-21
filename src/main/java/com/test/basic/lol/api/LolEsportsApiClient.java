@@ -2,8 +2,9 @@ package com.test.basic.lol.api;
 
 import com.test.basic.lol.leagues.LeagueDto;
 import com.test.basic.lol.leagues.LeagueResponse;
-import com.test.basic.lol.matches.MatchDetailResponse;
-import com.test.basic.lol.matches.MatchScheduleResponse;
+import com.test.basic.lol.api.dto.matches.MatchDetailResponse;
+import com.test.basic.lol.api.dto.matches.MatchScheduleResponse;
+import com.test.basic.lol.api.dto.standings.StandingsResponse;
 import com.test.basic.lol.tournaments.TournamentDto;
 import com.test.basic.lol.tournaments.TournamentResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +27,7 @@ public class LolEsportsApiClient {
     private final String API_KEY;
 
     private static final String HL = "ko-KR";
-    private static final String LEAGUE_ID = "98767991310872058"; // LCK
+    private static final String LEAGUE_ID = "98767991310872058"; // LCK. TODO 삭제
 
 //    private static final String API_URL =
 //            "/persisted/gw/getSchedule?hl=ko-KR&leagueId=98767991302996019";
@@ -167,7 +168,7 @@ public class LolEsportsApiClient {
     }
 
     // 현재 날짜 기준으로 진행중인 토너먼트 있으면 해당 토너먼트 id 순위 조회
-    public Mono<String> fetchStandings(String tournamentId) {
+    public Mono<String> fetchStandingsJson(String tournamentId) {
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/persisted/gw/getStandings")
@@ -177,6 +178,18 @@ public class LolEsportsApiClient {
                 .header("x-api-key", API_KEY)
                 .retrieve()
                 .bodyToMono(String.class);
+    }
+
+    public Mono<StandingsResponse> fetchStandings(String tournamentId) {
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/persisted/gw/getStandings")
+                        .queryParam("hl", HL)
+                        .queryParam("tournamentId", tournamentId)
+                        .build())
+                .header("x-api-key", API_KEY)
+                .retrieve()
+                .bodyToMono(StandingsResponse.class);
     }
 
     public Mono<MatchDetailResponse> fetchMatchDetailFromApi(String matchId) {

@@ -3,6 +3,7 @@ package com.test.basic.lol.matches;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.test.basic.lol.api.LolEsportsApiClient;
+import com.test.basic.lol.api.dto.matches.MatchScheduleResponse;
 import com.test.basic.lol.leagues.League;
 import com.test.basic.lol.leagues.LeagueRepository;
 import com.test.basic.lol.matchteams.MatchTeam;

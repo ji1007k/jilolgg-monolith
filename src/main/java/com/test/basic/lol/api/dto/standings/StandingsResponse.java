@@ -34,7 +34,8 @@ public class StandingsResponse {
     public static class SectionDto {
         public String name;
         public List<MatchDto> matches;
-        public List<RankingDto> rankings;
+        public List<RankingDto> rankings;        // 순위별로 팀 목록이 나눠진 리스트
+        public List<TeamDto> refinedRankings;    // 공동순위 처리 후 flatMap한 결과 리스트
     }
 
     @Data
@@ -69,6 +70,7 @@ public class StandingsResponse {
         public String name;
         public String code;
         public String image;
+        public int rank;
         public ResultDto result;    // matches
         public RecordDto record;    // rankings
 

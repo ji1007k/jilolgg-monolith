@@ -1,13 +1,11 @@
 package com.test.basic.lol.standings;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.test.basic.lol.api.LolEsportsApiClient;
-import com.test.basic.lol.teams.TournamentTeamRankingDto;
+import com.test.basic.lol.api.dto.standings.StandingsResponse;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,8 +22,96 @@ public class StandingsService {
         this.objectMapper = objectMapper;
     }
 
-    public List<StandingsDto> getStandingsByTournamentId(String tournamentId) {
-        Mono<String> result = lolEsportsApiClient.fetchStandings(tournamentId);
+    public Mono<StandingsResponse.StandingsData> getStandingsByTournamentIdFromApi(String tournamentId) {
+        return lolEsportsApiClient
+                .fetchStandings(tournamentId)
+                .map(response -> {
+                    response.getData().setTournamentId(tournamentId);
+
+                    List<StandingsResponse.StandingsDto> standings = response.getData().getStandings();
+                    for (StandingsResponse.StandingsDto standing : standings) {
+                        List<StandingsResponse.StageDto> stages = standing.getStages();
+
+                        for (StandingsResponse.StageDto stage : stages) {
+                            List<StandingsResponse.SectionDto> sections = stage.getSections();
+
+                            for (StandingsResponse.SectionDto section : sections) {
+                                // [1] matches : 전적 조회
+                                List<StandingsResponse.MatchDto> matches = section.getMatches();
+
+                                // [1-1] 경기별 세트 스코어로 득실차 계산
+                                Map<String, Integer> gameWinsMap = new HashMap<>();
+
+                                for (StandingsResponse.MatchDto match : matches) {
+                                    List<StandingsResponse.TeamDto> teams = match.getTeams();
+
+                                    if (teams.size() == 2) {
+                                        StandingsResponse.TeamDto teamA = teams.get(0);
+                                        StandingsResponse.TeamDto teamB = teams.get(1);
+
+                                        String teamAId = teamA.getTeamId();
+                                        String teamBId = teamB.getTeamId();
+
+                                        if (teamA.getResult() == null || teamB.getResult() == null)
+                                            continue;
+
+                                        int teamAWins = teamA.getResult().getGameWins();
+                                        int teamBWins = teamB.getResult().getGameWins();
+
+                                        // teamA 득실차 = 내 wins - 상대 wins
+                                        int diffA = teamAWins - teamBWins;
+                                        int diffB = teamBWins - teamAWins;
+
+                                        gameWinsMap.put(teamAId, gameWinsMap.getOrDefault(teamAId, 0) + diffA);
+                                        gameWinsMap.put(teamBId, gameWinsMap.getOrDefault(teamBId, 0) + diffB);
+                                    }
+                                }
+
+
+                                // [2] rankings : 순위, 승, 패, 득실
+                                // [2-1] 순위 정렬
+                                List<StandingsResponse.RankingDto> rankings = section.getRankings();
+
+                                for (StandingsResponse.RankingDto ranking : rankings) {
+                                    List<StandingsResponse.TeamDto> teams = ranking.getTeams();
+
+                                    // 득실차 정보 저장
+                                    for (StandingsResponse.TeamDto team : teams) {
+                                        int gameDiff = gameWinsMap.getOrDefault(team.getTeamId(), 0);
+                                        team.getRecord().setGameDiff(gameDiff);
+                                    }
+
+                                    teams.sort((a, b) -> {
+                                        StandingsResponse.RecordDto aRecord = a.getRecord();
+                                        StandingsResponse.RecordDto bRecord = b.getRecord();
+
+                                        // [2-1-1] 승리수 우선 정렬
+                                        int winsA = aRecord.getWins();
+                                        int winsB = bRecord.getWins();
+
+                                        int winCompare = Integer.compare(winsB, winsA);
+                                        if (winCompare != 0) {
+                                            return winCompare;
+                                        }
+
+                                        // [2-1-2] 득실차 보조 정렬
+                                        int diffA = aRecord.getGameDiff();
+                                        int diffB = bRecord.getGameDiff();
+
+                                        return Integer.compare(diffB, diffA);
+                                    });
+                                }
+                            }
+                        }
+                    }
+
+                    return response.getData();
+                });
+    }
+
+
+    /*public List<StandingsDto> getStandingsByTournamentIdFromApi(String tournamentId) {
+        Mono<String> result = lolEsportsApiClient.fetchStandingsJson(tournamentId);
 
         try {
             JsonNode standingsNodes = objectMapper.readTree(result.block())
@@ -171,6 +257,8 @@ public class StandingsService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse data", e);
         }
-    }
+    }*/
+
+
 
 }

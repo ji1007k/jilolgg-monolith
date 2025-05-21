@@ -1,6 +1,8 @@
 package com.test.basic.lol.matches;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -34,9 +36,15 @@ public class MatchController {
 
 
     @GetMapping
-    public ResponseEntity<List<MatchDto>> getMatches(@RequestParam(required = false) String leagueId,
-                                                     @RequestParam(required = false) LocalDate startDate,
-                                                     @RequestParam(required = false) LocalDate endDate) {
+    @Operation(summary = "경기 일정 목록 조회", description = "리그/날짜별 경기 일정 목록 조회 API")
+    @Parameters({
+            @Parameter(name = "leagueId", description = "리그ID"),
+            @Parameter(name = "startDate", description = "시작일"),
+            @Parameter(name = "endDate", description = "종료일")
+    })
+    public ResponseEntity<List<MatchDto>> getMatches(@RequestParam String leagueId,
+                                                     @RequestParam LocalDate startDate,
+                                                     @RequestParam LocalDate endDate) {
         List<MatchDto> matches = matchService.getMatchesByLeagueIdAndDate(
                 leagueId,
                 startDate,

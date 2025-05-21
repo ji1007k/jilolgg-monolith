@@ -1,6 +1,5 @@
-package com.test.basic.lol.standings;
+package com.test.basic.lol.standings.dto;
 
-import com.test.basic.lol.teams.Team;
 import lombok.Data;
 
 import java.util.List;

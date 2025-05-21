@@ -2,7 +2,7 @@ package com.test.basic.lol.sync;
 
 import com.test.basic.lol.api.LolEsportsApiClient;
 import com.test.basic.lol.matches.Match;
-import com.test.basic.lol.matches.MatchDetailResponse;
+import com.test.basic.lol.api.dto.matches.MatchDetailResponse;
 import com.test.basic.lol.matches.MatchRepository;
 import com.test.basic.lol.matchteams.MatchTeam;
 import com.test.basic.lol.matchteams.MatchTeamRepository;

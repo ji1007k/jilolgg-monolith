@@ -6,6 +6,7 @@ import com.test.basic.lol.api.dto.standings.StandingsResponse;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,46 +68,57 @@ public class StandingsService {
                                     }
                                 }
 
-
                                 // [2] rankings : 순위, 승, 패, 득실
-                                // [2-1] 순위 정렬
+                                // [2-1] 정렬된 팀순위 저장
                                 List<StandingsResponse.RankingDto> rankings = section.getRankings();
-
-                                for (StandingsResponse.RankingDto ranking : rankings) {
-                                    List<StandingsResponse.TeamDto> teams = ranking.getTeams();
-
-                                    // 득실차 정보 저장
-                                    for (StandingsResponse.TeamDto team : teams) {
-                                        int gameDiff = gameWinsMap.getOrDefault(team.getTeamId(), 0);
-                                        team.getRecord().setGameDiff(gameDiff);
-                                    }
-
-                                    teams.sort((a, b) -> {
-                                        StandingsResponse.RecordDto aRecord = a.getRecord();
-                                        StandingsResponse.RecordDto bRecord = b.getRecord();
-
-                                        // [2-1-1] 승리수 우선 정렬
-                                        int winsA = aRecord.getWins();
-                                        int winsB = bRecord.getWins();
-
-                                        int winCompare = Integer.compare(winsB, winsA);
-                                        if (winCompare != 0) {
-                                            return winCompare;
-                                        }
-
-                                        // [2-1-2] 득실차 보조 정렬
-                                        int diffA = aRecord.getGameDiff();
-                                        int diffB = bRecord.getGameDiff();
-
-                                        return Integer.compare(diffB, diffA);
-                                    });
-                                }
+                                section.setRefinedRankings(flattenAndSortRankings(rankings, gameWinsMap));
                             }
                         }
                     }
 
                     return response.getData();
                 });
+    }
+
+    public List<StandingsResponse.TeamDto> flattenAndSortRankings(List<StandingsResponse.RankingDto> rankings,
+                                                                  Map<String, Integer> gameWinsMap) {
+        List<StandingsResponse.TeamDto> allTeams = new ArrayList<>();
+
+        // 1. 각 랭킹의 팀들 모으고 gameDiff 세팅
+        for (StandingsResponse.RankingDto ranking : rankings) {
+            for (StandingsResponse.TeamDto team : ranking.getTeams()) {
+                int gameDiff = gameWinsMap.getOrDefault(team.getTeamId(), 0);
+                team.getRecord().setGameDiff(gameDiff);
+                allTeams.add(team);
+            }
+        }
+
+        // 2. 정렬 (승수 내림차순, 득실차 내림차순)
+        allTeams.sort((a, b) -> {
+            int winCompare = Integer.compare(b.getRecord().getWins(), a.getRecord().getWins());
+            if (winCompare != 0) return winCompare;
+
+            return Integer.compare(b.getRecord().getGameDiff(), a.getRecord().getGameDiff());
+        });
+
+        // 3. 순위 다시 매기기
+        int rank = 1;
+        for (int i = 0; i < allTeams.size(); i++) {
+            if (i > 0) {
+                StandingsResponse.RecordDto prev = allTeams.get(i - 1).getRecord();
+                StandingsResponse.RecordDto curr = allTeams.get(i).getRecord();
+
+                boolean sameRecord = prev.getWins() == curr.getWins() &&
+                        prev.getGameDiff() == curr.getGameDiff();
+
+                if (!sameRecord) {
+                    rank = i + 1;
+                }
+            }
+            allTeams.get(i).setRank(rank);
+        }
+
+        return allTeams;
     }
 
 

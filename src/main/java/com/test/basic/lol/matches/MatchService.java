@@ -173,6 +173,10 @@ public class MatchService {
                         teamOpt = teamRepository.findByCodeAndName(teamDto.getCode(), teamDto.getName());
                     }
 
+                    if (teamOpt.isEmpty()) {
+                        throw new RuntimeException("Team not found with name: " + teamDto.getName());
+                    }
+
                     Team team = teamOpt.get();
                     MatchTeam matchTeam = matchTeamRepository
                             .findByMatch_MatchIdAndTeam_TeamId(savedMatch.getMatchId(), team.getTeamId())

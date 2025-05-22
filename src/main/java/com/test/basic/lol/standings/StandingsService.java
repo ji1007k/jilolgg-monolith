@@ -93,10 +93,13 @@ public class StandingsService {
             }
         }
 
-        // 2. 정렬 (승수 내림차순, 득실차 내림차순)
+        // 2. 정렬 (승수 내림차순 > 패수 오름차순 > 득실차 내림차순)
         allTeams.sort((a, b) -> {
             int winCompare = Integer.compare(b.getRecord().getWins(), a.getRecord().getWins());
             if (winCompare != 0) return winCompare;
+
+            int lossCompare = Integer.compare(a.getRecord().getLosses(), b.getRecord().getLosses());
+            if (lossCompare != 0) return lossCompare;
 
             return Integer.compare(b.getRecord().getGameDiff(), a.getRecord().getGameDiff());
         });
@@ -109,6 +112,7 @@ public class StandingsService {
                 StandingsResponse.RecordDto curr = allTeams.get(i).getRecord();
 
                 boolean sameRecord = prev.getWins() == curr.getWins() &&
+                        prev.getLosses() == curr.getLosses() &&
                         prev.getGameDiff() == curr.getGameDiff();
 
                 if (!sameRecord) {

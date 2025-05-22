@@ -309,6 +309,13 @@ public class MatchService {
         return matchRedisTemplate.opsForValue().get(key);
     }
 
+    public List<MatchDto> getMatchesByMatchIds(List<String> matchIds) {
+        return matchRepository.findByMatchIdIn(matchIds)
+                .stream()
+                .map(matchMapper::entityToDto)
+                .collect(Collectors.toList());
+    }
+
 
     // TODO 삭제 ----------------------------------------------------------------------------
 

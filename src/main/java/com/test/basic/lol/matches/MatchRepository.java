@@ -46,4 +46,6 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
             AND m.startTime BETWEEN :startOfDay AND :endOfDay
     """)
     List<Match> findMatchByLeagueIdAndDate(String leagueId, LocalDateTime startOfDay, LocalDateTime endOfDay);
+
+    List<Match> findByMatchIdIn(List<String> matchIds);
 }

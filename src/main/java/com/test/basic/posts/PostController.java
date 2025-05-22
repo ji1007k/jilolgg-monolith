@@ -1,5 +1,8 @@
 package com.test.basic.posts;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -12,7 +15,8 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/posts")
+@RequestMapping("/posts")
+@Tag(name="Post API", description="게시글 관리 API")
 public class PostController {
     private static final Logger logger = LoggerFactory.getLogger(PostController.class);
 
@@ -23,6 +27,7 @@ public class PostController {
     }
 
     @PostMapping
+    @Operation(summary="게시글 등록", description="게시글 등록 API")
     public ResponseEntity<Post> createPost(@RequestBody Post post) {
         Post newPost = postService.createPost(post);
 
@@ -38,6 +43,7 @@ public class PostController {
     }
 
     @GetMapping(value = "/{id}")
+    @Operation(summary="게시글 조회", description="게시글 조회 API")
     public ResponseEntity<Post> getPostById(@PathVariable(name = "id") Long id) {
         Optional<Post> foundPost = postService.getPostById(id);
 
@@ -49,6 +55,7 @@ public class PostController {
     }
 
     @GetMapping
+    @Operation(summary="게시글 목록 조회", description="게시글 목록 조회 API")
     public ResponseEntity<List> getAllPosts(@RequestParam("keyword") String keyword,
                                             @RequestParam("sort") String sort) {
 
@@ -57,6 +64,7 @@ public class PostController {
     }
 
     @PutMapping(value = "/{id}", produces = "application/json;charset=UTF-8")
+    @Operation(summary="게시글 수정", description="게시글 수정 API")
     public ResponseEntity<Post> updatePost(@PathVariable Long id,
                                            @RequestBody Post post) {
 
@@ -66,6 +74,7 @@ public class PostController {
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary="게시글 삭제", description="게시글 삭제 API")
     public ResponseEntity deletePost(@PathVariable Long id) {
         postService.deletePost(id);
         return ResponseEntity.noContent().build();

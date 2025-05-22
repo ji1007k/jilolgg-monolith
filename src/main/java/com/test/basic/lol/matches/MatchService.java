@@ -173,6 +173,10 @@ public class MatchService {
                         teamOpt = teamRepository.findByCodeAndName(teamDto.getCode(), teamDto.getName());
                     }
 
+                    if (teamOpt.isEmpty()) {
+                        throw new RuntimeException("Team not found with name: " + teamDto.getName());
+                    }
+
                     Team team = teamOpt.get();
                     MatchTeam matchTeam = matchTeamRepository
                             .findByMatch_MatchIdAndTeam_TeamId(savedMatch.getMatchId(), team.getTeamId())
@@ -303,6 +307,13 @@ public class MatchService {
 
     public List<MatchDto> getMatchList(String key) {
         return matchRedisTemplate.opsForValue().get(key);
+    }
+
+    public List<MatchDto> getMatchesByMatchIds(List<String> matchIds) {
+        return matchRepository.findByMatchIdIn(matchIds)
+                .stream()
+                .map(matchMapper::entityToDto)
+                .collect(Collectors.toList());
     }
 
 

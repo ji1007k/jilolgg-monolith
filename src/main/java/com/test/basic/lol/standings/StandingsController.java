@@ -28,7 +28,7 @@ public class StandingsController {
     public Mono<ResponseEntity<StandingsResponse.StandingsData>> getStandings(@PathVariable String tournamentId) {
         return standingsService
                 .getStandingsByTournamentIdFromApi(tournamentId) // Mono<List<...>>
-                .map(ResponseEntity::ok); // ResponseEntity로 감싸기
+                .map(ResponseEntity::ok);
     }
 
    /* @GetMapping("/{tournamentId}")

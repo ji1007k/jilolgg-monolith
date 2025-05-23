@@ -99,7 +99,9 @@ public class SecurityConfig {
 						.ignoringRequestMatchers(
 							new AntPathRequestMatcher("/auth/login"),
 							new AntPathRequestMatcher("/auth/signup"),
-							new AntPathRequestMatcher("/auth/token/refresh")
+							new AntPathRequestMatcher("/auth/token/refresh"),
+							// 경기 전적 조회
+							new AntPathRequestMatcher("/lol/matchhistory")
 						)
 						.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) // httpOnly: false (JS에서 읽을 수 있도록)
 						.csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())	// 토큰 해석기 지정(spring security 6~)

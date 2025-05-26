@@ -1,8 +1,11 @@
 package com.test.basic.lol.sync;
 
-import com.test.basic.lol.api.LolEsportsApiClient;
-import com.test.basic.lol.matches.Match;
 import com.test.basic.lol.api.dto.matches.MatchDetailResponse;
+import com.test.basic.lol.api.dto.matches.MatchScheduleResponse;
+import com.test.basic.lol.leagues.League;
+import com.test.basic.lol.leagues.LeagueRepository;
+import com.test.basic.lol.matches.Match;
+import com.test.basic.lol.matches.MatchApiService;
 import com.test.basic.lol.matches.MatchRepository;
 import com.test.basic.lol.matchteams.MatchTeam;
 import com.test.basic.lol.matchteams.MatchTeamRepository;
@@ -18,6 +21,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -28,11 +34,13 @@ import java.util.concurrent.TimeUnit;
 public class SyncMatchService {
     private static Logger logger = LoggerFactory.getLogger(SyncMatchService.class);
 
+    private final MatchApiService matchApiService;
+
+    private final LeagueRepository leagueRepository;
     private final MatchRepository matchRepository;
     private final TeamRepository teamRepository;
     private final MatchTeamRepository matchTeamRepository;
 
-    private final LolEsportsApiClient apiClient;
     private final RedissonClient redissonClient;
     private RLock lock;
 
@@ -66,7 +74,7 @@ public class SyncMatchService {
                 String matchId = match.getMatchId();
 
                 // matchid로 경기 상세 api 요청&응답 수신
-                Mono<MatchDetailResponse> monoResponse = apiClient.fetchMatchDetailFromApi(matchId);
+                Mono<MatchDetailResponse> monoResponse = matchApiService.fetchMatchDetailFromApi(matchId);
                 MatchDetailResponse response = monoResponse.block();    // 데이터 비교 위해 동기식으로 요청
 
                 if (response == null || response.getData() == null || response.getData().getEvent() == null) {
@@ -181,4 +189,184 @@ public class SyncMatchService {
             logger.warn(">>> 락 해제 시도 없음 (락 획득 실패 또는 타임아웃에 의한 자동 해제)");
         }
     }
+
+    // 파라미터로 전달된 YEAR 데이터까지만 갱신.
+    // EX) 2022를 전달한 경우, 금년 2025부터~2024,2023,2022 데이터 갱신
+    public void syncMatchesByLeagueIdAndYearExternalApi(String leagueId, String year) {
+        Optional<League> leagueOpt = leagueRepository.findByLeagueId(leagueId);
+        if (leagueOpt.isEmpty()) {
+            throw new RuntimeException("League not found with id: " + leagueId);
+        }
+
+        int targetYear = Integer.parseInt(year);
+        String nextPageToken = null;
+
+        do {
+            String finalToken = nextPageToken;
+
+            MatchScheduleResponse response = matchApiService.fetchScheduleByLeagueIdAndPageToken(leagueId, finalToken);
+
+            if (response == null || response.getData() == null || response.getData().getSchedule() == null) {
+                break;
+            }
+
+            List<MatchScheduleResponse.EventDto> events = response.getData()
+                    .getSchedule()
+                    .getEvents();
+
+            // 1️⃣ 페이지 내 모든 이벤트가 targetYear보다 이전이면 종료
+            boolean allBeforeTargetYear = events.stream()
+                    .filter(event -> event.getStartTime() != null)
+                    .map(event -> OffsetDateTime.parse(event.getStartTime())
+                            .atZoneSameInstant(ZoneId.of("Asia/Seoul"))
+                            .toLocalDateTime()
+                            .getYear())
+                    .allMatch(eventYear -> eventYear < targetYear);
+
+            if (allBeforeTargetYear) break;
+
+            for (MatchScheduleResponse.EventDto event : events) {
+                if (event.getMatch() == null || event.getStartTime() == null) continue;
+
+                // 시간대 포함된 문자열 -> LocalDateTime 변환
+                // OffsetDateTime 자체에 시간대가 있음 → 서울 시간대로 맞춤 변환
+                LocalDateTime eventDateTime = OffsetDateTime.parse(event.getStartTime())
+                        .atZoneSameInstant(ZoneId.of("Asia/Seoul"))
+                        .toLocalDateTime();
+
+                int eventYear = eventDateTime.getYear();
+
+                // 2️⃣ 연도가 타겟보다 작으면 무시 (스킵)
+                if (eventYear < targetYear) continue;
+
+                MatchScheduleResponse.MatchDto matchDto = event.getMatch();
+
+                // [1] Match 저장
+                Match match = matchRepository.findByMatchId(matchDto.getId()).orElseGet(Match::new);
+                match.setMatchId(matchDto.getId());
+                match.setLeague(leagueOpt.get());
+                match.setStartTime(eventDateTime);
+                match.setState(event.getState());
+                match.setBlockName(event.getBlockName());
+                match.setGameCount(matchDto.getStrategy().getCount());
+                match.setStrategy(matchDto.getStrategy().getType() + matchDto.getStrategy().getCount());
+
+                Match savedMatch = matchRepository.save(match);
+
+                // [2] MatchTeam 저장.
+                for (MatchScheduleResponse.TeamDto teamDto : matchDto.getTeams()) {
+                    Optional<Team> teamOpt;
+                    if (teamDto.getName().equalsIgnoreCase("TBD")) {    // TBD (To Be Determined)
+                        teamOpt = teamRepository.findByName(teamDto.getName());
+                    } else {
+                        teamOpt = teamRepository.findByCodeAndName(teamDto.getCode(), teamDto.getName());
+                    }
+
+                    if (teamOpt.isEmpty()) {
+                        throw new RuntimeException("Team not found with name: " + teamDto.getName());
+                    }
+
+                    Team team = teamOpt.get();
+                    MatchTeam matchTeam = matchTeamRepository
+                            .findByMatch_MatchIdAndTeam_TeamId(savedMatch.getMatchId(), team.getTeamId())
+                            .orElseGet(MatchTeam::new);
+
+                    matchTeam.setMatch(savedMatch);
+                    matchTeam.setTeam(team);
+
+                    if (teamDto.getResult() != null) {
+                        matchTeam.setOutcome(teamDto.getResult().getOutcome());
+                        matchTeam.setGameWins(teamDto.getResult().getGameWins());
+                    }
+
+                    matchTeamRepository.save(matchTeam);
+                }
+            }
+
+            nextPageToken = response.getData().getSchedule().getPages().getOlder();
+
+        } while (nextPageToken != null);
+    }
+
+    // 250526 미사용. 참고용. ==================================================
+
+    // 리그id, 연도별 데이터 동기화
+    /*public List<MatchDto> getMatchesByLeagueIdAndYearFromExternalApi(String leagueId, String year) {
+
+        List<MatchDto> allMatches = new ArrayList<>();
+        String nextPageToken = null;
+
+        do {
+            String finalToken = nextPageToken;
+
+            Mono<String> response = apiClient.fetchScheduleJsonByLeagueIdAndPageToken(leagueId, finalToken);
+
+            try {
+                JsonNode root = objectMapper.readTree(response.block());
+                JsonNode schedule = root.path("data").path("schedule");
+                JsonNode events = schedule.path("events");
+
+                List<MatchDto> pageMatches = parseMatchesFromEvents(events, leagueId, year);
+                allMatches.addAll(pageMatches);
+
+                // 중단 조건: 더 이상 해당 연도의 이벤트가 없음
+                boolean allBeforeTargetYear = StreamSupport.stream(events.spliterator(), false)
+                        .noneMatch(event -> event.path("startTime").asText().startsWith(year));
+                if (allBeforeTargetYear) break;
+
+                JsonNode pages = schedule.path("pages");
+                nextPageToken = pages.path("older").asText(null);
+
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to parse response", e);
+            }
+
+        } while (nextPageToken != null);
+
+        return allMatches;
+    }*/
+
+    /*public List<MatchDto> parseMatchesFromEvents(JsonNode events, String leagueId, String year) {
+        List<MatchDto> result = new ArrayList<>();
+
+        for (JsonNode event : events) {
+            String startTime = event.path("startTime").asText();
+            if (!startTime.startsWith(year)) continue;
+
+            List<MatchTeamDto> matchTeamDtos = StreamSupport.stream(
+                            event.path("match").path("teams").spliterator(), false)
+                    .map(team -> new MatchTeamDto(
+                            team.path("result").path("outcome").asText(),
+                            team.path("result").path("gameWins").asInt(),
+                            new TeamDto(team.path("code").asText(),
+                                    team.path("name").asText())
+                    ))
+                    .toList();
+
+            boolean completed = event.path("state").asText().equalsIgnoreCase("completed");
+            String winningTeamCode = completed
+                    ? matchTeamDtos.stream()
+                    .filter(team -> "win".equalsIgnoreCase(team.getOutcome()))
+                    .map(matchTeamDto -> matchTeamDto.getTeam().getCode())
+                    .findFirst().orElse(null)
+                    : null;
+
+            result.add(new MatchDto(
+                    event.path("match").path("id").asText(),
+                    startTime,
+                    event.path("state").asText(),
+                    event.path("strategy").path("type").asText(),
+                    winningTeamCode,
+                    matchTeamDtos.stream()
+                            .map(team -> {
+                                team.getTeam().setLeagueId(leagueId);
+                                return team;
+                            })
+                            .toList()
+            ));
+        }
+
+        return result;
+    }*/
+
 }

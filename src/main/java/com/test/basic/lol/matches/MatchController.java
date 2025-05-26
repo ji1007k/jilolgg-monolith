@@ -1,5 +1,6 @@
 package com.test.basic.lol.matches;
 
+import com.test.basic.lol.sync.SyncMatchService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -18,6 +19,7 @@ import java.util.List;
 @Tag(name = "[LOL] Match API", description = "경기 일정 API")
 public class MatchController {
     private final MatchService matchService;
+    private final SyncMatchService syncMatchService;
 //    private final SyncLolEsportsApiService syncLolEsportsApiService;
 
     private static final List<String> MAJOR_LEAGUE_IDS = List.of(
@@ -63,7 +65,7 @@ public class MatchController {
     @GetMapping("/sync")
     @Operation(summary = "리그별 경기일정 수동 동기화", description = "리그별 경기일정 수동 동기화 API")
     public ResponseEntity syncAllMatchesByLeagueIdFromApi(@RequestParam(required = false) String year) {
-        matchService.syncMatchesByExternalApi(MAJOR_LEAGUE_IDS, year);
+        syncMatchService.syncMatchesByExternalApi(MAJOR_LEAGUE_IDS, year);
         return ResponseEntity.ok("리그별 경기 일정 동기화 완료");
     }
 

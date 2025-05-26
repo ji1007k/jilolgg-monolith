@@ -121,13 +121,6 @@ public class MatchService {
                 .collect(Collectors.toList());
     }
 
-    // 리그id, 연도별 데이터 동기화 (블로킹 방식)
-    public void syncMatchesByExternalApi(List<String> leagueIds, String year) {
-        leagueIds.forEach(
-                leagueId -> syncMatchService.syncMatchesByLeagueIdAndYearExternalApi(leagueId, year)
-        );
-    }
-
 
     // 250526 미사용. 참고용. ==================================================
 

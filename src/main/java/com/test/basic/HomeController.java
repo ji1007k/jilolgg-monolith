@@ -48,6 +48,7 @@ public class HomeController {
 			model.addAttribute("userId", jwt.getSubject());
 			model.addAttribute("username", jwt.getClaimAsString("username"));
 			// JWT 만료 시간 추출 및 전달 (한국 시간)
+			// Instant (UTC 기준의 순간) -> 서울 기준 LocalDateTime 생성
 			Instant expirationTime = jwt.getExpiresAt();
 			LocalDateTime expirationTimeKST = LocalDateTime.ofInstant(expirationTime, ZoneId.of("Asia/Seoul"));
 			model.addAttribute("expirationTime", expirationTimeKST.toString());

@@ -1,0 +1,47 @@
+package com.test.basic.lol.domain.tournament;
+
+import com.test.basic.lol.api.esports.SyncLolEsportsApiService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/lol/tournaments")
+@Tag(name = "[LOL] Tournament API", description = "토너먼트 관련 API")
+public class TournamentController {
+
+    private final TournamentService tournamentService;
+    private final SyncLolEsportsApiService syncLolEsportsApiService;
+
+    public TournamentController(TournamentService tournamentService, SyncLolEsportsApiService syncLolEsportsApiService) {
+        this.tournamentService = tournamentService;
+        this.syncLolEsportsApiService = syncLolEsportsApiService;
+    }
+
+    /*@GetMapping
+    @Operation(summary = "금년도 토너먼트 목록 조회", description = "금년도 토너먼트 목록 조회 API")
+    public ResponseEntity<List<TournamentDto>> getTournamentsForCurrentYear() {
+        List<TournamentDto> tournaments = tournamentService.getTournamentsForCurrentYear();
+        return ResponseEntity.ok(tournaments);
+    }*/
+
+    @GetMapping
+    @Operation(summary = "토너먼트 목록 조회", description = "토너먼트 목록 조회 API")
+    public ResponseEntity<List<TournamentDto>> getTournamentsByYear(@RequestParam(name = "leagueId") String leagueId,
+                                                                    @RequestParam(name = "year") String year) {
+        List<TournamentDto> tournaments = tournamentService.getTournamentsByLeagueIdAndYear(leagueId, year);
+        return ResponseEntity.ok(tournaments);
+    }
+
+    @GetMapping("/sync")
+    public ResponseEntity<List<TournamentDto>> getAllTournamentsByLeagueIdFromApi() {
+        syncLolEsportsApiService.syncTournaments();
+        return ResponseEntity.ok(tournamentService.getAllTournaments());
+    }
+}

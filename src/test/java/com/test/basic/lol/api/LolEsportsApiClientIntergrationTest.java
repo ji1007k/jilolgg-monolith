@@ -3,14 +3,12 @@ package com.test.basic.lol.api;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.test.basic.lol.matches.MatchDto;
-import com.test.basic.lol.tournaments.TournamentDto;
+import com.test.basic.lol.api.esports.LolEsportsApiClient;
+import com.test.basic.lol.domain.tournament.TournamentDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,7 +26,7 @@ public class LolEsportsApiClientIntergrationTest {
     /*@Test
     void testFetchScheduleMatchesIntegration() {
         // 실제로 HTTP 요청 보내는 테스트 (실서버가 아니면 WireMock 등으로 가짜 서버 띄워야 안전)
-        Mono<String> result = lolEsportsApiClient.fetchScheduleMatchesJson();
+        Mono<String> result = lolEsportsApiClient.fetchScheduleMatchesJson("98767991310872058");
 
         String jsonResponse = result.block();
 

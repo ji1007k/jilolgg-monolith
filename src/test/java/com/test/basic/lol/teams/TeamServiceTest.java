@@ -1,5 +1,8 @@
-package com.test.basic.lol.teams;
+package com.test.basic.lol.domain.team;
 
+import com.test.basic.lol.domain.team.Team;
+import com.test.basic.lol.domain.team.TeamRepository;
+import com.test.basic.lol.domain.team.TeamService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

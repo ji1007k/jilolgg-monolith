@@ -6,7 +6,7 @@ import com.test.basic.auth.jwt.JwtTokenProvider;
 import com.test.basic.auth.security.config.SecurityConfig;
 import com.test.basic.auth.security.user.CustomUserDetails;
 import com.test.basic.auth.security.user.CustomUserDetailsService;
-import com.test.basic.users.UserService;
+import com.test.basic.user.UserService;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

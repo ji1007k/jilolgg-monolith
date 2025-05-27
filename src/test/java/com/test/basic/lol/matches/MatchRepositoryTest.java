@@ -1,5 +1,7 @@
 package com.test.basic.lol.matches;
 
+import com.test.basic.lol.domain.match.Match;
+import com.test.basic.lol.domain.match.MatchRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,0 +1,14 @@
+package com.test.basic.lol.domain.team.favorite;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+// 즐겨찾기 응답
+@Data
+@AllArgsConstructor
+public class FavoriteTeamResponse {
+    private String teamId;
+    private String code;
+    private String name;
+    private Integer displayOrder;
+}

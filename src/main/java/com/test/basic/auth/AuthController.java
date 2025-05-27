@@ -1,8 +1,8 @@
 package com.test.basic.auth;
 
 import com.test.basic.auth.jwt.JwtTokenProvider;
-import com.test.basic.users.UserEntity;
-import com.test.basic.users.UserService;
+import com.test.basic.user.UserEntity;
+import com.test.basic.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;

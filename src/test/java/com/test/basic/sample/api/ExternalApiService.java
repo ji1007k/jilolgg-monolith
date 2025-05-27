@@ -1,6 +1,6 @@
 package com.test.basic.sample.api;
 
-import com.test.basic.lol.api.LolEsportsApiConfig;
+import com.test.basic.lol.api.esports.LolEsportsApiConfig;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;

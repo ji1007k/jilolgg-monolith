@@ -1,7 +1,9 @@
 package com.test.basic.lol.api;
 
-import com.test.basic.lol.teams.TeamService;
-import com.test.basic.lol.teams.TeamSyncDto;
+import com.test.basic.lol.api.esports.LolEsportsApiClient;
+import com.test.basic.lol.api.esports.LolEsportsApiConfig;
+import com.test.basic.lol.domain.team.TeamService;
+import com.test.basic.lol.domain.team.TeamSyncDto;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

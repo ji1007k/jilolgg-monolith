@@ -1,7 +1,7 @@
 package com.test.basic.auth.security.user;
 
-import com.test.basic.users.UserEntity;
-import com.test.basic.users.UserRepository;
+import com.test.basic.user.UserEntity;
+import com.test.basic.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

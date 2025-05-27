@@ -1,6 +1,6 @@
 package com.test.basic.sample.api;
 
-import com.test.basic.lol.api.LolEsportsApiConfig;
+import com.test.basic.lol.api.esports.LolEsportsApiConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

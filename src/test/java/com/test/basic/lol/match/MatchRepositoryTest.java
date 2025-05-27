@@ -1,4 +1,4 @@
-package com.test.basic.lol.matches;
+package com.test.basic.lol.match;
 
 import com.test.basic.lol.domain.match.Match;
 import com.test.basic.lol.domain.match.MatchRepository;

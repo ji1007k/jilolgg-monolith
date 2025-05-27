@@ -1,4 +1,4 @@
-package com.test.basic.lol.domain.team;
+package com.test.basic.lol.team;
 
 import com.test.basic.lol.domain.team.Team;
 import com.test.basic.lol.domain.team.TeamRepository;

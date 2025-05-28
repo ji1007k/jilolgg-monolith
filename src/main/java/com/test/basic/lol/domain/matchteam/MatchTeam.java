@@ -24,6 +24,7 @@ public class MatchTeam {
     @Column(length = 20)
     private String outcome;
 
+    // null일 수 있어서 Integer 사용. int는 null 저장 불가능
     private Integer gameWins;
 
 }

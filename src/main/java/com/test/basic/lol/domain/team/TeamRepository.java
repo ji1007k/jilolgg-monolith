@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface TeamRepository extends JpaRepository<Team, Long> {
@@ -43,6 +44,8 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     List<Team> findBySlugIn(List<String> slugs);
     List<Team> findByLeague_LeagueIdAndSlugIn(String leagueId, List<String> slugs);
     List<Team> findBySlugContaining(String slug);
+
+    List<Team> findByCodeIn(Set<String> teamCodes);
     //
 //    findByTeamName(String name)
 // WHERE team_name = ?

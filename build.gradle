@@ -30,6 +30,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-batch'
 
     // 채팅 기능 구현 (WebSocket + Redis Pub/Sub)
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
@@ -51,6 +52,7 @@ dependencies {
 
     // Entity <-> DTO 매핑 프레임워크
     implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+    // MapStruct의 코드 생성기. 컴파일 시점에 @Mapper 인터페이스를 분석해서 자동으로 구현체 (Impl 클래스)를 생성
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
 
     // WAR는 외부 Tomcat

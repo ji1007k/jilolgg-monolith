@@ -138,7 +138,7 @@ public class SyncMatchService {
 
                     if (teamDto.getResult() != null) {
                         int newGameWins = teamDto.getResult().getGameWins();
-                        if (matchTeam.getGameWins() != newGameWins) {
+                        if (matchTeam.getGameWins() == null || matchTeam.getGameWins() != newGameWins) {
                             matchTeam.setGameWins(newGameWins);
                             teamUpdated = true;
                         }

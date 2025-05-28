@@ -5,13 +5,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.test.basic.lol.domain.league.League;
 import com.test.basic.lol.domain.matchteam.MatchTeam;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 
 @Entity
-@Data
+@Getter
+@Setter
 @Table(name = "teams", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"team_id"})
 })
@@ -42,7 +44,7 @@ public class Team {
     @JoinColumn(name = "league_id", referencedColumnName = "league_id", nullable = false)
     private League league;
 
-    @OneToMany(mappedBy = "team")
+    @OneToMany(mappedBy = "team", fetch = FetchType.LAZY)
     private List<MatchTeam> matchTeams;
 
     public Team(String teamId, String code, String name, String slug, String image, League league) {

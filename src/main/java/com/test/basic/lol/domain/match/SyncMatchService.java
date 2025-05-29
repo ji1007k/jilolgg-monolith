@@ -127,7 +127,12 @@ public class SyncMatchService {
 
                     MatchTeam matchTeam = matchTeamRepository
                             .findByMatch_MatchIdAndTeam_TeamId(match.getMatchId(), team.getTeamId())
-                            .orElseGet(MatchTeam::new);
+                            .orElseGet(() -> {
+                                // 여기서 새로 생성된 MatchTeam은 match 필드 값이 null이기 떄문에 세팅 필요
+                                MatchTeam mt = new MatchTeam();
+                                mt.setMatch(match);
+                                return mt;
+                            });
 
                     boolean teamUpdated = false;
 

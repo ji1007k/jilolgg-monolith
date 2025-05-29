@@ -31,6 +31,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PAT }}
 
+      # 컨테이너 --memory는 최소 -Xmx의 1.5배 이상 잡아야 안정적
       - name: "[4] Deploy to EC2 via SSM"
         run: |
           REPO_URL="ghcr.io/${{ github.repository }}"
@@ -40,7 +41,7 @@ jobs:
             \"sudo docker pull $REPO_URL:latest\",
             \"sudo docker stop basic-be || true\",
             \"sudo docker rm basic-be || true\",
-            \"sudo docker run -d --name basic-be -p 8080:8080 $REPO_URL:latest\",
+            \"sudo docker run --memory=256m --memory-swap=512m -d --name basic-be -p 8080:8080 $REPO_URL:latest\",
             \"sudo docker ps\"
           ]"
 

@@ -31,6 +31,8 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     Optional<Team> findByName(String name);
 
     List<Team> findByTeamIdIn(List<String> teamIds);
+    List<Team> findByCodeIn(Set<String> teamCodes);
+    List<Team> findByNameIn(Set<String> teamNames);
 
 
 // TODO 삭제 ------------------------------------------------------
@@ -45,7 +47,6 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     List<Team> findByLeague_LeagueIdAndSlugIn(String leagueId, List<String> slugs);
     List<Team> findBySlugContaining(String slug);
 
-    List<Team> findByCodeIn(Set<String> teamCodes);
     //
 //    findByTeamName(String name)
 // WHERE team_name = ?

@@ -21,19 +21,17 @@ public class MatchService {
 
     private final MatchApiService matchApiService;
     private final MatchCacheService matchCacheService;
-    private final SyncMatchService syncMatchService;
     private final MatchMapper matchMapper;
     private final MatchRepository matchRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
 
-    public MatchService(MatchMapper matchMapper, MatchRepository matchRepository, MatchCacheService matchCacheService, MatchApiService matchApiService, SyncMatchService syncMatchService) {
+    public MatchService(MatchMapper matchMapper, MatchRepository matchRepository, MatchCacheService matchCacheService, MatchApiService matchApiService) {
         this.matchMapper = matchMapper;
         this.matchRepository = matchRepository;
         this.matchCacheService = matchCacheService;
         this.matchApiService = matchApiService;
-        this.syncMatchService = syncMatchService;
     }
 
     public List<MatchDto> getAllMatches() {

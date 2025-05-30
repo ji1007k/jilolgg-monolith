@@ -16,6 +16,7 @@ import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StopWatch;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
@@ -44,7 +45,7 @@ public class SyncMatchService {
 
 
     @Transactional
-    public String syncTodaysMatchesFromLolEsportsApi(List<Match> matches) {
+    public void syncTodaysMatchesFromLolEsportsApi(List<Match> matches) {
         // Redisson Lock 획득
         lock = redissonClient.getLock(LOCK_KEY); // lightweight 프록시 객체
         boolean isLocked = false;
@@ -62,7 +63,7 @@ public class SyncMatchService {
 
             if (! isLocked) {
                 logger.warn(">>> 락 획득 실패. 이미 다른 동기화 작업이 진행 중.");
-                return "이미 동기화 작업이 진행 중입니다.";
+                return;
             }
 
             logger.info(">>> 락 획득 성공.");
@@ -172,11 +173,9 @@ public class SyncMatchService {
                 }
             }
 
-            return "금일 경기 일정 동기화 성공";
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             logger.error(">> 락 획득 중 예외 발생: {}", e.getMessage());
-            return "락 획득 실패";
         } finally {
             cleanup();
         }
@@ -199,6 +198,10 @@ public class SyncMatchService {
         RLock lock = redissonClient.getLock(LOCK_KEY);
         boolean isLocked = false;
 
+        // 소요 시간 측정
+        StopWatch sw = new StopWatch();
+        sw.start();
+
         try {
             isLocked = lock.tryLock(1, TimeUnit.SECONDS);
             if (!isLocked) {
@@ -220,6 +223,9 @@ public class SyncMatchService {
             if (isLocked && lock.isHeldByCurrentThread()) {
                 lock.unlock();
             }
+
+            sw.stop();
+            logger.info(">>> 소요 시간: {}ms", sw.getTotalTimeMillis());
         }
     }
 

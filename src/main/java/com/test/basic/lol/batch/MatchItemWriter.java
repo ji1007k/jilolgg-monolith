@@ -7,6 +7,8 @@ import com.test.basic.lol.domain.matchteam.MatchTeam;
 import com.test.basic.lol.domain.matchteam.MatchTeamRepository;
 import com.test.basic.lol.domain.team.Team;
 import com.test.basic.lol.domain.team.TeamRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
 
@@ -17,24 +19,28 @@ import java.util.stream.Collectors;
 public record MatchItemWriter(MatchRepository matchRepository, TeamRepository teamRepository,
                               MatchTeamRepository matchTeamRepository) implements ItemWriter<MatchAggregate> {
 
+    private static final Logger logger = LoggerFactory.getLogger(MatchItemWriter.class);
+
     // Spring Batch 5 이상. Chunk 객체 사용. (내부에 List를 포함한 래퍼)
     // 데이터 + 배치 처리 관련 메타데이터
     @Override
-    public void write(Chunk<? extends MatchAggregate> chunk) throws Exception {
+    public void write(Chunk<? extends MatchAggregate> chunk) {
         List<MatchAggregate> items = (List<MatchAggregate>) chunk.getItems();
 
-        // 1. 모든 팀 코드 수집 (TBD 포함)
-        Set<String> teamCodes = new HashSet<>();
+        // 1. 모든 팀명 수집 (TBD 포함)
+        Set<String> teamNames = new HashSet<>();
         for (MatchAggregate mag : items) {
             for (MatchScheduleResponse.TeamDto teamDto : mag.teams()) {
                 if (!teamDto.getName().equalsIgnoreCase("TBD")) {
-                    teamCodes.add(teamDto.getCode());
+                    teamNames.add(teamDto.getName());
                 }
             }
         }
 
-        // 2. 한 번에 팀들 조회 (teamRepository에 findByCodeIn 메서드가 있어야 함)
-        List<Team> teams = teamRepository.findByCodeIn(teamCodes);
+        // 2. 한 번에 팀들 조회
+        List<Team> teams = findUniqueTeamsByNameOrCode(teamNames, items);
+
+        // 2-1. map 으로 변환
         Map<String, Team> codeToTeamMap = teams.stream()
                 .collect(Collectors.toMap(Team::getCode, Function.identity()));
 
@@ -60,13 +66,17 @@ public record MatchItemWriter(MatchRepository matchRepository, TeamRepository te
                     // TBD 팀은 별도 조회 (기존 코드 재활용)
                     Optional<Team> tbdTeamOpt = teamRepository.findByName(teamDto.getName());
                     if (tbdTeamOpt.isEmpty()) {
-                        throw new RuntimeException("Team not found with name: " + teamDto.getName());
+                        // 예외 던지면 해당 STEP이 FATIED 처리돼버리므로 로그만 찍고 건너뛰기
+//                        throw new RuntimeException("Team not found with code: " + teamDto.getCode());
+                        logger.warn("Team not found with name: {}", teamDto.getName());
+                        continue;
                     }
                     team = tbdTeamOpt.get();
                 } else {
                     team = codeToTeamMap.get(teamDto.getCode());
                     if (team == null) {
-                        throw new RuntimeException("Team not found with code: " + teamDto.getCode());
+                        logger.warn("Team not found with code: {}", teamDto.getCode());
+                        continue;
                     }
                 }
 
@@ -87,6 +97,42 @@ public record MatchItemWriter(MatchRepository matchRepository, TeamRepository te
                 matchTeamRepository.save(matchTeam);
             }
         }
+    }
+
+    private List<Team> findUniqueTeamsByNameOrCode(Set<String> teamNames, List<MatchAggregate> items) {
+        // 1. name 기준 조회
+        List<Team> teamsByName = teamRepository.findByNameIn(teamNames);
+
+        // 2. name 기준으로 그룹핑 → 중복된 name 찾아내기
+        Map<String, List<Team>> nameGrouped = teamsByName.stream()
+                .collect(Collectors.groupingBy(Team::getName));
+
+        // 3. 중복 name 리스트 뽑기
+        Set<String> duplicateNames = nameGrouped.entrySet().stream()
+                .filter(e -> e.getValue().size() > 1)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
+
+        // 4. 중복된 팀들만 제거
+        List<Team> filteredTeamsByName = teamsByName.stream()
+                .filter(team -> !duplicateNames.contains(team.getName()))
+                .toList();
+
+        // 5. 중복된 팀 name → code 로 다시 조회
+        Set<String> duplicateCodes = items.stream()
+                .flatMap(mag -> mag.teams().stream())
+                .filter(teamDto -> duplicateNames.contains(teamDto.getName()))
+                .map(MatchScheduleResponse.TeamDto::getCode)
+                .collect(Collectors.toSet());
+
+        List<Team> teamsByCode = teamRepository.findByCodeIn(duplicateCodes);
+
+        // 6. 합치기
+        List<Team> finalTeams = new ArrayList<>();
+        finalTeams.addAll(filteredTeamsByName);
+        finalTeams.addAll(teamsByCode);
+
+        return finalTeams;
     }
 
 }

@@ -27,6 +27,7 @@ public class MatchItemReader implements ItemReader<MatchEventWithLeague> {
     private Queue<MatchScheduleResponse.EventDto> buffer = new LinkedList<>();
     private String nextPageToken = null;
     private boolean finished = false;
+    private boolean firstFetch = true;
 
     private League league;
 
@@ -61,7 +62,16 @@ public class MatchItemReader implements ItemReader<MatchEventWithLeague> {
 
         // 내부 버퍼링으로 fetch 최소화. (API 호출은 buffer가 비어 있을 때만)
         while (buffer.isEmpty()) {
+
+            // 처음 호출도 아니고 nextPageToken도 없으면 종료
+            if (!firstFetch && nextPageToken == null) {
+                finished = true;
+                return null;
+            }
+
             MatchScheduleResponse response = matchApiService.fetchScheduleByLeagueIdAndPageToken(leagueId, nextPageToken);
+            firstFetch = false; // 호출 이후 false로 설정
+
             if (response == null || response.getData() == null || response.getData().getSchedule() == null) {
 //            logger.warn("[{}] 리그의 일정 정보가 비어 있습니다. nextToken: {}", leagueId, finalToken);
                 finished = true;
@@ -85,12 +95,14 @@ public class MatchItemReader implements ItemReader<MatchEventWithLeague> {
             }
 
             buffer.addAll(events);
+
+            // 페이지 토큰 갱신
             nextPageToken = response.getData().getSchedule().getPages().getOlder();
 
             if (nextPageToken == null) {
                 logger.info("[Thread: {}] PageToken 없음", Thread.currentThread().getName());
-                finished = true;
-                break;
+                // 다음 read()에서 buffer 비면 종료되도록 유도
+                finished = buffer.isEmpty();
             }
         }
 

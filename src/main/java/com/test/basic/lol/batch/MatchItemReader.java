@@ -4,18 +4,21 @@ import com.test.basic.lol.api.esports.dto.MatchScheduleResponse;
 import com.test.basic.lol.domain.league.League;
 import com.test.basic.lol.domain.league.LeagueRepository;
 import com.test.basic.lol.domain.match.MatchApiService;
-import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.ItemReader;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Queue;
 
 
-@RequiredArgsConstructor
 public class MatchItemReader implements ItemReader<MatchEventWithLeague> {
+    private static final Logger logger = LoggerFactory.getLogger(MatchItemReader.class);
+
     private final String leagueId;
     private final int targetYear;
     private final MatchApiService matchApiService;
@@ -25,7 +28,7 @@ public class MatchItemReader implements ItemReader<MatchEventWithLeague> {
     private String nextPageToken = null;
     private boolean finished = false;
 
-    private final League league;
+    private League league;
 
 
     public MatchItemReader(String leagueId, int targetYear,
@@ -36,15 +39,25 @@ public class MatchItemReader implements ItemReader<MatchEventWithLeague> {
         this.matchApiService = matchApiService;
         this.leagueRepository = leagueRepository;
 
-        this.league = leagueRepository.findByLeagueId(leagueId)
-                .orElseThrow(() -> new RuntimeException("League not found with id: " + leagueId));
+        Optional<League> leagueOpt = leagueRepository.findByLeagueId(leagueId);
+        if (leagueOpt.isEmpty()) {
+            logger.warn("League not found with id: {}", leagueId);
+            finished = true;
+        } else {
+            this.league = leagueOpt.get();
+        }
     }
 
 
     // read 1번 -> EventDto 1개 반환
     @Override
     public MatchEventWithLeague read() {
-        if (finished) return null;
+        if (finished) {
+            logger.info("[Thread: {}] 읽기 종료", Thread.currentThread().getName());
+            return null;
+        }
+
+        logger.info("[Thread: {}] 읽기 실행", Thread.currentThread().getName());
 
         // 내부 버퍼링으로 fetch 최소화. (API 호출은 buffer가 비어 있을 때만)
         while (buffer.isEmpty()) {
@@ -74,8 +87,10 @@ public class MatchItemReader implements ItemReader<MatchEventWithLeague> {
             buffer.addAll(events);
             nextPageToken = response.getData().getSchedule().getPages().getOlder();
 
-            if (nextPageToken == null && buffer.isEmpty()) {
+            if (nextPageToken == null) {
+                logger.info("[Thread: {}] PageToken 없음", Thread.currentThread().getName());
                 finished = true;
+                break;
             }
         }
 

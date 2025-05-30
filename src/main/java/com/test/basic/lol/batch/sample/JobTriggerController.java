@@ -2,6 +2,7 @@ package com.test.basic.lol.batch.sample;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
@@ -10,6 +11,7 @@ import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 import org.springframework.batch.core.repository.JobRestartException;
+import org.springframework.util.StopWatch;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,6 +27,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/lol/batch")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "[TEST] Batch Job Trigger API", description = "Batch Job Trigger API")
 public class JobTriggerController {
 
@@ -61,6 +64,9 @@ public class JobTriggerController {
 
     @GetMapping("/run-match-job")
     public String runMatchJob(@RequestParam String year) {
+        StopWatch sw = new StopWatch();
+        sw.start();
+
         for (String leagueId : MAJOR_LEAGUE_IDS) {
             JobParameters params = new JobParametersBuilder()
                     .addString("leagueId", leagueId)
@@ -78,6 +84,9 @@ public class JobTriggerController {
                 return "Job 실행 실패: " + e.getMessage();
             }
         }
+
+        sw.stop();
+        log.info(">>> 소요 시간: {}ms", sw.getTotalTimeMillis());
 
         return "Match Job 실행 완료";
     }

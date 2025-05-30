@@ -18,22 +18,24 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.jdbc.datasource.init.DataSourceInitializer;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
 
+/** Job, Step, Reader, Processor, Writer Bean 정의
+    - Job: syncMatchJob
+    - Step: syncMatchStep
+    - Reader: MatchItemReader (API 호출)
+    - Processor: MatchItemProcessor (EventDto -> MatchAggregate)
+    - Writer: MatchItemWriter (MatchAggregate -> DB 저장)
+*/
 @Configuration
 @EnableBatchProcessing
 public class MatchBatchConfig {
-
-    // TODO: Job, Step, Reader, Processor, Writer Bean 정의
-    //  - Job: syncMatchJob
-    //  - Step: syncMatchStep
-    //  - Reader: MatchItemReader (API 호출)
-    //  - Processor: MatchItemProcessor (EventDto -> MatchAggregate)
-    //  - Writer: MatchItemWriter (MatchAggregate -> DB 저장)
 
     // 기본 제공 스키마 파일을 실행하여 Job 실행 상태, 이력 등을 저장할 메타 테이블 생성 (쿼리 경로 직접 지정)
     @Profile({"dev", "prod"}) // 개발/운영만
@@ -60,15 +62,32 @@ public class MatchBatchConfig {
                 .build();
     }
 
+    // 내부 Step 들이 chunk 기반이면 트랜잭션 매니저 필수
+    //  ignored prefix: "사용 안 함"을 표현하는 네이밍 규칙(but. Spring은 의존성 요구함)
     @Bean
     public Step syncMatchStep(JobRepository jobRepository,
-                              PlatformTransactionManager transactionManager,
-                              MatchItemReader matchItemReader,
-                              MatchItemProcessor matchItemProcessor,
-                              MatchItemWriter matchItemWriter) {
+                              PlatformTransactionManager ignoredTransactionManager,
+                              LeaguePartitioner leaguePartitioner,
+                              Step partitionedMatchStep,
+                              TaskExecutor limitedTaskExecutor) {
         return new StepBuilder("syncMatchStep", jobRepository)
+                .partitioner("partitionedMatchStep", leaguePartitioner)
+                .step(partitionedMatchStep)
+                .taskExecutor(limitedTaskExecutor)
+                .gridSize(5)    // 병렬 작업(파티션) 수 조절
+                .build();
+    }
+
+    // 파티션 내부에서 실행될 Step
+    @Bean
+    public Step partitionedMatchStep(JobRepository jobRepository,
+                                     PlatformTransactionManager transactionManager,
+                                     MatchItemReader matchItemReader,
+                                     MatchItemProcessor matchItemProcessor,
+                                     MatchItemWriter matchItemWriter) {
+        return new StepBuilder("partitionedMatchStep", jobRepository)
                 .<MatchEventWithLeague, MatchAggregate>chunk(
-                        50,
+                        100, // 하나의 트랜잭션 단위로 처리할 아이템 수.
                         transactionManager
                 )
                 .reader(matchItemReader)
@@ -78,6 +97,7 @@ public class MatchBatchConfig {
     }
 
     @Bean
+    // StepScope: 매 파티션마다 독립된 Reader 생성 (Spring Batch 추천 방식) -> Thread-safe를 위한 설정
     @StepScope
     public MatchItemReader matchItemReader(
             @Value("#{jobParameters['leagueId']}") String leagueId,
@@ -108,4 +128,35 @@ public class MatchBatchConfig {
                 teamRepository,
                 matchTeamRepository);
     }
+
+
+
+
+// 1) 병렬 수 제한 예 ================================================================
+    /*@Bean
+    public Step multiThreadedStep(JobRepository jobRepository,
+                                  PlatformTransactionManager transactionManager) {
+        return new StepBuilder("multiThreadedStep", jobRepository)
+                .<String, String>chunk(100, transactionManager) // chunk size 너무 크면 GC 문제 유발
+                .reader(itemReader())
+                .processor(itemProcessor())
+                .writer(itemWriter())
+                .taskExecutor(limitedTaskExecutor())    // 병렬 실행. 직접 정의한 병렬 executor 주입
+                .build();
+    }*/
+
+    // Spring Batch 5.x 부터 TaskExecutor 직접 설정해서 병렬 제어
+    // 멀티스레드 Step 처리에서 스레드 풀을 설정
+    @Bean
+    public TaskExecutor limitedTaskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(10);    // 기본적으로 유지할 병렬 스레드 수 (ex. CPU 수 * 2 이하)
+        executor.setMaxPoolSize(20);     // 최대 확장 스레드 수
+        executor.setQueueCapacity(30);   // 버퍼 역할 큐 0 -> 대기x 바로 실행
+        executor.setThreadNamePrefix("thread-batch-match-partition-");
+        executor.initialize();
+        return executor;
+    }
+
+
 }

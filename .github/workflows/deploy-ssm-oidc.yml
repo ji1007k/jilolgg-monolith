@@ -42,7 +42,7 @@ jobs:
             \"sudo docker pull $REPO_URL:latest\",
             \"sudo docker stop basic-be || true\",
             \"sudo docker rm basic-be || true\",
-            \"sudo docker run --memory=384m --memory-swap=512m -d --name basic-be -p 8080:8080 $REPO_URL:latest\",
+            \"sudo docker run --memory=448m --memory-swap=576m -d --name basic-be -p 8080:8080 $REPO_URL:latest\",
             \"sudo docker ps\"
           ]"
 

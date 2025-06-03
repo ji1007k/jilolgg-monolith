@@ -227,6 +227,9 @@ public class SyncMatchService {
                     syncMatchesByLeagueIdAndYearExternalApi(leagueId, year);
                 } catch (Exception e) {
                     logger.error("[{}] 리그 동기화 실패: {}", leagueId, e.getMessage(), e);
+                } finally {
+                    entityManager.flush();
+                    entityManager.clear();
                 }
             }
 

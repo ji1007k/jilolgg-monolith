@@ -4,6 +4,8 @@ import com.test.basic.lol.api.esports.LolEsportsApiClient;
 import com.test.basic.lol.domain.league.League;
 import com.test.basic.lol.domain.league.LeagueRepository;
 import jakarta.annotation.PreDestroy;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
@@ -29,6 +31,9 @@ public class SyncTeamService {
     private final LolEsportsApiClient apiClient;
     private final RedissonClient redissonClient;
     private RLock lock;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public SyncTeamService(TeamRepository teamRepository,
                            LolEsportsApiClient apiClient,
@@ -152,5 +157,8 @@ public class SyncTeamService {
         } else {
             logger.warn(">>> 락 해제 시도 없음 (락 획득 실패 또는 타임아웃에 의한 자동 해제)");
         }
+
+        entityManager.flush();
+        entityManager.clear();
     }
 }

@@ -9,6 +9,8 @@ import com.test.basic.lol.domain.matchteam.MatchTeamRepository;
 import com.test.basic.lol.domain.team.Team;
 import com.test.basic.lol.domain.team.TeamRepository;
 import jakarta.annotation.PreDestroy;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
@@ -31,6 +33,9 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class SyncMatchService {
     private static Logger logger = LoggerFactory.getLogger(SyncMatchService.class);
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     private final MatchApiService matchApiService;
 
@@ -178,6 +183,10 @@ public class SyncMatchService {
             logger.error(">> 락 획득 중 예외 발생: {}", e.getMessage());
         } finally {
             cleanup();
+
+            Runtime runtime = Runtime.getRuntime();
+            long used = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
+            logger.info("현재 JVM 힙 사용량: {} MB", used);
         }
     }
 
@@ -190,6 +199,10 @@ public class SyncMatchService {
         } else {
             logger.warn(">>> 락 해제 시도 없음 (락 획득 실패 또는 타임아웃에 의한 자동 해제)");
         }
+
+        // 영속성 컨텍스트 초기화
+        entityManager.flush();
+        entityManager.clear();
     }
 
 

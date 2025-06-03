@@ -5,7 +5,9 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StopWatch;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -16,6 +18,7 @@ import java.util.List;
 @RequestMapping("/lol/matches")
 @RequiredArgsConstructor
 @Tag(name = "[LOL] Match API", description = "경기 일정 API")
+@Slf4j
 public class MatchController {
     private final MatchService matchService;
     private final SyncMatchService syncMatchService;
@@ -64,7 +67,18 @@ public class MatchController {
     @GetMapping("/sync")
     @Operation(summary = "리그별 경기일정 수동 동기화", description = "리그별 경기일정 수동 동기화 API")
     public ResponseEntity syncAllMatchesByLeagueIdFromApi(@RequestParam(required = false) String year) {
-        syncMatchService.syncMatchesByExternalApi(MAJOR_LEAGUE_IDS, year);
+
+        // 소요 시간 측정
+        StopWatch sw = new StopWatch();
+        sw.start();
+
+        for (String leagueId : MAJOR_LEAGUE_IDS) {
+            syncMatchService.syncMatchesByLeagueIdAndYearExternalApi(leagueId, year);
+        }
+
+        sw.stop();
+        log.info(">>> 소요 시간: {}ms", sw.getTotalTimeMillis());
+
         return ResponseEntity.ok("리그별 경기 일정 동기화 완료");
     }
 

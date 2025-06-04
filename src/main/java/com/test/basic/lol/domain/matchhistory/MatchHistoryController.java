@@ -14,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/lol/matchhistory")
-@Tag(name = "[LOL] Match History API", description = "경기 전적 API")
+@Tag(name = "[LOL(Esports)] 7. Match History API", description = "경기 전적 API")
 public class MatchHistoryController {
 
     private final MatchService matchService;

@@ -17,7 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/lol/matches")
 @RequiredArgsConstructor
-@Tag(name = "[LOL] Match API", description = "경기 일정 API")
+@Tag(name = "[LOL(Esports)] 5. Match API", description = "경기 일정 API")
 @Slf4j
 public class MatchController {
     private final MatchService matchService;

@@ -11,7 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/lol/leagues")
-@Tag(name = "[LOL] League API", description = "리그 관련 API")
+@Tag(name = "[LOL(Esports)] 1. League API", description = "리그 관련 API")
 public class LeagueController {
 
     public final LeagueService leagueService;

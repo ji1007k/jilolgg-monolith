@@ -55,8 +55,10 @@ public class CustomJwtFilter extends OncePerRequestFilter {
         
 //        String method = request.getMethod(); // 요청 메서드 가져오기
 //        if (path.startsWith("/auth/login") && "GET".equalsIgnoreCase(method)) {
-        if (path.startsWith("/auth/login") || "/auth/signup".equals(path)) {
-            filterChain.doFilter(request, response);    // JWT 필터를 통과하지 않고 바로 넘김
+        List<String> whitelist = List.of("/auth/login", "/auth/signup", "/token/generate");
+
+        if (whitelist.contains(path)) {
+            filterChain.doFilter(request, response);
             return;
         }
 
@@ -91,8 +93,10 @@ public class CustomJwtFilter extends OncePerRequestFilter {
                 AbstractAuthenticationToken authentication = new JwtAuthenticationToken(token, authorities);
                 authentication.setAuthenticated(true);
 
-                // SecurityContext에 인증 정보 저장
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                // SecurityContext에 인증 정보 저장 (인증 중복 방지)
+                if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             } catch (JwtException e) {
                 SecurityContextHolder.clearContext(); // 인증 실패 시 context 초기화
             }

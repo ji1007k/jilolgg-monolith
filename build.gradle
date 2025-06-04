@@ -72,6 +72,7 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.projectlombok:lombok:1.18.22'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
+    testImplementation 'org.springframework.batch:spring-batch-test'
 }
 
 // Spring Boot 3.x 버전부터 기본적으로 JUnit 5(Jupiter) 해서 설정 불필요

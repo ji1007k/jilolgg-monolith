@@ -18,6 +18,7 @@ import org.springframework.web.util.UriBuilder;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -144,6 +145,7 @@ public class LolEsportsApiClientUnitTest {
         when(lolEsportsApiConfig.getUrl()).thenReturn("testUrl");
         when(lolEsportsApiConfig.getKey()).thenReturn("testKey");
         when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
+        when(webClientBuilder.defaultHeader(anyString(), anyString())).thenReturn(webClientBuilder);
         when(webClientBuilder.exchangeStrategies(any(ExchangeStrategies.class))).thenReturn(webClientBuilder);  // exchangeStrategies를 Mock
         when(webClientBuilder.build()).thenReturn(webClient);  // build() 메서드 호출 시, Mock된 WebClient 반환
 
@@ -174,7 +176,7 @@ public class LolEsportsApiClientUnitTest {
             return requestHeadersUriSpec; // 스텁 결과
         });
 
-        when(requestHeadersUriSpec.header("x-api-key", lolEsportsApiConfig.getKey())).thenReturn(requestHeadersUriSpec);
+//        when(requestHeadersUriSpec.header("x-api-key", lolEsportsApiConfig.getKey())).thenReturn(requestHeadersUriSpec);
         when(requestHeadersUriSpec.retrieve()).thenReturn(responseSpec);
 
         lolEsportsApiClient = new LolEsportsApiClient(webClientBuilder, lolEsportsApiConfig);
@@ -202,6 +204,7 @@ public class LolEsportsApiClientUnitTest {
     @Test
     void testFetchAllTeams() {
         when(responseSpec.bodyToMono(String.class)).thenReturn(Mono.just(MOCK_JSON_RESPONSE2));
+        when(teamService.parseTeamsFromResponse(anyString())).thenReturn(List.of(new TeamSyncDto()));
 
         // 실행
         Mono<String> result = lolEsportsApiClient.fetchAllTeams();
@@ -228,7 +231,11 @@ public class LolEsportsApiClientUnitTest {
 
     @Test
     void testFetchTeamBySlug() {
+        TeamSyncDto resultDto = new TeamSyncDto();
+        resultDto.setSlug("t1");
+
         when(responseSpec.bodyToMono(String.class)).thenReturn(Mono.just(MOCK_JSON_RESPONSE2));
+        when(teamService.parseTeamsFromResponse(anyString())).thenReturn(List.of(resultDto));
 
         Mono<String> result = lolEsportsApiClient.fetchTeamBySlug("t1");
         List<TeamSyncDto> teams = teamService.parseTeamsFromResponse(result.block());
@@ -239,6 +246,7 @@ public class LolEsportsApiClientUnitTest {
 
         // 없는 결과
         when(responseSpec.bodyToMono(String.class)).thenReturn(Mono.just(""));
+        when(teamService.parseTeamsFromResponse(anyString())).thenReturn(Collections.emptyList());
         Mono<String> result2 = lolEsportsApiClient.fetchTeamBySlug("DoesNotExist");
         List<TeamSyncDto> teams2 = teamService.parseTeamsFromResponse(result2.block());
 

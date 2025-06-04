@@ -16,8 +16,12 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.datasource.init.DataSourceInitializer;
+import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import javax.sql.DataSource;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -38,13 +42,27 @@ import java.util.Queue;
 @Configuration
 // Job, Step, JobLauncher, JobRepository 등의 필수 컴포넌트를 자동으로 설정
 @EnableBatchProcessing
-@Profile({"dev", "test"})
+@Profile("test")
 public class BatchSampleConfig {
 
     private Queue<String> dataQueue = new LinkedList<>(List.of("one", "two", "three", "four", "five"));
 
     // JobBuilder와 StepBuilder를 직접 new
     // DSL 사용 시 JobRepository와 PlatformTransactionManager는 Spring Batch가 자동 등록
+    @Bean
+    public DataSourceInitializer batchDataSourceInitializer(DataSource dataSource) {
+        ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
+        populator.addScript(new ClassPathResource("org/springframework/batch/core/schema-h2.sql"));
+
+        // 에러 무시 설정 추가 (EX. 이미 관련 테이블 생성된 경우)
+        populator.setContinueOnError(true); // SQL 실행 중 에러가 나도 계속 실행
+        populator.setIgnoreFailedDrops(true); // DROP 구문 실패 무시 (선택적)
+
+        DataSourceInitializer initializer = new DataSourceInitializer();
+        initializer.setDataSource(dataSource);
+        initializer.setDatabasePopulator(populator);
+        return initializer;
+    }
 
     // 하나의 배치 작업 단위. 여러 Step으로 구성
     @Bean

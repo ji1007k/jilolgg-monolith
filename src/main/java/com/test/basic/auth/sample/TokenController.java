@@ -16,21 +16,16 @@
 
 package com.test.basic.auth.sample;
 
+import com.test.basic.auth.jwt.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.oauth2.jwt.JwtClaimsSet;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.time.Instant;
-import java.util.stream.Collectors;
 
 /**
  * A controller for the token resource.
@@ -42,11 +37,11 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/token")
 public class TokenController {
-	private static JwtEncoder encoder;
+	private final JwtTokenProvider jwtTokenProvider;
 
 	@Autowired
-	public TokenController(JwtEncoder encoder) {
-		this.encoder = encoder;
+	public TokenController(JwtTokenProvider jwtTokenProvider) {
+		this.jwtTokenProvider = jwtTokenProvider;
 	}
 
 	/*@Operation(summary = "JWT 토큰 발급", description = "JWT 토큰을 발급합니다.")
@@ -62,8 +57,8 @@ public class TokenController {
 	@GetMapping("/generate")
 	@Operation(summary = "JWT 토큰 발급", description = "JWT 토큰을 발급합니다.")
 	@SecurityRequirement(name = "BasicAuth")  // 🔥 Swagger에서 Basic Auth로 인증 가능
-	public String generateTokenSample(Authentication authentication) {
-		Instant now = Instant.now();
+	public ResponseEntity<String> generateTokenSample(Authentication authentication) {
+		/*Instant now = Instant.now();
 
 		long expiry = 36000L;
 		// @formatter:off
@@ -79,9 +74,9 @@ public class TokenController {
 				.subject(authentication.getName())	// JWT의 주체 (여기서는 인증된 사용자의 이름)
 				.claim("scope", scope)	// 사용자가 가진 권한
 				.build();
-		// @formatter:on
+		// @formatter:on*/
 
-		return this.encoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+		return ResponseEntity.ok(jwtTokenProvider.createToken(authentication).getTokenValue());
 	}
 
 }

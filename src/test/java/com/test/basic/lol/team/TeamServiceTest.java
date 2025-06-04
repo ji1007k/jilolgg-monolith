@@ -58,15 +58,15 @@ public class TeamServiceTest {
     }
 
     @Test
-    void testGetTeamByCode() {
+    void testGetTeamBySlug() {
         String slug = testTeam.getSlug();
 
         // invocationOnMock: 호출된 메서드의 인자
-        when(teamRepository.findByCode(anyString())).thenAnswer(invocationOnMock -> {
-            String requestedCode = invocationOnMock.getArgument(0);  // 검색할 code
+        when(teamRepository.findBySlug(anyString())).thenAnswer(invocationOnMock -> {
+            String requestedSlug = invocationOnMock.getArgument(0);  // 검색할 code
             Team mockTeam = new Team();
-            mockTeam.setCode(requestedCode);               // 요청받은 코드로 설정
-            return Optional.of(mockTeam);                      // findByCode는 Optional<Team> 리턴이니까!
+            mockTeam.setSlug(requestedSlug);               // 요청받은 파리미터로 설정
+            return Optional.of(mockTeam);                  // findBySlug는 Optional<Team> 리턴이니까!
         });
 
         // T1으로 호출한 결과가 T1인지 확인
@@ -81,8 +81,8 @@ public class TeamServiceTest {
     }
 
     @Test
-    void testGetTeamByCode_shouldThrow_WhenTeamDoesNotExist() {
-        when(teamRepository.findByCode(anyString())).thenReturn(Optional.empty());
+    void testGetTeamBySlug_shouldThrow_WhenTeamDoesNotExist() {
+        when(teamRepository.findBySlug(anyString())).thenReturn(Optional.empty());
 
         // 없는 팀 조회 시 에러 확인
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> {

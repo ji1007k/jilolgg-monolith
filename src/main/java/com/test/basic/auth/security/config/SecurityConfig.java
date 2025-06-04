@@ -91,7 +91,7 @@ public class SecurityConfig {
 
 				// 토큰 유효성 검증 필터 등록 (커스텀 필터)
 				// 커스텀 필터가 usesrnamepassword 인증 필터보다 먼저 동작하도록 등록
-				.addFilterBefore(new CustomJwtFilter(jwtTokenProvider()), UsernamePasswordAuthenticationFilter.class)
+				.addFilterBefore(customJwtFilter(jwtTokenProvider()), UsernamePasswordAuthenticationFilter.class)
 //				.addFilterBefore(new CustomCsrfFilter(csrfRequireMatcher()), CustomJwtFilter.class) // CSRF 필터
 
 				// 특정 요청에서 CSRF 해제
@@ -163,6 +163,10 @@ public class SecurityConfig {
 		return new InMemoryUserDetailsManager(admin, user);
 	}*/
 
+	@Bean
+	public CustomJwtFilter customJwtFilter(JwtTokenProvider jwtTokenProvider) {
+		return new CustomJwtFilter(jwtTokenProvider);
+	}
 
 	@Bean
 	public JwtTokenProvider jwtTokenProvider() throws Exception {

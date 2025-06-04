@@ -87,7 +87,7 @@ public class MatchService {
         return result;
     }
 
-    private List<MatchDto> getMatchesWithCache(
+    public List<MatchDto> getMatchesWithCache(
             String leagueId,
             LocalDate startDate,
             LocalDate endDate,

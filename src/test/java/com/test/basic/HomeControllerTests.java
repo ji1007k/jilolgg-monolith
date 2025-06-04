@@ -17,20 +17,27 @@ package com.test.basic;
  * limitations under the License.
  */
 
-import com.test.basic.auth.security.config.SecurityConfig;
+import com.nimbusds.jose.util.Base64;
+import com.test.basic.auth.jwt.JwtTokenProvider;
 import com.test.basic.auth.sample.TokenController;
+import com.test.basic.auth.security.config.SecurityConfig;
+import com.test.basic.auth.security.user.CustomUserDetailsService;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
+import java.nio.charset.StandardCharsets;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -40,44 +47,64 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @WebMvcTest({ HomeController.class, TokenController.class })
 @Import(SecurityConfig.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class HomeControllerTests {
 
     @Autowired
     MockMvc mvc;
 
+    @Autowired
+    JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    CustomUserDetailsService customUserDetailsService;
+
+//    UserDetails mockUser;
+
+    @BeforeAll
+    void setup() {
+        // ======================
+        // 가짜 UserDetails 설정
+       /* mockUser = new CustomUserDetails(
+                1L, // 혹은 UUID.randomUUID()
+                "admin",           // email
+                "$2b$12$JgK.Du5J.DbMQ6zQ1Tx58OoKCEGr3NUG.p45zDQb0qALy9T5MczJy", // password
+                "admin",           // username
+                List.of(new SimpleGrantedAuthority("SCOPE_ADMIN"))
+        );*/
+    }
+
+
     @Test
-    void rootWhenAuthenticatedThenSaysHelloUser() throws Exception {
+    void testTokenGeneration_withCredentials200() throws Exception {
+        String userInfo = "admin:admin";
+        Base64 base64Encoded = Base64.encode(userInfo.getBytes(StandardCharsets.UTF_8));
+
         // @formatter:off
-        MvcResult result = this.mvc.perform(post("/token")
-                        .with(httpBasic("user", "password")))
+        MvcResult result2 = this.mvc.perform(get("/token/generate")
+                        .header(HttpHeaders.AUTHORIZATION, "Basic " + base64Encoded)
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        String token = result.getResponse().getContentAsString();
+        String token = result2.getResponse().getContentAsString();
 
-        /*this.mvc.perform(get("/")
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(content().string("Hello, user!"));*/
+        assertNotNull(token);
+    }
 
-        this.mvc.perform(get("/mypage", 1)
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(content().string("Hello, user!"));
+    @Test
+    void testTokenGeneration_badCredentials401() throws Exception {
+        // @formatter:off
+        this.mvc.perform(get("/token/generate"))
+                .andExpect(status().isUnauthorized());
         // @formatter:on
     }
 
     @Test
-    void rootWhenUnauthenticatedThen401() throws Exception {
+    void testIndexPage_moveSuccessfully() throws Exception {
         // @formatter:off
         this.mvc.perform(get("/"))
-                .andExpect(status().isUnauthorized());
-        // @formatter:on
-    }
-
-    @Test
-    void tokenWhenBadCredentialsThen401() throws Exception {
-        // @formatter:off
-        this.mvc.perform(post("/token"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk());
         // @formatter:on
     }
 

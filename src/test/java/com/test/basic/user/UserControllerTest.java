@@ -232,8 +232,9 @@ public class UserControllerTest {
 
         // 특정 ID로 유저 수정
         mockMvc.perform(put("/users/{id}", 1L)  // URL 경로에서 id 값을 1L로 전달
-                        .header("X-CSRF-TOKEN", this.csrfToken)
-                        .session(this.mockSession)
+                            .with(csrf())
+//                        .header("X-CSRF-TOKEN", this.csrfToken)
+//                        .session(this.mockSession)
                         .cookie(this.jwtAccessCookie)
                         .contentType(MediaType.APPLICATION_JSON)  // JSON 형식으로 요청
                         .content(objectMapper.writeValueAsString(updatedUser)))  // updatedUser를 JSON으로 변환하여 본문에 담기

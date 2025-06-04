@@ -10,6 +10,7 @@ import org.springframework.batch.test.context.SpringBatchTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.Year;
 import java.time.ZoneId;
@@ -22,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 //  -> BatchTestConfig.class import 안해도 됨
 @SpringBatchTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS) // 각 객체가 클래스 당 한번만 생성되도록
+@ActiveProfiles("test")
 public class SyncMatchJobTest {
 
     @Autowired

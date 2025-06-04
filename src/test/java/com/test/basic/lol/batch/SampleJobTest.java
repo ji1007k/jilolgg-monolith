@@ -13,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -24,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 // 테스트 클래스 인스턴스를 메서드마다 새로 생성하지 않고, 테스트 클래스 단위로 한 번만 생성
 // @BeforeAll 메서드나 공유 자원을 쓰기 위해선 static을 요구하지 않게 하려면 필요
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@ActiveProfiles("test")
 public class SampleJobTest {
 
     @Autowired

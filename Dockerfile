@@ -15,8 +15,10 @@ RUN chmod +x gradlew
 
 # 의존성 다운로드 및 빌드
 # RUN --mount=type=cache,target=/root/.gradle ./gradlew build --no-daemon
-# 의존성 다운로드 및 빌드, 테스트 실행 방지
-RUN --mount=type=cache,target=/root/.gradle ./gradlew build --no-daemon -x test
+# 의존성 다운로드 및 빌드, 테스트 실행
+RUN --mount=type=cache,target=/root/.gradle ./gradlew build --no-daemon
+# 테스트 생략
+#RUN --mount=type=cache,target=/root/.gradle ./gradlew build --no-daemon -x test
 
 # Stage 2: Final runtime image
 FROM eclipse-temurin:17-jre-alpine AS runtime

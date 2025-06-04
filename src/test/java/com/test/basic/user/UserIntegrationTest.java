@@ -137,15 +137,35 @@ public class UserIntegrationTest {
                 String.class
         );
 
-        // CSRF 토큰을 헤더에서 추출
-        csrfToken = csrfResponse.getHeaders().getFirst("X-CSRF-TOKEN");
+        // 1. 쿠키에 저장 후 추출 방법 (STATELESS)
+        // XSRF-TOKEN=e1b7a378-b833-4e20-8d20-3756b9173fa6; Path=/
+        List<String> setCookies = csrfResponse.getHeaders().get(HttpHeaders.SET_COOKIE);
+        StringBuilder cookieBuilder = new StringBuilder();
+
+        for (String c : setCookies) {
+            String[] parts = c.split(";", 2); // "XSRF-TOKEN=xxx; Path=/..."
+            String cookiePart = parts[0];
+            cookieBuilder.append(cookiePart).append("; ");
+
+            if (cookiePart.startsWith("XSRF-TOKEN")) {
+                csrfToken = cookiePart.split("=")[1];
+            }
+        }
+
+        // csrf 요청 시 받은 모든 Set-Cookie 값을 다시 전송해야 함
+        this.cookie = this.cookie + "; " + cookieBuilder;
+
+
+        // =========================================
+        // 2. 쿠키 저장 전 방법: CSRF 토큰을 헤더에서 추출 (JSESSIONID도 함꼐 필요)
+//        csrfToken = csrfResponse.getHeaders().getFirst("X-CSRF-TOKEN");
 
         // 🚨 CSRF 토큰이 없으면 예외 발생
         assertNotNull(csrfToken, "CSRF Token이 없습니다!");
         logger.info("CSRF Token: {}", csrfToken);
 
         // ✅ 세션 쿠키 추출
-        List<String> cookies = csrfResponse.getHeaders().get("Set-Cookie");
+        /*List<String> cookies = csrfResponse.getHeaders().get("Set-Cookie");
         sessionId = null;
         for (String cookie : cookies) {
             if (cookie.startsWith("JSESSIONID")) {
@@ -153,7 +173,7 @@ public class UserIntegrationTest {
             }
         }
         assertNotNull(sessionId, "세션ID가 없습니다.");
-        System.out.println("Session ID: " + sessionId);
+        System.out.println("Session ID: " + sessionId);*/
     }
 
     private HttpHeaders createHeaders(String authHeader) {
@@ -174,8 +194,9 @@ public class UserIntegrationTest {
 
         // ✅ CSRF 토큰 설정
         logger.info("Sending CSRF Token: {}", csrfToken);
-        headers.set("X-CSRF-TOKEN", csrfToken);
-        headers.add(HttpHeaders.COOKIE, cookie + "; JSESSIONID=" + sessionId);  // 값 추가
+        headers.set("X-XSRF-TOKEN", csrfToken);
+        headers.add(HttpHeaders.COOKIE, cookie);
+//        headers.add(HttpHeaders.COOKIE, cookie + "; JSESSIONID=" + sessionId);  // 값 추가
 
         // when (실제 HTTP POST 요청)
         HttpEntity<UserEntity> request = new HttpEntity<>(user, headers);
@@ -266,8 +287,9 @@ public class UserIntegrationTest {
         // w
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("X-Csrf-Token", csrfToken);
-        headers.add(HttpHeaders.COOKIE, cookie + "; JSESSIONID=" + sessionId);
+        headers.set("X-XSRF-TOKEN", csrfToken);
+        headers.add(HttpHeaders.COOKIE, cookie);
+//        headers.add(HttpHeaders.COOKIE, cookie + "; JSESSIONID=" + sessionId);
         HttpEntity<UserEntity> request = new HttpEntity<>(updateUser, headers);
 
         ResponseEntity<UserEntity> response = restTemplate.exchange(
@@ -296,8 +318,9 @@ public class UserIntegrationTest {
 
         // w
         HttpHeaders headers = new HttpHeaders();
-        headers.set("X-Csrf-Token", csrfToken);
-        headers.add(HttpHeaders.COOKIE, cookie + "; JSESSIONID=" + sessionId);
+        headers.set("X-XSRF-TOKEN", csrfToken);
+        headers.add(HttpHeaders.COOKIE, cookie);
+//        headers.add(HttpHeaders.COOKIE, cookie + "; JSESSIONID=" + sessionId);
         HttpEntity<Void> request = new HttpEntity<>(headers);
 
         ResponseEntity<Void> res = restTemplate.exchange(
@@ -313,6 +336,8 @@ public class UserIntegrationTest {
     }
 
 
+    @Test
+    @Disabled
     void testRSARequest() {
         // given (요청할 URL과 파라미터 설정)
         String rsaUrl = "/rsa/generate";

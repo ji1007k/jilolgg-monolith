@@ -1,5 +1,6 @@
-package com.test.basic.lol.batch.sample;
+package com.test.basic.lol.batch;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -63,6 +64,7 @@ public class JobTriggerController {
 
 
     @GetMapping("/run-match-job")
+    @Operation(summary = "경기 일정 갱신 배치", description = "EC2 프리티어에서 돌리면 서버 다운됨")
     public String runMatchJob(@RequestParam String year) {
         StopWatch sw = new StopWatch();
         sw.start();

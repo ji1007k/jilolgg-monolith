@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/lol/standings")
-@Tag(name = "[LOL] Standings API", description = "리그 순위 API")
+@Tag(name = "[LOL(Esports)] 6. Standings API", description = "리그 순위 API")
 public class StandingsController {
 
     private final StandingsService standingsService;

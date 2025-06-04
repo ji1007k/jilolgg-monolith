@@ -15,7 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/lol/teams")
-@Tag(name = "[LOL] Team API", description = "팀 관련 API")
+@Tag(name = "[LOL(Esports)] 3. Team API", description = "팀 관련 API")
 public class TeamController {
     private static final Logger logger = LoggerFactory.getLogger(TeamController.class);
 

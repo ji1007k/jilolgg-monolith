@@ -1,3 +1,5 @@
+[← 이전 페이지로 돌아가기](../README.md)
+
 ## 개발 과정에서의 고민과 한계
 
 - **JWT 기반 무상태 인증 구조 (CSRF 공격 방어를 위해 Double Submit Cookie 패턴 적용)**

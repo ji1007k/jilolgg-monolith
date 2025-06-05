@@ -33,7 +33,7 @@ import java.util.List;
 public class JobTriggerController {
 
     private final JobLauncher jobLauncher;  // Job을 실행하는 컴포넌트 (Job 실행 트리거)
-    private final Job exampleJob;
+//    private final Job exampleJob;
     private final Job syncMatchJob;
 
     private static final List<String> MAJOR_LEAGUE_IDS = List.of(
@@ -44,11 +44,10 @@ public class JobTriggerController {
             "113464388705111224",
             "98767991325878492",
             "98767975604431411",
-            // LPL, LEC, ...
+            // LPL, LEC, LJL
             "98767991314006698",
             "98767991302996019",
-            "98767991349978712",
-            "98767991299243165");
+            "98767991349978712");
 
 /*
     @GetMapping("/run-sample")

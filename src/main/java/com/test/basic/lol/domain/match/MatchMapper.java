@@ -16,6 +16,7 @@ public interface MatchMapper {
     @Mapping(target = "winningTeamCode", expression = "java(getWinningTeamCode(match))")
     @Mapping(source = "startTime", target = "startTime", dateFormat = "yyyy-MM-dd HH:mm:ss")
     @Mapping(source = "matchTeams", target = "participants")    // 필드 이름이 다를 경우 매핑 명시
+    @Mapping(target = "strategy", expression = "java(refineStrategy(match))")
     MatchDto entityToDto(Match match);
 
     default String getWinningTeamCode(Match match) {
@@ -25,5 +26,9 @@ public interface MatchMapper {
                 .map(Team::getCode)
                 .findFirst()
                 .orElse(null);
+    }
+
+    default String refineStrategy(Match match) {
+        return match.getStrategy().replace("bestOf", "bo");
     }
 }

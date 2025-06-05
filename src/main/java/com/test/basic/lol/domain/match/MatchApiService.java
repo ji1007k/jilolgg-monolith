@@ -63,6 +63,7 @@ public class MatchApiService {
                         event.path("startTime").asText(),
                         event.path("state").asText(),
                         event.path("strategy").path("type").asText(),
+                        event.path("blockName").asText(),
                         winningTeamCode,
                         matchTeamDtos.stream()
                                 .map(team -> {

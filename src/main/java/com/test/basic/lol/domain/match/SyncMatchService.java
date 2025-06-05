@@ -397,6 +397,7 @@ public class SyncMatchService {
                     startTime,
                     event.path("state").asText(),
                     event.path("strategy").path("type").asText(),
+                    event.path("blockName").asText(),
                     winningTeamCode,
                     matchTeamDtos.stream()
                             .map(team -> {

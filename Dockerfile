@@ -13,9 +13,7 @@ COPY . ./
 # Gradle Wrapper에 실행 권한 부여
 RUN chmod +x gradlew
 
-# 의존성 다운로드 및 빌드
-# RUN --mount=type=cache,target=/root/.gradle ./gradlew build --no-daemon
-# 의존성 다운로드 및 빌드, 테스트 실행
+# 의존성 다운로드 및 빌드(테스트 포함)
 RUN --mount=type=cache,target=/root/.gradle ./gradlew build --no-daemon
 # 테스트 생략
 #RUN --mount=type=cache,target=/root/.gradle ./gradlew build --no-daemon -x test

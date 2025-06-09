@@ -29,3 +29,127 @@ CREATE TABLE social_accounts (
 
 250207 JWT + Spring Security
 https://github.com/spring-projects/spring-security-samples/tree/main/servlet/spring-boot/java/jwt/login
+
+
+
+
+----------------
+커밋 잘못 했을 떄 push 취소
+방법1) 강제 리셋 + 강제 푸시 (혼자 작업 중일 때만)
+IntelliJ에서 Git → Log 탭 열기
+취소하고 싶은 커밋 이전 커밋을 우클릭 → Reset Current Branch to Here...
+Hard 선택 (파일도 커밋 전 상태로 돌아감)
+리셋 후, 터미널에서:
+git push origin HEAD --force
+
+방법2) 되돌리는 커밋 생성 (협업 시 추천)
+Git → Log 탭 열기
+되돌리고 싶은 커밋을 우클릭 → Revert Commit
+IDEA가 자동으로 "이 커밋을 되돌립니다" 커밋을 만들어줌
+이걸 그냥 다시 Push.
+** 수정사항 사라짐
+
+
+# 특정 포트 사용중인 프로세스 강제 종료
+## 프로세스 id 확인
+netstat -ona | findstr PORT
+## 강제 종료
+taskkill /f /pid PROCESS_ID
+
+
+250519 Redis cli 접속 및 데이터 삭제
+redis-cli -h 54.180.118.74 -p 36379 -a jikim_pwdForRedis_250419
+FLUSHALL
+
+Redis cli 메모리 정보 확인 (접속 후 명령어 실행 가능)
+info memory
+// 아래 항목과 같을 경우 메모리 제한 및 정ㅊ-------
+maxmemory:0
+maxmemory_human:0B
+maxmemory_policy:noeviction
+
+Redis cli로 메모리 제한 및 정책 설정
+- 방법1) redis.conf 직접 수정 -> ec2 재부팅돼도 유지됨
+    > 설정파일 위치 찾기
+        sudo find / -name redis.conf
+    > maxmemory 128mb
+    > maxmemory-policy allkeys-lru
+
+- 방법2) 런타임 변경 -> ec2 재부팅 시 초기화됨
+redis-cli -h 127.0.0.1 -p 36379 -a jikim_pwdForRedis_250419 config set maxmemory 128mb
+redis-cli -h 127.0.0.1 -p 36379 -a jikim_pwdForRedis_250419 config set maxmemory-policy allkeys-lru
+
+# Redis 저장된 전체 키 목록 확인
+redis-cli -h 127.0.0.1 -p 36379 -a jikim_pwdForRedis_250419 KEYS *
+## 커서 기반으로 일부 키만 리턴 -> 서버 부하 최소화
+redis-cli -h 127.0.0.1 -p 36379 -a jikim_pwdForRedis_250419 SCAN 0
+
+
+Nginx 설정파일
+sudo nano /etc/nginx/sites-available/default
+
+실시간 로그 확인
+1) less
+sudo less +F /var/log/nginx/access.log
+ctrl + c: 방향키 이동 가능
+/ 눌러서 검색
+2) tail
+sudo tail -f /var/log/nginx/access.log
+3) cat
+cat /var/log/nginx/access.log
+
+
+도커 명령어
+docker system prune -a
+docker system df -a
+
+도커 컨테이너 내부 파일 접근
+docker exec -it 컨테이너명 sh
+
+
+리눅스 서비스 확인 명령어
+sudo systemctl status 서비스명(생략하면 전체 서비스)
+sudo systemctl restart 서비스명
+
+파일 권한 변경
+chown -R 777 ${UID}:${UID} 파일경로
+
+용량 확인
+1) 메모리
+free -h
+# 리눅스/유닉스 실시간 시스템 모니터링 툴
+# CPU, 메모리, 스왑 사용량 실시간 확인
+htop
+top
+    shift + M : 내림차순 정렬
+2) 디스크
+df
+
+
+---
+# EC2 메모리 부족 OOM 시스템 로그 검색 (해당 시간대 포함)
+grep -i "killed process" /var/log/syslog
+grep -i "out of memory" /var/log/syslog
+grep "2025-05-28T17:" /var/log/syslog
+
+
+# 컨테이너 메모리 사용량 확인
+docker stats
+## 컨테이너 내부에서 JVM 모니터링 (-u 0 : 관리자 권한으로 접속)
+docker exec -u 0 -it [컨테이너명] sh
+### jdk 설치
+apk add [openjdk17]
+### pid 확인
+jps
+### pid jvm 모니터링 (1000ms 마다 로그 찍기)
+jstat -gc [pid] 1000
+
+
+# ec2 서비스 상태 조작 명령어
+sudo systemctl status [서비스명]
+sudo systemctl start [서비스명]
+sudo systemctl restart [서비스명]
+sudo systemctl stop [서비스명]
+sudo systemctl enable [서비스명]
+sudo systemctl is-enabled [서비스명]
+sudo systemctl disable [서비스명]

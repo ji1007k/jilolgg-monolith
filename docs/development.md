@@ -51,7 +51,7 @@
         - Swagger 요청 시 특정 인증 헤더를 포함시키고, 해당 헤더 포함 요청에 대해 CSRF 검사 제외
         - RequestMatcher를 사용하여 특정 요청만 CSRF 무시
         - Swagger 문서에는 @ApiImplicitParam, @SecurityRequirement로 인증 정보 설정
--
+
 - **EC2 프리티어 사양 한계 대응**
     - 프론트엔드와 백엔드를 분리하여 운영하며, Nginx를 통해 HTTPS 트래픽을 리버스 프록시.
     - Redis EC2 설치 및 메모리 제한

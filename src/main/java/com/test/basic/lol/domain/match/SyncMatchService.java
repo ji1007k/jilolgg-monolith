@@ -183,10 +183,6 @@ public class SyncMatchService {
             logger.error(">> 락 획득 중 예외 발생: {}", e.getMessage());
         } finally {
             cleanup();
-
-            Runtime runtime = Runtime.getRuntime();
-            long used = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
-            logger.info("현재 JVM 힙 사용량: {} MB", used);
         }
     }
 
@@ -203,6 +199,21 @@ public class SyncMatchService {
         // 영속성 컨텍스트 초기화
         entityManager.flush();
         entityManager.clear();
+
+
+        Runtime runtime = Runtime.getRuntime();
+        long used = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
+        logger.info(">>> GC 전 JVM 힙 사용량: {} MB", used);
+
+        try {
+            System.gc();
+            Thread.sleep(200);  // Full GC 대기
+        } catch(InterruptedException ie) {
+            logger.error("Thread 정지 중 에러 발생: {}", ie.getMessage());
+        }
+
+        used = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);
+        logger.info(">>> GC 후 JVM 힙 사용량: {} MB", used);
     }
 
 
@@ -320,12 +331,7 @@ public class SyncMatchService {
         } catch (Exception e) {
             logger.error("[{}] 리그 동기화 실패: {}", leagueId, e.getMessage(), e);
         } finally {
-            if (isLocked && lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
-
-            entityManager.flush();
-            entityManager.clear();
+            cleanup();
         }
     }
 

@@ -43,12 +43,16 @@ USER appuser
 COPY --from=build /app/build/libs/*.jar app.jar
 
 # 컨테이너 실행 시 JAR 파일 실행
-ENTRYPOINT ["java",
-"-Xms64m", "-Xmx128m",
+ENTRYPOINT [
+"java",
+"-Xms64m",
+"-Xmx128m",
 "-XX:MaxMetaspaceSize=128m",
 "-XX:+UseSerialGC",
 "-Dfile.encoding=UTF-8",
 "-Duser.timezone=Asia/Seoul",
-"-jar", "app.jar"]
+"-jar",
+"app.jar"
+]
 
 EXPOSE 8080

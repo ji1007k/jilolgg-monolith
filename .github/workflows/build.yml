@@ -1,10 +1,10 @@
 name: "[CI] Build Basic BE SpringBoot"
 
 on:
-  # PR 처음 열렸을 때, PR에 커밋 추가될 떄, PR 다시 열렸을 떄
   pull_request:
     branches:
       - main  # main 브랜치 대상
+    # PR 처음 열렸을 때, PR에 커밋 추가될 떄, PR 다시 열렸을 떄
     types: [opened, synchronize, reopened]
 
 jobs:
@@ -42,7 +42,7 @@ jobs:
         run: |
           # Docker 이미지를 빌드하고 GHCR로 푸시
           docker build -t $REPO_URL:latest .  # GHCR에 태그 붙여서 빌드
-          docker push $REPO_URL:latest  # 이미지를 GHCR로 푸시
+          docker push $REPO_URL:latest        # 이미지를 GHCR로 푸시
 
 
 

@@ -42,7 +42,7 @@ USER appuser
 # JAR 파일을 복사
 COPY --from=build /app/build/libs/*.jar app.jar
 
-# 컨테이너 실행 시 JAR 파일 실행
+# 컨테이너 실행 시 JAR 파일 실행 (LF 형식 필요)
 ENTRYPOINT [
 "java",
 "-Xms64m",

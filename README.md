@@ -53,5 +53,6 @@ JIKIM.GG는 LoL Esports API를 활용해 리그, 팀, 경기 정보를 수집하
 
 ## 문서 바로가기
 - [시스템 아키텍처](./docs/architecture.md)
+- [Infra 구성 및 배포](./docs/infra.md)
 - [개발 과정 및 한계](./docs/development.md)
 - [개선 방향](docs/improvements.md)

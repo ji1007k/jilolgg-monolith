@@ -81,3 +81,13 @@ dependencies {
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
 }
+
+// java 소스 컴파일 시 문자 인코딩 명시
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+// resources 하위 파일 복사/처리 시 사용할 인코딩 지정
+processResources {
+    filteringCharset = 'UTF-8'
+}

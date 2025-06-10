@@ -117,6 +117,10 @@ docker compose up -d --build
 docker compose build be/fe
 docker compose up -d be/fe
 
+# override 파일 무시하고 실행
+docker compose -f compose.yaml up
+# 여러 compose 파일 병합 실행
+docker compose -f composeA.yaml -f composeB.yaml up
 
 도커 컨테이너 내부 파일 접근
 docker exec -it 컨테이너명 sh

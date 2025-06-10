@@ -31,7 +31,17 @@ CREATE TABLE social_accounts (
 https://github.com/spring-projects/spring-security-samples/tree/main/servlet/spring-boot/java/jwt/login
 
 
+# git repo clone (. 생략 시 be/be 와 같이 하위 폴더와 함께 생성됨)
+git clone https://github.com/ji1007k/basic-fe-nextjs.git .
 
+# git submodule 서브모듈 사용하기 (repo 안에 repo)
+## 서브모듈 추가
+git submodule add <be 레포 URL> <폴더명 ex. be>
+git submodule add <fe 레포 URL> <폴더명 ex. fe>
+## 서브모듈 초기화 (폴더 생성, 서브모듈의 하위 서브모듈까지 초기화)
+git submodule update --init --recursive
+# 최신 서브모듈 커밋으로 갱신
+git submodule update --remote --merge
 
 ----------------
 커밋 잘못 했을 떄 push 취소
@@ -102,6 +112,11 @@ cat /var/log/nginx/access.log
 도커 명령어
 docker system prune -a
 docker system df -a
+
+docker compose up -d --build
+docker compose build be/fe
+docker compose up -d be/fe
+
 
 도커 컨테이너 내부 파일 접근
 docker exec -it 컨테이너명 sh

@@ -1,5 +1,6 @@
 package com.test.basic.lol.domain.team.favorite;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,7 @@ public class FavoriteTeamController {
 
     // 1. 즐겨찾기 등록
     @PostMapping("/{teamId}")
+    @SecurityRequirement(name = "CSRF")
     public ResponseEntity<String> addFavorite(@PathVariable String teamId,
                                               @AuthenticationPrincipal Jwt jwt) {
         Long userId = Long.valueOf(jwt.getClaim("sub"));
@@ -42,6 +44,7 @@ public class FavoriteTeamController {
 
     // 3. 즐겨찾기 삭제
     @DeleteMapping("/{teamId}")
+    @SecurityRequirement(name = "CSRF")
     public ResponseEntity<Void> removeFavorite(@PathVariable String teamId,
                                                @AuthenticationPrincipal Jwt jwt) {
         Long userId = Long.valueOf(jwt.getSubject());

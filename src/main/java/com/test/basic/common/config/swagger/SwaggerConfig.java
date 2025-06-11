@@ -34,6 +34,14 @@ import java.util.List;
         in = SecuritySchemeIn.HEADER,
         paramName = "X-From-Swagger"
 )
+// 클라이언트와 서버가 동일한 도메인일 경우, swagger ui 내부 js 코드에서 x-xsrf-token 헤더에 자동으로 csrf 토큰 넣어서 보내줌
+// CORS 에선 검증 필요
+@SecurityScheme(
+        name = "CSRF",
+        type = SecuritySchemeType.APIKEY,
+        in = SecuritySchemeIn.HEADER,
+        paramName = "X-XSRF-TOKEN"
+)
 public class SwaggerConfig {
     @Bean
     public OpenAPI customOpenAPI() {

@@ -51,9 +51,11 @@ public class TeamController {
         }
     }
 
+
     @PostMapping("/sync")
     @PreAuthorize("hasAuthority('ADMIN')")
     @SecurityRequirement(name = "IgnoreCSRF")
+    @SecurityRequirement(name = "CSRF")
     @Operation(summary = "LOL 팀 정보 수동 동기화", description = "LOL 팀 정보 수동 동기화 API")
     public ResponseEntity<String> syncTeams() {
         logger.info("==================== 팀 정보 수동 동기화 작업 시작 ====================");
@@ -68,7 +70,5 @@ public class TeamController {
         logger.info("==================== 팀 정보 수동 동기화 작업 완료 ====================");
         return ResponseEntity.ok(result);
     }
-
-
 
 }

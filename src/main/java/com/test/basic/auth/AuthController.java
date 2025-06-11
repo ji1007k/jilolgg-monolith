@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +38,12 @@ public class AuthController {
     private final JwtTokenProvider jwtTokenProvider;
 
     private final UserService userService;
+
+    @Value("${cookie.secure}")
+    private boolean isSecure;
+
+    @Value("${cookie.same-site}")
+    private String sameSite;
 
     @Autowired
     public AuthController(JwtTokenProvider jwtTokenProvider, UserService userService) {
@@ -98,26 +105,35 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
+    /**
+     * 쿠키 삭제는 기존 쿠키와 name, path, domain, secure, sameSite 등이 완전히 일치해야 합니다.
+     * maxAge(0)만 바꿔서 보내야 브라우저가 기존 쿠키를 "덮어써서 삭제"
+     */
     @GetMapping("/logout")
     @SecurityRequirement(name = "BearerAuth")  // 🔥 Swagger에서 JWT 인증 필요
     @Operation(summary = "로그아웃", description = "로그아웃 API")
     public ResponseEntity logout(HttpServletResponse response) {
         // 세션 쿠키를 만료시켜서 삭제
-        Cookie cookie = new Cookie("access_token", null);
-        cookie.setHttpOnly(true);  // 자바스크립트에서 쿠키를 접근할 수 없도록 설정
-        cookie.setPath("/");  // 쿠키의 경로를 현재 웹사이트의 루트로 설정
-        cookie.setMaxAge(0);  // 쿠키 만료 시간 설정 (0으로 설정하면 즉시 만료됨)
-        cookie.setSecure(true);  // HTTPS 연결에서만 쿠키가 전달됨
-//        cookie.setSecure(false);  // HTTP 연결에서 쿠키가 전달됨
-        response.addCookie(cookie);  // 쿠키를 응답에 추가하여 클라이언트에서 삭제되도록 함
+        ResponseCookie cookie = ResponseCookie.from("access_token", null)
+                .httpOnly(true)
+                .path("/")
+                .secure(isSecure)
+                .sameSite(sameSite)
+                .maxAge(0)  // 쿠키 만료 시간 0: 즉시 만료
+                .build();
 
-        Cookie refreshTokenCookie = new Cookie("refresh_token", null);
-        refreshTokenCookie.setHttpOnly(true);  // 자바스크립트에서 쿠키를 접근할 수 없도록 설정
-        refreshTokenCookie.setPath("/");  // 쿠키의 경로를 현재 웹사이트의 루트로 설정
-        refreshTokenCookie.setMaxAge(0);  // 쿠키 만료 시간 설정 (0으로 설정하면 즉시 만료됨)
-        refreshTokenCookie.setSecure(true);  // refreshToken 쿠키에 대해서도 동일
-//        refreshTokenCookie.setSecure(false);  // HTTP 연결에서 쿠키가 전달됨
-        response.addCookie(refreshTokenCookie);  // 쿠키를 응답에 추가하여 클라이언트에서 삭제되도록 함
+        response.addHeader("Set-Cookie", cookie.toString());  // 쿠키를 응답에 추가하여 클라이언트에서 삭제되도록 함
+
+        // refreshToken 쿠키에 대해서도 동일하게 설정
+        ResponseCookie refreshTokenCookie = ResponseCookie.from("refresh_token", null)
+                .httpOnly(true)
+                .path("/")
+                .secure(isSecure)
+                .sameSite(sameSite)
+                .maxAge(0)
+                .build();
+
+        response.addHeader("Set-Cookie", refreshTokenCookie.toString());
 
         // 추가적으로 헤더에서 JWT 토큰 삭제 (필터에서 처리되는 부분)
         response.setHeader("Authorization", ""); // Authorization 헤더를 비워서 토큰 삭제

@@ -18,6 +18,6 @@ public class CsrfTokenController {
         // CSRF 토큰을 응답 헤더에 포함하여 반환
         return ResponseEntity.ok()
                 .header("X-CSRF-TOKEN", csrfToken.getToken())
-                .build();
+                .body(csrfToken.getToken());
     }
 }

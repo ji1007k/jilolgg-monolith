@@ -27,13 +27,14 @@ JIKIM.GG는 LoL Esports API를 활용해 리그, 팀, 경기 정보를 수집하
 ## 3. 기술 스택
 
 ### Backend
-- Java 17, Spring Boot 3 (WebFlux + JPA)
-- Redis (Pub/Sub, 캐시)
-- PostgreSQL (AWS RDS)
+- Java 17, Spring Boot 3 (Spring MVC)
 - Spring Security (OAuth2 + JWT)
 - Spring Batch 5, Redisson (분산 락)
+- JPA (Hibernate), PostgreSQL (AWS RDS)
+- Redis (Pub/Sub, 캐시)
+- WebClient (비동기 외부 API 호출)
 - JUnit5, Mockito, MockMvc
-- Logback, Slf4j
+- Logback
 
 ### Frontend
 - Next.js (CSR + SSR)
@@ -42,12 +43,12 @@ JIKIM.GG는 LoL Esports API를 활용해 리그, 팀, 경기 정보를 수집하
 ### Infra / DevOps
 - AWS EC2 (Ubuntu)
 - Docker, Nginx (HTTPS 리버스 프록시)
-- GitHub Actions (CI/CD 자동화)
+- GitHub Actions (CI/CD)
 - GitHub OIDC + AWS IAM (보안 배포)
 
 ### 기타
-- OpenAPI(Swagger)
-- Postman
+- OpenAPI (Swagger)
+- Postman (API 테스트)
 
 ---
 

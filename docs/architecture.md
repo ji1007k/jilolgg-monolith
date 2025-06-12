@@ -25,7 +25,7 @@
   ├─ JWT / OAuth2 인증 처리
   ├─ LOL Esports API 데이터 연동
   ├─ Redis Pub/Sub 채팅 처리
-  ├─ 배치 스케줄러 (Spring Batch + WebFlux)
+  ├─ 배치 스케줄러 (Spring Batch + WebClient)
   └─ Redisson 분산 락 처리
 
 ─────────────────────────────────────────────

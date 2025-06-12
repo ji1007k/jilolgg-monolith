@@ -2,7 +2,7 @@
 
 ## 개발 과정에서의 고민과 한계
 
-1.  **JWT 기반 무상태 인증 구조 (CSRF 공격 방어를 위한 CORS + SameSite 조합 적용)
+1.  **JWT 기반 무상태 인증 구조** (CSRF 공격 방어를 위한 CORS + SameSite 조합 적용)
     - JWT를 httpOnly 쿠키에 저장해 XSS 공격에 대응하고, 자동 전송 구조 유지
     - CSRF 방어를 위해
       - SameSite=Lax 설정으로 외부 출처 쿠키 전송 제한
@@ -25,7 +25,7 @@
 
 ---
 
-4. **WebSocket + Redis Pub/Sub 기반 채팅 기능**
+4. **WebSocket + Redis Pub/Sub 기반 실시간 채팅 기능**
     - Redis Pub/Sub 구조 적용 → 다중 인스턴스 간 메시지 처리 안정화
     - 연결 유지 및 UX 개선을 위해 Ping/Pong 전략 적용 
 

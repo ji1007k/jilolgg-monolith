@@ -48,8 +48,7 @@
 
 ---
 
-7. **EC2 프리티어 사양 한계 대응**
-    - 프리티어 환경에서 프론트 및 백엔드 배포 + Nginx 리버스 프록시 + Redis 운영중 OOM, 접속 문제 발생
+7. **EC2 프일 인스턴스에 프론트 및 백엔드 배포 + Nginx 리버스 프록시 + Redis 운영중 OOM, 접속 문제 발생
     - 안정화를 위한 노력
       - PostgreSQL DB를 Docker → EC2 설치 → AWS RDS로 전환
       - Redis 및 JVM 메모리 제한 및 스왑 메모리 활성화

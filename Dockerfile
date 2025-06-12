@@ -19,7 +19,7 @@ RUN --mount=type=cache,target=/root/.gradle ./gradlew build --no-daemon
 #RUN --mount=type=cache,target=/root/.gradle ./gradlew build --no-daemon -x test
 
 # Stage 2: Final runtime image
-FROM eclipse-temurin:17-jre-alpine AS runtime
+FROM eclipse-temurin:17-jdk-alpine AS runtime
 
 WORKDIR /app
 

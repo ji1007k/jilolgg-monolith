@@ -44,7 +44,12 @@
     - 보안 강화:
         - Nginx에서 HTTPS 포트만 허용, 루트 접근 제한, 의심 요청 차단 설정
         - AWS Systems Manager (SSM) 도입
-        - 최종 배포는 GitHub OIDC + SSM 접속 방식으로 전환 (SSH는 단일 인스턴스에 프론트 및 백엔드 배포 + Nginx 리버스 프록시 + Redis 운영중 OOM, 접속 문제 발생
+        - 최종 배포는 GitHub OIDC + SSM 접속 방식으로 전환 (SSH는 본인 IP만 허용)
+
+---
+
+7. **EC2 프리티어 사양 한계 대응**
+    - 단일 인스턴스에 프론트 및 백엔드 배포 + Nginx 리버스 프록시 + Redis 운영중 OOM, 접속 문제 발생
     - 안정화를 위한 노력
       - PostgreSQL DB를 Docker → EC2 설치 → AWS RDS로 전환
       - Redis 및 JVM 메모리 제한 및 스왑 메모리 활성화

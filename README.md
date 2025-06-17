@@ -16,7 +16,7 @@ JIKIM.GG는 LoL Esports API를 활용해 리그, 팀, 경기 정보를 수집하
 
 ## 2. 주요 기능
 다음과 같은 주요 기능을 제공합니다. (기능 상세 [여기](./docs/features.md)에서 확인)
-- OAuth2 + JWT 기반 로그인/로그아웃/토큰 갱신
+- JWT 기반 로그인/로그아웃/토큰 갱신
 - 경기 정보 자동 연동 및 캐싱 처리 (API → DB → Redis)
 - 경기 일정 동기화 (Spring Batch + WebFlux 기반 병렬 수집)
 - 실시간 채팅 기능 (WebSocket + Redis Pub/Sub)

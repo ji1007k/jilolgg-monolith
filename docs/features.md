@@ -3,7 +3,6 @@
 ## 상세 기능 목록
 
 ### 사용자 인증
-- OAuth2 기반 소셜 로그인
 - Access/Refresh 토큰 기반 인증
 - CSRF와 XSS 공격을 방지하기 위해 Secure 및 httpOnly 속성을 적용한 쿠키 사용
 

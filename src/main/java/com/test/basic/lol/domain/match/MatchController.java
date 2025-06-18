@@ -71,9 +71,7 @@ public class MatchController {
         StopWatch sw = new StopWatch();
         sw.start();
 
-        for (String leagueId : MAJOR_LEAGUE_IDS) {
-            syncMatchService.syncMatchesByLeagueIdAndYearExternalApi(leagueId, year);
-        }
+        syncMatchService.syncMatchesByLeagueIdsAndYear(MAJOR_LEAGUE_IDS, year);
 
         sw.stop();
         log.info(">>> 소요 시간: {}ms", sw.getTotalTimeMillis());

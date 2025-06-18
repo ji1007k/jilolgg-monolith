@@ -21,7 +21,7 @@ public class FavoriteTeamController {
 
     // 1. 즐겨찾기 등록
     @PostMapping("/{teamId}")
-    @SecurityRequirement(name = "CSRF")
+    @SecurityRequirement(name = "03_CSRF")
     public ResponseEntity<String> addFavorite(@PathVariable String teamId,
                                               @AuthenticationPrincipal Jwt jwt) {
         Long userId = Long.valueOf(jwt.getClaim("sub"));
@@ -44,7 +44,7 @@ public class FavoriteTeamController {
 
     // 3. 즐겨찾기 삭제
     @DeleteMapping("/{teamId}")
-    @SecurityRequirement(name = "CSRF")
+    @SecurityRequirement(name = "03_CSRF")
     public ResponseEntity<Void> removeFavorite(@PathVariable String teamId,
                                                @AuthenticationPrincipal Jwt jwt) {
         Long userId = Long.valueOf(jwt.getSubject());

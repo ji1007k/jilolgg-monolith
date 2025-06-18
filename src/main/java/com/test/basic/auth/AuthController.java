@@ -67,7 +67,7 @@ public class AuthController {
     // Spring Security는 Basic Auth 방식에서 자동으로 username과 password를 추출해서 Authentication 객체에 넣어줌
     @GetMapping("/login")
     @Operation(summary = "로그인", description = "로그인 API")
-    @SecurityRequirement(name = "BasicAuth")  // 🔥 Swagger에서 Basic Auth로 인증 가능
+    @SecurityRequirement(name = "01_BasicAuth")  // 🔥 Swagger에서 Basic Auth로 인증 가능
     public ResponseEntity login(Authentication authentication, HttpServletResponse response) throws Exception {
         // 1. Basic Authentication 정보는 이미 authentication 객체에 담겨 있음
         // 여기서 authentication의 principal === UserDetails 객체
@@ -110,7 +110,7 @@ public class AuthController {
      * maxAge(0)만 바꿔서 보내야 브라우저가 기존 쿠키를 "덮어써서 삭제"
      */
     @GetMapping("/logout")
-    @SecurityRequirement(name = "BearerAuth")  // 🔥 Swagger에서 JWT 인증 필요
+    @SecurityRequirement(name = "02_BearerAuth")  // 🔥 Swagger에서 JWT 인증 필요
     @Operation(summary = "로그아웃", description = "로그아웃 API")
     public ResponseEntity logout(HttpServletResponse response) {
         // 세션 쿠키를 만료시켜서 삭제
@@ -151,7 +151,7 @@ public class AuthController {
     }
 
     @PostMapping(value = {  "/token/refresh" })
-    @SecurityRequirement(name = "BearerAuth")  // 🔥 Swagger에서 JWT 인증 필요
+    @SecurityRequirement(name = "02_BearerAuth")  // 🔥 Swagger에서 JWT 인증 필요
     @Operation(summary = "JWT 토큰 갱신", description = "JWT 토큰 갱신 API")
     public ResponseEntity refreshToken(Authentication authentication, HttpServletResponse response) {
         Jwt accessToken = jwtTokenProvider.makeAccessToken(authentication);

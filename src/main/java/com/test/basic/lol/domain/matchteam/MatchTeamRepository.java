@@ -11,6 +11,14 @@ import java.util.Optional;
 public interface MatchTeamRepository extends JpaRepository<MatchTeam, Long> {
     Optional<MatchTeam> findByMatch_MatchIdAndTeam_TeamId(String matchId, String teamId);
 
+    @Query("""
+        SELECT mt
+        FROM MatchTeam mt
+        WHERE mt.match.matchId = :matchId
+    """)
+    List<MatchTeam> findByMatch_MatchId(String matchId);
     @Query("SELECT DISTINCT mt.team.teamId FROM MatchTeam mt WHERE mt.match.matchId IN :matchIds")
     List<String> findDistinctTeamIdByMatchIdIn(List<String> matchIds);
+
+    void deleteByMatch_MatchIdAndTeam_Name(String matchMatchId, String teamName);
 }

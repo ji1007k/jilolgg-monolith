@@ -3,45 +3,31 @@ package com.test.basic.common.config.swagger;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
-import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.Parameter;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
+/*
+// Swagger에서 사용할 Basic 인증 (기본 사용자/비밀번호 방식)
+@SecurityScheme(name = "BasicAuth", type = SecuritySchemeType.HTTP, scheme = "basic")
+// Swagger 인증용 Bearer 토큰 (JWT 방식)
+@SecurityScheme(name = "BearerAuth", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT")
+// Swagger API 테스트 시 CSRF 우회용 헤더 (X-From-Swagger)
+@SecurityScheme(name = "IgnoreCSRF", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER, paramName = "X-From-Swagger")
+// 실제 CSRF 인증용 헤더 (X-XSRF-TOKEN), CORS 환경에선 서버 검증 필요
+// → Swagger UI 내부 JS가 동일 도메인일 경우 자동 전송
+@SecurityScheme(name = "CSRF", type = SecuritySchemeType.APIKEY, in = SecuritySchemeIn.HEADER, paramName = "X-XSRF-TOKEN")
+*/
 @Configuration
-@SecurityScheme(
-        name = "BasicAuth",          // Swagger에서 사용할 인증 이름
-        type = SecuritySchemeType.HTTP,
-        scheme = "basic"             // Basic Auth 방식 사용
-)
-@SecurityScheme(
-        name = "BearerAuth",    // Swagger 인증용: Bearer Token (JWT)
-        type = SecuritySchemeType.HTTP,
-        scheme = "bearer",
-        bearerFormat = "JWT"
-)
-@SecurityScheme(
-        name = "IgnoreCSRF",    // Swagger API 테스트 시 CSRF 인증 우회용
-        type = SecuritySchemeType.APIKEY,
-        in = SecuritySchemeIn.HEADER,
-        paramName = "X-From-Swagger"
-)
-// 클라이언트와 서버가 동일한 도메인일 경우, swagger ui 내부 js 코드에서 x-xsrf-token 헤더에 자동으로 csrf 토큰 넣어서 보내줌
-// CORS 에선 검증 필요
-@SecurityScheme(
-        name = "CSRF",
-        type = SecuritySchemeType.APIKEY,
-        in = SecuritySchemeIn.HEADER,
-        paramName = "X-XSRF-TOKEN"
-)
 public class SwaggerConfig {
     @Bean
     public OpenAPI customOpenAPI() {
@@ -57,7 +43,34 @@ public class SwaggerConfig {
 
         //  Swagger UI에서 보여줄 서버 목록 설정
         return new OpenAPI()
-                .components(new Components())
+                .components(new Components()
+                        .addSecuritySchemes(
+                                "01_BasicAuth",
+                                new SecurityScheme()
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("basic")
+                        )
+                        .addSecuritySchemes(
+                                "02_BearerAuth",
+                                new SecurityScheme()
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer").bearerFormat("JWT")
+                        )
+                        .addSecuritySchemes(
+                                "03_CSRF",
+                                new SecurityScheme()
+                                        .type(SecurityScheme.Type.APIKEY)
+                                        .in(SecurityScheme.In.HEADER)
+                                        .name("X-XSRF-TOKEN")
+                        )
+                        .addSecuritySchemes(
+                                "04_IgnoreCSRF",
+                                new SecurityScheme()
+                                        .type(SecurityScheme.Type.APIKEY)
+                                        .in(SecurityScheme.In.HEADER)
+                                        .name("X-From-Swagger")
+                        )
+                )
                 .info(info)
                 .servers(List.of(
                         new Server()

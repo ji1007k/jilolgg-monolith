@@ -56,7 +56,7 @@ public class TokenController {
 	// spring security 샘플 프로젝트
 	@GetMapping("/generate")
 	@Operation(summary = "JWT 토큰 발급", description = "JWT 토큰을 발급합니다.")
-	@SecurityRequirement(name = "BasicAuth")  // 🔥 Swagger에서 Basic Auth로 인증 가능
+	@SecurityRequirement(name = "01_BasicAuth")  // 🔥 Swagger에서 Basic Auth로 인증 가능
 	public ResponseEntity<String> generateTokenSample(Authentication authentication) {
 		/*Instant now = Instant.now();
 

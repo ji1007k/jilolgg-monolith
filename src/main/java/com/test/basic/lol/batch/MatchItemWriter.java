@@ -59,6 +59,23 @@ public record MatchItemWriter(MatchRepository matchRepository, TeamRepository te
                     })
                     .orElseGet(() -> matchRepository.save(incoming));
 
+            // [2] MatchTeam 갱신
+            // 기존 매치 팀 데이터 조회 (DB에 저장된 상태)
+            List<MatchTeam> existingTeams = matchTeamRepository.findByMatch_MatchId(savedMatch.getMatchId());
+
+            // 기존 데이터에 "TBD" 팀이 포함되어 있는지 확인
+            boolean existingHasTbd = existingTeams.stream()
+                    .anyMatch(mt -> "TBD".equalsIgnoreCase(mt.getTeam().getName()));
+
+            // 새로 가져온 팀 목록에 "TBD"가 없는지 확인
+            boolean incomingHasNoTbd = mag.teams().stream()
+                    .noneMatch(t -> "TBD".equalsIgnoreCase(t.getName()));
+
+            // 기존에는 "TBD"가 있었고, 새 데이터에는 없다면 → 삭제
+            if (existingHasTbd && incomingHasNoTbd) {
+                matchTeamRepository.deleteByMatch_MatchIdAndTeam_Name(savedMatch.getMatchId(), "TBD");
+            }
+
             for (MatchScheduleResponse.TeamDto teamDto : mag.teams()) {
                 Team team;
 

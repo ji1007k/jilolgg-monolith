@@ -27,94 +27,114 @@ public record MatchItemWriter(MatchRepository matchRepository, TeamRepository te
     public void write(Chunk<? extends MatchAggregate> chunk) {
         List<MatchAggregate> items = (List<MatchAggregate>) chunk.getItems();
 
-        // 1. 모든 팀명 수집 (TBD 포함)
-        Set<String> teamNames = new HashSet<>();
-        for (MatchAggregate mag : items) {
-            for (MatchScheduleResponse.TeamDto teamDto : mag.teams()) {
-                if (!teamDto.getName().equalsIgnoreCase("TBD")) {
-                    teamNames.add(teamDto.getName());
-                }
-            }
-        }
+        // [1] 모든 팀 이름 수집 (TBD 제외)
+        Set<String> teamNames = items.stream()
+                .flatMap(m -> m.teams().stream())
+                .map(MatchScheduleResponse.TeamDto::getName)
+                .filter(name -> !"TBD".equalsIgnoreCase(name))
+                .collect(Collectors.toSet());
 
-        // 2. 한 번에 팀들 조회
+        // [2] 팀 조회 + resolve map 생성
         List<Team> teams = findUniqueTeamsByNameOrCode(teamNames, items);
-
-        // 2-1. map 으로 변환
         Map<String, Team> codeToTeamMap = teams.stream()
                 .collect(Collectors.toMap(Team::getCode, Function.identity()));
 
+        // [3] matchId 수집
+        Set<String> matchIds = items.stream()
+                .map(m -> m.match().getMatchId())
+                .collect(Collectors.toSet());
+
+        // [4] Match bulk 조회 + 병합
+        Map<String, Match> existingMatches = matchRepository.findByMatchIdIn(matchIds).stream()
+                .collect(Collectors.toMap(Match::getMatchId, Function.identity()));
+
+        List<Match> matchesToSave = new ArrayList<>();
         for (MatchAggregate mag : items) {
             Match incoming = mag.match();
+            Match merged = existingMatches.getOrDefault(incoming.getMatchId(), incoming);
+            if (existingMatches.containsKey(incoming.getMatchId())) {
+                merged.setStartTime(incoming.getStartTime());
+                merged.setState(incoming.getState());
+                merged.setBlockName(incoming.getBlockName());
+                merged.setGameCount(incoming.getGameCount());
+                merged.setStrategy(incoming.getStrategy());
+                merged.setLeague(incoming.getLeague());
+            }
+            matchesToSave.add(merged);
+        }
 
-            Match savedMatch = matchRepository.findByMatchId(incoming.getMatchId())
-                    .map(existing -> {
-                        existing.setStartTime(incoming.getStartTime());
-                        existing.setState(incoming.getState());
-                        existing.setBlockName(incoming.getBlockName());
-                        existing.setGameCount(incoming.getGameCount());
-                        existing.setStrategy(incoming.getStrategy());
-                        existing.setLeague(incoming.getLeague());
-                        return matchRepository.save(existing);
-                    })
-                    .orElseGet(() -> matchRepository.save(incoming));
+        List<Match> savedMatches = matchRepository.saveAll(matchesToSave);
+        Map<String, Match> savedMatchMap = savedMatches.stream()
+                .collect(Collectors.toMap(Match::getMatchId, Function.identity()));
 
-            // [2] MatchTeam 갱신
-            // 기존 매치 팀 데이터 조회 (DB에 저장된 상태)
-            List<MatchTeam> existingTeams = matchTeamRepository.findByMatch_MatchId(savedMatch.getMatchId());
+        // [5] 기존 MatchTeam bulk 조회
+        List<MatchTeam> existingMatchTeams = matchTeamRepository.findByMatch_MatchIdIn(matchIds);
+        Map<String, List<MatchTeam>> matchIdToTeamsMap = existingMatchTeams.stream()
+                .collect(Collectors.groupingBy(mt -> mt.getMatch().getMatchId()));
 
-            // 기존 데이터에 "TBD" 팀이 포함되어 있는지 확인
+        // [6] TBD 삭제 대상 식별
+        List<MatchTeam> matchTeamsToDelete = new ArrayList<>();
+        for (MatchAggregate mag : items) {
+            String matchId = mag.match().getMatchId();
+            List<MatchTeam> existingTeams = matchIdToTeamsMap.getOrDefault(matchId, Collections.emptyList());
+
             boolean existingHasTbd = existingTeams.stream()
                     .anyMatch(mt -> "TBD".equalsIgnoreCase(mt.getTeam().getName()));
-
-            // 새로 가져온 팀 목록에 "TBD"가 없는지 확인
             boolean incomingHasNoTbd = mag.teams().stream()
                     .noneMatch(t -> "TBD".equalsIgnoreCase(t.getName()));
 
-            // 기존에는 "TBD"가 있었고, 새 데이터에는 없다면 → 삭제
             if (existingHasTbd && incomingHasNoTbd) {
-                matchTeamRepository.deleteByMatch_MatchIdAndTeam_Name(savedMatch.getMatchId(), "TBD");
-            }
-
-            for (MatchScheduleResponse.TeamDto teamDto : mag.teams()) {
-                Team team;
-
-                if (teamDto.getName().equalsIgnoreCase("TBD")) {
-                    // TBD 팀은 별도 조회 (기존 코드 재활용)
-                    Optional<Team> tbdTeamOpt = teamRepository.findByName(teamDto.getName());
-                    if (tbdTeamOpt.isEmpty()) {
-                        // 예외 던지면 해당 STEP이 FATIED 처리돼버리므로 로그만 찍고 건너뛰기
-//                        throw new RuntimeException("Team not found with code: " + teamDto.getCode());
-                        logger.warn("Team not found with name: {}", teamDto.getName());
-                        continue;
-                    }
-                    team = tbdTeamOpt.get();
-                } else {
-                    team = codeToTeamMap.get(teamDto.getCode());
-                    if (team == null) {
-                        logger.warn("Team not found with code: {}", teamDto.getCode());
-                        continue;
-                    }
-                }
-
-                MatchTeam matchTeam = matchTeamRepository
-                        .findByMatch_MatchIdAndTeam_TeamId(savedMatch.getMatchId(), team.getTeamId())
-                        .orElseGet(() -> {
-                            MatchTeam mt = new MatchTeam();
-                            mt.setMatch(savedMatch);
-                            mt.setTeam(team);
-                            return mt;
-                        });
-
-                if (teamDto.getResult() != null) {
-                    matchTeam.setOutcome(teamDto.getResult().getOutcome());
-                    matchTeam.setGameWins(teamDto.getResult().getGameWins());
-                }
-
-                matchTeamRepository.save(matchTeam);
+                matchTeamsToDelete.addAll(
+                        existingTeams.stream()
+                                .filter(mt -> "TBD".equalsIgnoreCase(mt.getTeam().getName()))
+                                .toList()
+                );
             }
         }
+        if (!matchTeamsToDelete.isEmpty()) {
+            matchTeamRepository.deleteAll(matchTeamsToDelete);
+        }
+
+        // [7] MatchTeam 병합 후 saveAll
+        Map<String, MatchTeam> matchTeamMap = existingMatchTeams.stream()
+                .collect(Collectors.toMap(
+                        mt -> mt.getMatch().getMatchId() + "_" + mt.getTeam().getTeamId(),
+                        Function.identity()
+                ));
+
+        List<MatchTeam> matchTeamsToSave = new ArrayList<>();
+
+        for (MatchAggregate mag : items) {
+            Match match = savedMatchMap.get(mag.match().getMatchId());
+
+            for (MatchScheduleResponse.TeamDto teamDto : mag.teams()) {
+                Team team = resolveTeam(teamDto, codeToTeamMap);
+                if (team == null) {
+                    logger.warn("Team not found: {}", teamDto.getCode());
+                    continue;
+                }
+
+                String key = match.getMatchId() + "_" + team.getTeamId();
+                MatchTeam mt = matchTeamMap.get(key);
+
+                if (mt == null) {
+                    mt = new MatchTeam();
+                    mt.setMatch(match);
+                    mt.setTeam(team);
+                }
+
+                if (teamDto.getResult() != null) {
+                    mt.setOutcome(teamDto.getResult().getOutcome());
+                    mt.setGameWins(teamDto.getResult().getGameWins());
+                }
+
+                matchTeamsToSave.add(mt);
+            }
+        }
+
+        matchTeamRepository.saveAll(matchTeamsToSave);
     }
+
 
     private List<Team> findUniqueTeamsByNameOrCode(Set<String> teamNames, List<MatchAggregate> items) {
         // 1. name 기준 조회
@@ -151,5 +171,14 @@ public record MatchItemWriter(MatchRepository matchRepository, TeamRepository te
 
         return finalTeams;
     }
+
+    private Team resolveTeam(MatchScheduleResponse.TeamDto teamDto, Map<String, Team> codeToTeamMap) {
+        if ("TBD".equalsIgnoreCase(teamDto.getName())) {
+            return teamRepository.findByName("TBD").orElse(null);
+        }
+        return codeToTeamMap.get(teamDto.getCode());
+    }
+
+
 
 }

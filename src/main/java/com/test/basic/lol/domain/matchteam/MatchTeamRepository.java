@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface MatchTeamRepository extends JpaRepository<MatchTeam, Long> {
@@ -21,4 +22,6 @@ public interface MatchTeamRepository extends JpaRepository<MatchTeam, Long> {
     List<String> findDistinctTeamIdByMatchIdIn(List<String> matchIds);
 
     void deleteByMatch_MatchIdAndTeam_Name(String matchMatchId, String teamName);
+
+    List<MatchTeam> findByMatch_MatchIdIn(Set<String> matchIds);
 }

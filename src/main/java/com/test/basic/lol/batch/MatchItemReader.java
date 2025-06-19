@@ -54,11 +54,11 @@ public class MatchItemReader implements ItemReader<MatchEventWithLeague> {
     @Override
     public MatchEventWithLeague read() {
         if (finished) {
-            logger.info("[Thread: {}] 읽기 종료", Thread.currentThread().getName());
+            logger.debug("[Thread: {}] 읽기 종료", Thread.currentThread().getName());
             return null;
         }
 
-        logger.info("[Thread: {}] 읽기 실행", Thread.currentThread().getName());
+        logger.debug("[Thread: {}] 읽기 실행", Thread.currentThread().getName());
 
         // 내부 버퍼링으로 fetch 최소화. (API 호출은 buffer가 비어 있을 때만)
         while (buffer.isEmpty()) {
@@ -100,7 +100,7 @@ public class MatchItemReader implements ItemReader<MatchEventWithLeague> {
             nextPageToken = response.getData().getSchedule().getPages().getOlder();
 
             if (nextPageToken == null) {
-                logger.info("[Thread: {}] PageToken 없음", Thread.currentThread().getName());
+                logger.debug("[Thread: {}] PageToken 없음", Thread.currentThread().getName());
                 // 다음 read()에서 buffer 비면 종료되도록 유도
                 finished = buffer.isEmpty();
             }

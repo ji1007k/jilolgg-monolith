@@ -33,7 +33,6 @@ import javax.sql.DataSource;
     - Processor: MatchItemProcessor (EventDto -> MatchAggregate)
     - Writer: MatchItemWriter (MatchAggregate -> DB 저장)
 */
-// EC2 프리티어 사양이 너무 낮아서 돌리자마자 터져버림. 로컬 테스트만 가능..
 @Configuration
 @EnableBatchProcessing
 public class MatchBatchConfig {

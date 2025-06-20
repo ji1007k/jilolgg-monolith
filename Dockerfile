@@ -46,7 +46,7 @@ COPY --from=build /app/build/libs/*.jar app.jar
 ENTRYPOINT exec java \
   -Xms64m \
   -Xmx128m \
-  -XX:MaxMetaspaceSize=128m \
+  -XX:MaxMetaspaceSize=256m \
   -XX:+UseSerialGC \
   -Dfile.encoding=UTF-8 \
   -Duser.timezone=Asia/Seoul \

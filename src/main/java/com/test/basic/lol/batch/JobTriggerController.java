@@ -63,7 +63,7 @@ public class JobTriggerController {
 
 
     @GetMapping("/run-match-job")
-    @Operation(summary = "경기 일정 갱신 배치", description = "EC2 프리티어는 싱글코어라 오히려 더 느림")
+    @Operation(summary = "경기 일정 갱신 배치", description = "경기 일정 갱신 배치 API (리그 파티셔닝 적용)")
     public String runMatchJob(@RequestParam String year) {
         StopWatch sw = new StopWatch();
         sw.start();

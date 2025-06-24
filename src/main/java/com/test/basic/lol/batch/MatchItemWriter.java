@@ -64,15 +64,17 @@ public record MatchItemWriter(MatchRepository matchRepository, TeamRepository te
             List<MatchTeam> existingTeams = matchTeamRepository.findByMatch_MatchId(savedMatch.getMatchId());
 
             // 기존 데이터에 "TBD" 팀이 포함되어 있는지 확인
-            boolean existingHasTbd = existingTeams.stream()
-                    .anyMatch(mt -> "TBD".equalsIgnoreCase(mt.getTeam().getName()));
+            long existingTbdCnt = existingTeams.stream()
+                    .filter(mt -> "TBD".equalsIgnoreCase(mt.getTeam().getName()))
+                    .count();
 
             // 새로 가져온 팀 목록에 "TBD"가 없는지 확인
-            boolean incomingHasNoTbd = mag.teams().stream()
-                    .noneMatch(t -> "TBD".equalsIgnoreCase(t.getName()));
+            long incomingTbdCnt = mag.teams().stream()
+                    .filter(t -> "TBD".equalsIgnoreCase(t.getName()))
+                    .count();
 
-            // 기존에는 "TBD"가 있었고, 새 데이터에는 없다면 → 삭제
-            if (existingHasTbd && incomingHasNoTbd) {
+            // 기존 TBD 개수 != 새로운 팀 목록 TBD 개수 -> 기존 TBD 삭제
+            if (existingTbdCnt != incomingTbdCnt) {
                 matchTeamRepository.deleteByMatch_MatchIdAndTeam_Name(savedMatch.getMatchId(), "TBD");
             }
 
@@ -97,14 +99,21 @@ public record MatchItemWriter(MatchRepository matchRepository, TeamRepository te
                     }
                 }
 
-                MatchTeam matchTeam = matchTeamRepository
-                        .findByMatch_MatchIdAndTeam_TeamId(savedMatch.getMatchId(), team.getTeamId())
-                        .orElseGet(() -> {
-                            MatchTeam mt = new MatchTeam();
-                            mt.setMatch(savedMatch);
-                            mt.setTeam(team);
-                            return mt;
-                        });
+                MatchTeam matchTeam;
+                if (team.getName().equalsIgnoreCase("TBD")) {
+                    matchTeam = new MatchTeam();
+                    matchTeam.setMatch(savedMatch);
+                    matchTeam.setTeam(team);
+                } else {
+                    matchTeam = matchTeamRepository
+                            .findByMatch_MatchIdAndTeam_TeamId(savedMatch.getMatchId(), team.getTeamId())
+                            .orElseGet(() -> {
+                                MatchTeam mt = new MatchTeam();
+                                mt.setMatch(savedMatch);
+                                mt.setTeam(team);
+                                return mt;
+                            });
+                }
 
                 if (teamDto.getResult() != null) {
                     matchTeam.setOutcome(teamDto.getResult().getOutcome());

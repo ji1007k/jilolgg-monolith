@@ -51,15 +51,24 @@ public record MatchItemWriter(MatchRepository matchRepository, TeamRepository te
         List<Match> matchesToSave = new ArrayList<>();
         for (MatchAggregate mag : items) {
             Match incoming = mag.match();
-            Match merged = existingMatches.getOrDefault(incoming.getMatchId(), incoming);
+            Match merged;
+
             if (existingMatches.containsKey(incoming.getMatchId())) {
-                merged.setStartTime(incoming.getStartTime());
-                merged.setState(incoming.getState());
-                merged.setBlockName(incoming.getBlockName());
-                merged.setGameCount(incoming.getGameCount());
-                merged.setStrategy(incoming.getStrategy());
-                merged.setLeague(incoming.getLeague());
+                Match existing = existingMatches.get(incoming.getMatchId());
+
+                // 기존 엔터티에 값 업데이트 (ID가 살아 있음)
+                existing.setStartTime(incoming.getStartTime());
+                existing.setState(incoming.getState());
+                existing.setBlockName(incoming.getBlockName());
+                existing.setGameCount(incoming.getGameCount());
+                existing.setStrategy(incoming.getStrategy());
+                existing.setLeague(incoming.getLeague());
+
+                merged = existing; // 꼭 기존 객체로 설정
+            } else {
+                merged = incoming; // 신규인 경우 그대로 사용
             }
+
             matchesToSave.add(merged);
         }
 

@@ -113,8 +113,13 @@ public class MatchSyncWorker {
             // 매칭 팀 정보가 TBD이거나 TFT인 경우 중복으로 조회될 수 있어 분기 태움
             MatchTeam matchTeam;
             if (team.getName().equalsIgnoreCase("TBD") || team.getName().equalsIgnoreCase("TFT")) {
-                matchTeam = new MatchTeam();
-                matchTeam.setMatch(match);
+                matchTeam = matchTeamRepository
+                        .findAllByMatch_MatchIdAndTeam_TeamId(match.getMatchId(), team.getTeamId())
+                        .stream().findFirst().orElseGet(() -> {
+                            MatchTeam mt = new MatchTeam();
+                            mt.setMatch(match);
+                            return mt;
+                        });
             } else {
                 matchTeam = matchTeamRepository
                         .findByMatch_MatchIdAndTeam_TeamId(match.getMatchId(), team.getTeamId())
@@ -266,9 +271,14 @@ public class MatchSyncWorker {
                     // 매칭 팀 정보가 TBD이거나 TFT인 경우 중복으로 조회될 수 있어 분기 태움
                     MatchTeam matchTeam;
                     if (team.getName().equalsIgnoreCase("TBD") || team.getName().equalsIgnoreCase("TFT")) {
-                        matchTeam = new MatchTeam();
-                        matchTeam.setMatch(savedMatch);
-                        matchTeam.setTeam(team);
+                        matchTeam = matchTeamRepository
+                                .findAllByMatch_MatchIdAndTeam_TeamId(match.getMatchId(), team.getTeamId())
+                                .stream().findFirst().orElseGet(() -> {
+                                    MatchTeam mt = new MatchTeam();
+                                    mt.setMatch(savedMatch);
+                                    mt.setTeam(team);
+                                    return mt;
+                                });
                     } else {
                         matchTeam = matchTeamRepository
                                 .findByMatch_MatchIdAndTeam_TeamId(savedMatch.getMatchId(), team.getTeamId())

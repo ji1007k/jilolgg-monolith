@@ -110,9 +110,9 @@ public class MatchSyncWorker {
 
             Team team = teamOpt.get();
 
-
+            // 매칭 팀 정보가 TBD이거나 TFT인 경우 중복으로 조회될 수 있어 분기 태움
             MatchTeam matchTeam;
-            if (team.getName().equalsIgnoreCase("TBD")) {
+            if (team.getName().equalsIgnoreCase("TBD") || team.getName().equalsIgnoreCase("TFT")) {
                 matchTeam = new MatchTeam();
                 matchTeam.setMatch(match);
             } else {
@@ -263,8 +263,9 @@ public class MatchSyncWorker {
 
                     Team team = teamOpt.get();
 
+                    // 매칭 팀 정보가 TBD이거나 TFT인 경우 중복으로 조회될 수 있어 분기 태움
                     MatchTeam matchTeam;
-                    if (team.getName().equalsIgnoreCase("TBD")) {
+                    if (team.getName().equalsIgnoreCase("TBD") || team.getName().equalsIgnoreCase("TFT")) {
                         matchTeam = new MatchTeam();
                         matchTeam.setMatch(savedMatch);
                         matchTeam.setTeam(team);

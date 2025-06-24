@@ -2,7 +2,7 @@
 
 ## 프로젝트 개요
 
-* **이름**: `basic-be-springboot`
+* **이름**: basic-be-springboot
 * **스택**:
 
   * Spring Boot (Java Backend)
@@ -118,7 +118,6 @@ basic-be-springboot/
 
 **장점**
 
-* GitHub Actions 하나로 CI/CD 모두 처리
 * GHCR로 이미지 관리 → private registry 불필요
 * SSM 사용으로 SSH 키 없이 EC2 관리 가능
 

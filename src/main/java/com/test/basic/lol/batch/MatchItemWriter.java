@@ -76,14 +76,20 @@ public record MatchItemWriter(MatchRepository matchRepository, TeamRepository te
         List<MatchTeam> matchTeamsToDelete = new ArrayList<>();
         for (MatchAggregate mag : items) {
             String matchId = mag.match().getMatchId();
+
+            // MatchTeam 갱신
+            // 기존 매치 팀 데이터 조회 (DB에 저장된 상태)
             List<MatchTeam> existingTeams = matchIdToTeamsMap.getOrDefault(matchId, Collections.emptyList());
 
-            boolean existingHasTbd = existingTeams.stream()
-                    .anyMatch(mt -> "TBD".equalsIgnoreCase(mt.getTeam().getName()));
-            boolean incomingHasNoTbd = mag.teams().stream()
-                    .noneMatch(t -> "TBD".equalsIgnoreCase(t.getName()));
+            long existingTbdCnt = existingTeams.stream()
+                    .filter(mt -> "TBD".equalsIgnoreCase(mt.getTeam().getName()))
+                    .count();
+            long incomingTbdCnt = mag.teams().stream()
+                    .filter(t -> "TBD".equalsIgnoreCase(t.getName()))
+                    .count();
 
-            if (existingHasTbd && incomingHasNoTbd) {
+            // 기존 TBD 개수 != 새로운 팀 목록 TBD 개수 -> 기존 TBD 삭제
+            if (existingTbdCnt != incomingTbdCnt) {
                 matchTeamsToDelete.addAll(
                         existingTeams.stream()
                                 .filter(mt -> "TBD".equalsIgnoreCase(mt.getTeam().getName()))

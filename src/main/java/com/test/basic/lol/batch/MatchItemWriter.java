@@ -106,11 +106,13 @@ public record MatchItemWriter(MatchRepository matchRepository, TeamRepository te
                 );
             }
         }
+
         if (!matchTeamsToDelete.isEmpty()) {
             matchTeamRepository.deleteAll(matchTeamsToDelete);
         }
 
         // [7] MatchTeam 병합 후 saveAll
+        existingMatchTeams = matchTeamRepository.findByMatch_MatchIdIn(matchIds);
         Map<String, MatchTeam> matchTeamMap = existingMatchTeams.stream()
                 .collect(Collectors.toMap(  // 리스트를 Map으로 변환. key, value, key 중복 시 처리 방법
                         mt -> mt.getMatch().getMatchId() + "_" + mt.getTeam().getTeamId(),

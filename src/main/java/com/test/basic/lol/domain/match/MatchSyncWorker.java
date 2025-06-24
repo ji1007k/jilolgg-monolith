@@ -104,7 +104,8 @@ public class MatchSyncWorker {
             }
 
             if (teamOpt.isEmpty()) {
-                throw new RuntimeException("Team not found: " + teamDto.getName());
+                log.warn("Team not found with code and name: {}({})", teamDto.getCode(), teamDto.getName());
+                continue;
             }
 
             Team team = teamOpt.get();
@@ -255,7 +256,9 @@ public class MatchSyncWorker {
                     }
 
                     if (teamOpt.isEmpty()) {
-                        throw new RuntimeException("Team not found with name: " + teamDto.getName());
+//                        throw new RuntimeException("Team not found with name: " + teamDto.getName());
+                        log.warn("Team not found with code and name: {}({})", teamDto.getCode(), teamDto.getName());
+                        continue;
                     }
 
                     Team team = teamOpt.get();

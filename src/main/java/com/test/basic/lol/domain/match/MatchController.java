@@ -1,5 +1,6 @@
 package com.test.basic.lol.domain.match;
 
+import com.test.basic.lol.domain.league.LeagueService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -36,6 +37,7 @@ public class MatchController {
             "98767991314006698",
             "98767991302996019",
             "98767991349978712");
+    private final LeagueService leagueService;
 
 
     @GetMapping
@@ -71,7 +73,13 @@ public class MatchController {
         StopWatch sw = new StopWatch();
         sw.start();
 
-        syncMatchService.syncMatchesByLeagueIdsAndYear(MAJOR_LEAGUE_IDS, year);
+        List<String> leagueIds = leagueService.getAllLeagues()
+                .stream()
+                .map(leagueDto -> leagueDto.getLeagueId())
+                .toList();
+
+//        syncMatchService.syncMatchesByLeagueIdsAndYear(MAJOR_LEAGUE_IDS, year);
+        syncMatchService.syncMatchesByLeagueIdsAndYear(leagueIds, year);
 
         sw.stop();
         log.info(">>> 소요 시간: {}ms", sw.getTotalTimeMillis());

@@ -1,5 +1,7 @@
 package com.test.basic.lol.batch;
 
+import com.test.basic.lol.domain.league.LeagueDto;
+import com.test.basic.lol.domain.league.LeagueService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +50,7 @@ public class JobTriggerController {
             "98767991314006698",
             "98767991302996019",
             "98767991349978712");
+    private final LeagueService leagueService;
 
 /*
     @GetMapping("/run-sample")
@@ -68,7 +71,13 @@ public class JobTriggerController {
         StopWatch sw = new StopWatch();
         sw.start();
 
-        for (String leagueId : MAJOR_LEAGUE_IDS) {
+        List<String> leagueIds = leagueService.getAllLeagues()
+                .stream()
+                .map(LeagueDto::getLeagueId)
+                .toList();
+
+//        for (String leagueId : MAJOR_LEAGUE_IDS) {
+        for (String leagueId : leagueIds) {
             JobParameters params = new JobParametersBuilder()
                     .addString("leagueId", leagueId)
                     .addLong("targetYear", Long.valueOf(year))

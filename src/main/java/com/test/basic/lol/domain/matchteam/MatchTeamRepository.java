@@ -12,6 +12,9 @@ import java.util.Set;
 public interface MatchTeamRepository extends JpaRepository<MatchTeam, Long> {
     Optional<MatchTeam> findByMatch_MatchIdAndTeam_TeamId(String matchId, String teamId);
 
+    @Query("select mt from MatchTeam mt where mt.match.matchId = :matchId and mt.team.teamId = :teamId")
+    List<MatchTeam> findAllByMatch_MatchIdAndTeam_TeamId(String matchId, String teamId);
+
     @Query("""
         SELECT mt
         FROM MatchTeam mt

@@ -7,8 +7,6 @@ import com.test.basic.lol.domain.matchteam.MatchTeam;
 import com.test.basic.lol.domain.matchteam.MatchTeamRepository;
 import com.test.basic.lol.domain.team.Team;
 import com.test.basic.lol.domain.team.TeamRepository;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.Chunk;

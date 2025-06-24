@@ -45,7 +45,7 @@ public class JobTriggerControllerTest {
     private Job job;
 
     // TODO 테스트용 API 코드 분리
-    @Test
+    /*@Test
     @Disabled
     void testRunSampleJob_should_complete_successfully() throws Exception {
         MvcResult result = mockMvc.perform(get("/lol/batch/run-sample"))
@@ -56,5 +56,5 @@ public class JobTriggerControllerTest {
 
         assertThat(response).isNotNull();
         assertThat(response).isEqualTo("Job 실행 완료!");
-    }
+    }*/
 }

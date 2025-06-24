@@ -103,9 +103,10 @@ public record MatchItemWriter(MatchRepository matchRepository, TeamRepository te
 
         // [7] MatchTeam 병합 후 saveAll
         Map<String, MatchTeam> matchTeamMap = existingMatchTeams.stream()
-                .collect(Collectors.toMap(
+                .collect(Collectors.toMap(  // 리스트를 Map으로 변환. key, value, key 중복 시 처리 방법
                         mt -> mt.getMatch().getMatchId() + "_" + mt.getTeam().getTeamId(),
-                        Function.identity()
+                        Function.identity(),    // MatchTeam 객체 그대로 value로 사용 (x -> x)
+                        (existing, replacement) -> existing // 중복 key일 때 하나만 남기기
                 ));
 
         List<MatchTeam> matchTeamsToSave = new ArrayList<>();

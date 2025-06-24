@@ -7,6 +7,8 @@ import com.test.basic.lol.domain.matchteam.MatchTeam;
 import com.test.basic.lol.domain.matchteam.MatchTeamRepository;
 import com.test.basic.lol.domain.team.Team;
 import com.test.basic.lol.domain.team.TeamRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.Chunk;
@@ -111,7 +113,6 @@ public record MatchItemWriter(MatchRepository matchRepository, TeamRepository te
             matchTeamRepository.deleteAll(matchTeamsToDelete);
         }
 
-        // [7] MatchTeam 병합 후 saveAll
         existingMatchTeams = matchTeamRepository.findByMatch_MatchIdIn(matchIds);
         Map<String, MatchTeam> matchTeamMap = existingMatchTeams.stream()
                 .collect(Collectors.toMap(  // 리스트를 Map으로 변환. key, value, key 중복 시 처리 방법
@@ -149,6 +150,15 @@ public record MatchItemWriter(MatchRepository matchRepository, TeamRepository te
                 matchTeamsToSave.add(mt);
             }
         }
+
+        // 삭제된 ID와 겹치는 엔티티는 제거 후 저장
+        Set<Long> deletedIds = matchTeamsToDelete.stream()
+                .map(MatchTeam::getId)
+                .collect(Collectors.toSet());
+
+        matchTeamsToSave = matchTeamsToSave.stream()
+                .filter(mt -> !deletedIds.contains(mt.getId()))
+                .toList();
 
         matchTeamRepository.saveAll(matchTeamsToSave);
     }

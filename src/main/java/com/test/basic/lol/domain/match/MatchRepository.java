@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface MatchRepository extends JpaRepository<Match, Long> {
@@ -48,4 +49,5 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
     List<Match> findMatchByLeagueIdAndDate(String leagueId, LocalDateTime startOfDay, LocalDateTime endOfDay);
 
     List<Match> findByMatchIdIn(List<String> matchIds);
+    List<Match> findByMatchIdIn(Set<String> matchIds);
 }

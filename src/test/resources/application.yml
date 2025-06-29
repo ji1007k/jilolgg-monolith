@@ -6,14 +6,6 @@ spring:
   mvc:
     static-path-pattern: /**
 
-  # 뷰템플릿 설정 (Thymeleaf)
-  thymeleaf:
-    enabled: true
-    mode: HTML
-    encoding: UTF-8
-    cache: false
-    check-template-location: true
-
   # Database (H2 in-memory)
   datasource:
     url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1
@@ -45,14 +37,6 @@ spring:
         # 테이블 및 컬럼 이름을 따옴표로 감싸지 않도록 설정 (DBMS에 따라 동작 방식이 달라질 수 있음)
         globally_quoted_identifiers: true
 
-  # H2 Console 설정
-  h2:
-    console:
-      # H2 Database Console 활성화
-      enabled: true
-      # H2 Console에 접근할 수 있는 URL 설정 (예: http://localhost:8080/h2-console)
-      path: /h2-console
-
   # Spring Batch 설정
   batch:
     jdbc:
@@ -77,8 +61,8 @@ jwt:
   public:
     key: classpath:jwt/app.pub
 
-uploads:
-  path: uploads/
+#uploads:
+#  path: uploads/
 
 # https://developer.riotgames.com/
 lol:
@@ -95,10 +79,3 @@ lol:
 cookie:
   secure: true
   same-site: None
-
-springdoc:
-  swagger-ui:
-    csrf:
-      enabled: true
-    with-credentials: true
-    filter: true

@@ -39,7 +39,7 @@ import static org.mockito.Mockito.when;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 // 이렇게 실행된 쿼리는 Hibernate를 거치지 않고, 스프링의 DataSource를 통해 직접 실행되기 때문에
 // Hibernate SQL 로그에 출력 안됨
-@Sql(scripts = "/db/h2/users.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(scripts = "/db/h2/user.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @TestExecutionListeners(
         value = {AcceptanceTestExecutionListener.class},
         mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS

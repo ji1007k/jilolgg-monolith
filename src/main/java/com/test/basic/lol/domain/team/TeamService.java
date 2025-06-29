@@ -12,22 +12,28 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 // TODO 외부 API 데이터 바로 가져오는 로직 분리
 @Service
 public class TeamService {
 
     private final TeamRepository teamRepository;
-    private final LolEsportsApiClient lolEsportsApiClient;
+//    private final LolEsportsApiClient lolEsportsApiClient;
     private final TeamMapper teamMapper;
     private final ObjectMapper objectMapper;
     private final LeagueRepository leagueRepository;
     private final MatchTeamService matchTeamService;
 
 
-    public TeamService(TeamRepository teamRepository, LolEsportsApiClient lolEsportsApiClient, TeamMapper teamMapper, ObjectMapper objectMapper, LeagueRepository leagueRepository, MatchTeamService matchTeamService) {
+    public TeamService(TeamRepository teamRepository,
+//                       LolEsportsApiClient lolEsportsApiClient,
+                       TeamMapper teamMapper,
+                       ObjectMapper objectMapper,
+                       LeagueRepository leagueRepository,
+                       MatchTeamService matchTeamService) {
         this.teamRepository = teamRepository;
-        this.lolEsportsApiClient = lolEsportsApiClient;
+//        this.lolEsportsApiClient = lolEsportsApiClient;
         this.teamMapper = teamMapper;
         this.objectMapper = objectMapper;
         this.leagueRepository = leagueRepository;
@@ -64,23 +70,6 @@ public class TeamService {
                 .orElseThrow(() -> new EntityNotFoundException("Team not found: " + slug));
     }
 
-    // FIXME API 응답 데이터 DTO 따로 생성
-    /*public TeamSyncDto getTeamBySlugFromExternalApi(String slug) {
-        Mono<String> result = lolEsportsApiClient.fetchTeamBySlug(slug);
-        List<TeamSyncDto> teams = parseTeamsFromResponse(result.block());
-
-        if (teams == null || teams.isEmpty()) {
-            throw new EntityNotFoundException("Team not found with slug: " + slug);
-        }
-
-        return teams.get(0);
-    }
-
-    public List<TeamSyncDto> getAllTeamsFromExternalApi() {
-        Mono<String> result = lolEsportsApiClient.fetchAllTeams();
-        return parseTeamsFromResponse(result.block());
-    }*/
-
     // FIXME API의 팀 정보 전체 속성 가진 DTO 클래스로 관리 (선수 정보 포함)
     public List<TeamSyncDto> parseTeamsFromResponse(String response) {
         try {
@@ -106,4 +95,35 @@ public class TeamService {
         }
     }
 
+    public List<Team> getTeamsByName(Set<String> teamNames) {
+        return teamRepository.findByNameIn(teamNames);
+    }
+
+    public List<Team> getTeamsByCode(Set<String> duplicateCodes) {
+        return teamRepository.findByCodeIn(duplicateCodes);
+    }
+
+    public Team getTeamByName(String teamName) {
+        return teamRepository.findByName("TBD").orElse(null);
+    }
+
+
+    // TODO 삭제 또는 리팩토링 =======================================================
+
+    // FIXME API 응답 데이터 DTO 따로 생성
+    /*public TeamSyncDto getTeamBySlugFromExternalApi(String slug) {
+        Mono<String> result = lolEsportsApiClient.fetchTeamBySlug(slug);
+        List<TeamSyncDto> teams = parseTeamsFromResponse(result.block());
+
+        if (teams == null || teams.isEmpty()) {
+            throw new EntityNotFoundException("Team not found with slug: " + slug);
+        }
+
+        return teams.get(0);
+    }
+
+    public List<TeamSyncDto> getAllTeamsFromExternalApi() {
+        Mono<String> result = lolEsportsApiClient.fetchAllTeams();
+        return parseTeamsFromResponse(result.block());
+    }*/
 }

@@ -1,11 +1,11 @@
 package com.test.basic.lol.batch;
 
 
-import com.test.basic.lol.domain.league.LeagueRepository;
+import com.test.basic.lol.domain.league.LeagueService;
 import com.test.basic.lol.domain.match.MatchApiService;
-import com.test.basic.lol.domain.match.MatchRepository;
-import com.test.basic.lol.domain.matchteam.MatchTeamRepository;
-import com.test.basic.lol.domain.team.TeamRepository;
+import com.test.basic.lol.domain.match.MatchService;
+import com.test.basic.lol.domain.matchteam.MatchTeamService;
+import com.test.basic.lol.domain.team.TeamService;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.task.TaskExecutor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.datasource.init.DataSourceInitializer;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -62,6 +63,7 @@ public class MatchBatchConfig {
                 .build();
     }
 
+    // 마스터 Step
     // 내부 Step 들이 chunk 기반이면 트랜잭션 매니저 필수
     //  ignored prefix: "사용 안 함"을 표현하는 네이밍 규칙(but. Spring은 의존성 요구함)
     @Bean
@@ -75,10 +77,11 @@ public class MatchBatchConfig {
                 .step(partitionedMatchStep)
                 .taskExecutor(limitedTaskExecutor)
                 .gridSize(5)    // 병렬 작업(파티션) 수 조절
+                .allowStartIfComplete(true)       // 완료된 파티션 재시작 허용
                 .build();
     }
 
-    // 파티션 내부에서 실행될 Step
+    // 마스터 Step 파티션 내부에서 실행될 Step
     @Bean
     public Step partitionedMatchStep(JobRepository jobRepository,
                                      PlatformTransactionManager transactionManager,
@@ -93,6 +96,12 @@ public class MatchBatchConfig {
                 .reader(matchItemReader)
                 .processor(matchItemProcessor)
                 .writer(matchItemWriter)    // 내부적으로 flush + clear 수행
+                // 실패 재처리
+                .faultTolerant()
+                .retryLimit(3)              // 최대 3회 재시도
+                .retry(Exception.class)     // 특정 예외만 재시도
+                .skip(DataIntegrityViolationException.class)   // 데이터 무결성 오류 스킵
+                .skipLimit(3)               // 최대 10개까지 건너뛰기
                 .build();
     }
 
@@ -103,13 +112,13 @@ public class MatchBatchConfig {
             @Value("#{jobParameters['leagueId']}") String leagueId,
             @Value("#{jobParameters['targetYear']}") int targetYear,
             MatchApiService matchApiService,
-            LeagueRepository leagueRepository) {
+            LeagueService leagueService) {
 
         return new MatchItemReader(
                 leagueId,
                 targetYear,
                 matchApiService,
-                leagueRepository);
+                leagueService);
     }
 
     @Bean
@@ -119,14 +128,14 @@ public class MatchBatchConfig {
 
     @Bean
     public MatchItemWriter matchItemWriter(
-            MatchRepository matchRepository,
-            TeamRepository teamRepository,
-            MatchTeamRepository matchTeamRepository
+            MatchService matchService,
+            TeamService teamService,
+            MatchTeamService matchTeamService
     ) {
         return new MatchItemWriter(
-                matchRepository,
-                teamRepository,
-                matchTeamRepository);
+                matchService,
+                teamService,
+                matchTeamService);
     }
 
 

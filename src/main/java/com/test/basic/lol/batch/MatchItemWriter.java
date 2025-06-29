@@ -2,11 +2,11 @@ package com.test.basic.lol.batch;
 
 import com.test.basic.lol.api.esports.dto.MatchScheduleResponse;
 import com.test.basic.lol.domain.match.Match;
-import com.test.basic.lol.domain.match.MatchRepository;
+import com.test.basic.lol.domain.match.MatchService;
 import com.test.basic.lol.domain.matchteam.MatchTeam;
-import com.test.basic.lol.domain.matchteam.MatchTeamRepository;
+import com.test.basic.lol.domain.matchteam.MatchTeamService;
 import com.test.basic.lol.domain.team.Team;
-import com.test.basic.lol.domain.team.TeamRepository;
+import com.test.basic.lol.domain.team.TeamService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.Chunk;
@@ -16,8 +16,9 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public record MatchItemWriter(MatchRepository matchRepository, TeamRepository teamRepository,
-                              MatchTeamRepository matchTeamRepository) implements ItemWriter<MatchAggregate> {
+public record MatchItemWriter(MatchService matchService,
+                              TeamService teamService,
+                              MatchTeamService matchTeamService) implements ItemWriter<MatchAggregate> {
 
     private static final Logger logger = LoggerFactory.getLogger(MatchItemWriter.class);
 
@@ -45,8 +46,11 @@ public record MatchItemWriter(MatchRepository matchRepository, TeamRepository te
                 .collect(Collectors.toSet());
 
         // [4] Match bulk 조회 + 병합
-        Map<String, Match> existingMatches = matchRepository.findByMatchIdIn(matchIds).stream()
-                .collect(Collectors.toMap(Match::getMatchId, Function.identity()));
+        Map<String, Match> existingMatches = matchService.getMatchEntitiesByMatchIds(matchIds).stream()
+                .collect(Collectors.toMap(
+                        Match::getMatchId,
+                        Function.identity())
+                );
 
         List<Match> matchesToSave = new ArrayList<>();
         for (MatchAggregate mag : items) {
@@ -72,12 +76,12 @@ public record MatchItemWriter(MatchRepository matchRepository, TeamRepository te
             matchesToSave.add(merged);
         }
 
-        List<Match> savedMatches = matchRepository.saveAll(matchesToSave);
+        List<Match> savedMatches = matchService.saveMatches(matchesToSave);
         Map<String, Match> savedMatchMap = savedMatches.stream()
                 .collect(Collectors.toMap(Match::getMatchId, Function.identity()));
 
         // [5] 기존 MatchTeam bulk 조회
-        List<MatchTeam> existingMatchTeams = matchTeamRepository.findByMatch_MatchIdIn(matchIds);
+        List<MatchTeam> existingMatchTeams = matchTeamService.getMatchByMatchIds(matchIds);
         Map<String, List<MatchTeam>> matchIdToTeamsMap = existingMatchTeams.stream()
                 .collect(Collectors.groupingBy(mt -> mt.getMatch().getMatchId()));
 
@@ -107,12 +111,14 @@ public record MatchItemWriter(MatchRepository matchRepository, TeamRepository te
             }
         }
 
-        if (!matchTeamsToDelete.isEmpty()) {
-            matchTeamRepository.deleteAll(matchTeamsToDelete);
-        }
+        // 삭제 대상 ID 수집
+        Set<Long> toDeleteIds = matchTeamsToDelete.stream()
+                .map(MatchTeam::getId)
+                .collect(Collectors.toSet());
 
-        existingMatchTeams = matchTeamRepository.findByMatch_MatchIdIn(matchIds);
+        // 메모리 필터링으로 삭제 대상 제외한 맵 생성
         Map<String, MatchTeam> matchTeamMap = existingMatchTeams.stream()
+                .filter(mt -> !toDeleteIds.contains(mt.getId()))
                 .collect(Collectors.toMap(  // 리스트를 Map으로 변환. key, value, key 중복 시 처리 방법
                         mt -> mt.getMatch().getMatchId() + "_" + mt.getTeam().getTeamId(),
                         Function.identity(),    // MatchTeam 객체 그대로 value로 사용 (x -> x)
@@ -127,7 +133,7 @@ public record MatchItemWriter(MatchRepository matchRepository, TeamRepository te
             for (MatchScheduleResponse.TeamDto teamDto : mag.teams()) {
                 Team team = resolveTeam(teamDto, codeToTeamMap);
                 if (team == null) {
-                    logger.warn("Team not found: {}", teamDto.getCode());
+                    logger.debug("Team not found with code: {}", teamDto.getCode());
                     continue;
                 }
 
@@ -149,22 +155,17 @@ public record MatchItemWriter(MatchRepository matchRepository, TeamRepository te
             }
         }
 
-        // 삭제된 ID와 겹치는 엔티티는 제거 후 저장
-        Set<Long> deletedIds = matchTeamsToDelete.stream()
-                .map(MatchTeam::getId)
-                .collect(Collectors.toSet());
+        if (!matchTeamsToDelete.isEmpty()) {
+            matchTeamService.deleteMatchTeams(matchTeamsToDelete);
+        }
 
-        matchTeamsToSave = matchTeamsToSave.stream()
-                .filter(mt -> !deletedIds.contains(mt.getId()))
-                .toList();
-
-        matchTeamRepository.saveAll(matchTeamsToSave);
+        matchTeamService.saveMatchTeams(matchTeamsToSave);
     }
 
 
     private List<Team> findUniqueTeamsByNameOrCode(Set<String> teamNames, List<MatchAggregate> items) {
         // 1. name 기준 조회
-        List<Team> teamsByName = teamRepository.findByNameIn(teamNames);
+        List<Team> teamsByName = teamService.getTeamsByName(teamNames);
 
         // 2. name 기준으로 그룹핑 → 중복된 name 찾아내기
         Map<String, List<Team>> nameGrouped = teamsByName.stream()
@@ -188,7 +189,7 @@ public record MatchItemWriter(MatchRepository matchRepository, TeamRepository te
                 .map(MatchScheduleResponse.TeamDto::getCode)
                 .collect(Collectors.toSet());
 
-        List<Team> teamsByCode = teamRepository.findByCodeIn(duplicateCodes);
+        List<Team> teamsByCode = teamService.getTeamsByCode(duplicateCodes);
 
         // 6. 합치기
         List<Team> finalTeams = new ArrayList<>();
@@ -200,7 +201,7 @@ public record MatchItemWriter(MatchRepository matchRepository, TeamRepository te
 
     private Team resolveTeam(MatchScheduleResponse.TeamDto teamDto, Map<String, Team> codeToTeamMap) {
         if ("TBD".equalsIgnoreCase(teamDto.getName())) {
-            return teamRepository.findByName("TBD").orElse(null);
+            return teamService.getTeamByName("TBD");
         }
         return codeToTeamMap.get(teamDto.getCode());
     }

@@ -2,7 +2,7 @@ package com.test.basic.lol.batch;
 
 import com.test.basic.lol.api.esports.dto.MatchScheduleResponse;
 import com.test.basic.lol.domain.league.League;
-import com.test.basic.lol.domain.league.LeagueRepository;
+import com.test.basic.lol.domain.league.LeagueService;
 import com.test.basic.lol.domain.match.MatchApiService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,14 +15,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
 
-
 public class MatchItemReader implements ItemReader<MatchEventWithLeague> {
     private static final Logger logger = LoggerFactory.getLogger(MatchItemReader.class);
 
     private final String leagueId;
     private final int targetYear;
     private final MatchApiService matchApiService;
-    private final LeagueRepository leagueRepository;
+    private final LeagueService leagueService;
 
     private Queue<MatchScheduleResponse.EventDto> buffer = new LinkedList<>();
     private String nextPageToken = null;
@@ -34,13 +33,13 @@ public class MatchItemReader implements ItemReader<MatchEventWithLeague> {
 
     public MatchItemReader(String leagueId, int targetYear,
                            MatchApiService matchApiService,
-                           LeagueRepository leagueRepository) {
+                           LeagueService leagueService) {
         this.leagueId = leagueId;
         this.targetYear = targetYear;
         this.matchApiService = matchApiService;
-        this.leagueRepository = leagueRepository;
+        this.leagueService = leagueService;
 
-        Optional<League> leagueOpt = leagueRepository.findByLeagueId(leagueId);
+        Optional<League> leagueOpt = leagueService.getLeagueByLeagueId(leagueId);
         if (leagueOpt.isEmpty()) {
             logger.warn("League not found with id: {}", leagueId);
             finished = true;
@@ -87,6 +86,11 @@ public class MatchItemReader implements ItemReader<MatchEventWithLeague> {
                                 .atZoneSameInstant(ZoneId.of("Asia/Seoul"))
                                 .toLocalDateTime().getYear() >= targetYear)
                     .toList();
+
+            logger.debug("[Thread: {}] MatchIds: {}",
+                    Thread.currentThread().getName(),
+                    events.stream().map(event -> event.getMatch().getId())
+            );
 
             // 갱신 대상 이벤트가 없으면 reader 종료
             if (events.isEmpty()) {

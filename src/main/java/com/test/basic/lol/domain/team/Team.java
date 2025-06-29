@@ -40,7 +40,7 @@ public class Team {
     @Column(nullable = false)
     private String image;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "league_id", referencedColumnName = "league_id", nullable = false)
     private League league;
 

@@ -3,10 +3,11 @@ package com.test.basic.lol.domain.matchteam;
 import com.test.basic.lol.domain.match.Match;
 import com.test.basic.lol.domain.team.Team;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
-@Data
+@Getter @Setter
 @Table(name = "match_teams")
 public class MatchTeam {
     @Id

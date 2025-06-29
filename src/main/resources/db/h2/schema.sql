@@ -123,3 +123,28 @@ CREATE TABLE IF NOT EXISTS "temp_table"
     "tamp_column" bigint not null,
     UNIQUE ("id", "tamp_column")
 )
+
+
+
+-- -- 사용자 테이블 (users)
+-- CREATE TABLE users (
+--    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+--    email VARCHAR(255) NOT NULL,
+--    password VARCHAR(255),      -- 비밀번호 (소셜 로그인 사용자가 아닐 경우)
+--    name VARCHAR(255),          -- 이름
+--    profile_image_url TEXT,     -- 프로필 사진 URL (선택 사항)
+--    created_dt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--    updated_dt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+-- );
+--
+-- -- 소셜 계정 테이블 (social_accounts)
+-- CREATE TABLE social_accounts (
+--  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+--  user_id BIGINT NOT NULL,                    -- users 테이블과의 관계
+--  provider VARCHAR(50) NOT NULL,              -- 소셜 로그인 제공자 (Google, Facebook 등)
+--  provider_user_id VARCHAR(255) NOT NULL,     -- 소셜 로그인 제공자의 고유 사용자 ID
+--  access_token VARCHAR(255),                  -- 소셜 로그인 액세스 토큰 (필요시)
+--  refresh_token VARCHAR(255),                 -- 소셜 로그인 리프레시 토큰 (필요시)
+--  created_dt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+-- );

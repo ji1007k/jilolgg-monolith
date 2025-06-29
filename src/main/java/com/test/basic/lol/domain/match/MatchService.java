@@ -2,6 +2,8 @@ package com.test.basic.lol.domain.match;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+
+import java.util.Set;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,12 +112,19 @@ public class MatchService {
         return dtos;
     }
 
-
     public List<MatchDto> getMatchesByMatchIds(List<String> matchIds) {
         return matchRepository.findByMatchIdIn(matchIds)
                 .stream()
                 .map(matchMapper::entityToDto)
                 .collect(Collectors.toList());
+    }
+
+    public List<Match> getMatchEntitiesByMatchIds(Set<String> matchIds) {
+        return matchRepository.findByMatchIdIn(matchIds);
+    }
+
+    public List<Match> saveMatches(List<Match> matchesToSave) {
+        return matchRepository.saveAll(matchesToSave);
     }
 
 

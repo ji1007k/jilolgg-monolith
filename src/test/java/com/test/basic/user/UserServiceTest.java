@@ -95,7 +95,7 @@ public class UserServiceTest {
     void testGetUserById() {
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
 
-        Optional<UserEntity> foundUser = userRepository.findById(user.getId());
+        Optional<UserEntity> foundUser = userService.getUserById(user.getId());
 
         assertThat(foundUser).isNotNull();
         assertThat(foundUser.get().getId()).isEqualTo(user.getId());

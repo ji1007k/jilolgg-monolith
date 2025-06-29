@@ -4,7 +4,8 @@ spring:
   application:
     name: basic
   profiles:
-    active: prod
+    # 환경변수로 오버라이드 가능
+    default: ${SPRING_PROFILES_ACTIVE:prod}
 
   # 정적 파일 설정
   mvc:

@@ -18,9 +18,11 @@ import org.springframework.http.*;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -36,16 +38,18 @@ import static org.mockito.Mockito.when;
 // webEnvironment : 랜덤 포트에서 실제 서버 실행
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")  // 테스트 실행 시 특정 프로필(test)을 강제로 활성화
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+//@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 // 이렇게 실행된 쿼리는 Hibernate를 거치지 않고, 스프링의 DataSource를 통해 직접 실행되기 때문에
 // Hibernate SQL 로그에 출력 안됨
-@Sql(scripts = "/db/h2/users.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-@TestExecutionListeners(
+@Sql(scripts = "/db/h2/user.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@DisplayName("== 사용자 관리 통합 테스트 ==")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS) // 테스트 인스턴스를 클래스 단위로 유지 -> 인스턴스 변수 공유
+@Transactional  // 각 테스트가 트랜잭션 내에서 실행
+@Rollback       // 테스트 후 자동 롤백
+/*@TestExecutionListeners(
         value = {AcceptanceTestExecutionListener.class},
         mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS
-)
-@DisplayName("== 사용자 관리 통합 테스트 ==")
-@TestInstance(TestInstance.Lifecycle.PER_CLASS) // 테스트 인스턴스를 클래스 단위로 유지
+)*/
 public class UserIntegrationTest {
     private static final Logger logger = LoggerFactory.getLogger(UserIntegrationTest.class);
 
@@ -76,7 +80,6 @@ public class UserIntegrationTest {
         logger.info(baseUrl);
 
         user = new UserEntity();
-        user.setId(1L);
         user.setEmail("email123@example.com");
         user.setPassword("password123");
         user.setName("user123");
@@ -184,9 +187,13 @@ public class UserIntegrationTest {
     }
 
     @Test
-    @Order(1)
+//    @Order(1)
     @DisplayName("유저 생성 - DB 저장 및 HTTP 응답 테스트")
     void testCreateUser() {
+        createTestUser();
+    }
+
+    private Long createTestUser() {
         String userUrl = "/users";
 
         HttpHeaders headers = new HttpHeaders();
@@ -207,14 +214,16 @@ public class UserIntegrationTest {
         assertNotNull(response.getBody());
         assertNotNull(response.getBody().getId());  // ID가 생성되었는지 확인
         assertEquals(user.getEmail(), response.getBody().getEmail());  // 이메일 확인
+
+        return response.getBody().getId();
     }
 
-
     @Test
-    @Order(2)
+//    @Order(2)
     @DisplayName("유저 목록 조회 - DB 데이터 검증 및 HTTP 응답 테스트")
     void testGetUsers() {
         // given
+        createTestUser();
         String url = "/users?page=0&size=10";
 
         // when
@@ -247,8 +256,8 @@ public class UserIntegrationTest {
     @DisplayName("유저 단건 조회 - DB와 HTTP 응답 검증")
     void testGetUserById() {
         // g
+        Long userId = createTestUser();
         String url = "/users/{id}";
-        Long userId = 2L;
 
         // w
         // getForEntity()는 body나 header를 커스터마이징 불가능.
@@ -269,19 +278,20 @@ public class UserIntegrationTest {
         // t
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        UserEntity user = response.getBody();
-        assertNotNull(user);
-        assertEquals(2L, user.getId());
-        assertEquals("test@example.com", user.getEmail());
+        UserEntity savedUser = response.getBody();
+        assertNotNull(savedUser);
+        assertEquals(userId, savedUser.getId());
+        assertEquals(user.getEmail(), savedUser.getEmail());
     }
 
     @Test
     @DisplayName("유저 수정 - DB 및 HTTP 응답 검증")
     void testUpdateUser() {
         // g
+        Long userId = createTestUser();
         String url = "/users/{id}";
         UserEntity updateUser = new UserEntity();
-        updateUser.setId(2L);
+        updateUser.setId(userId);
         updateUser.setName("newname");
 
         // w
@@ -303,18 +313,18 @@ public class UserIntegrationTest {
         // t
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        UserEntity user = response.getBody();
-        assertNotNull(user);
-        assertEquals(2L, user.getId());
-        assertEquals("newname", user.getName());
+        UserEntity resultUser = response.getBody();
+        assertNotNull(resultUser);
+        assertEquals(updateUser.getId(), resultUser.getId());
+        assertEquals(updateUser.getName(), resultUser.getName());
     }
 
     @Test
     @DisplayName("유저 삭제 - DB 및 HTTP 응답 검증")
     void testDeleteUser() {
         // g
+        Long userId = createTestUser();
         String url = "/users/{id}";
-        Long userId = 2L;
 
         // w
         HttpHeaders headers = new HttpHeaders();

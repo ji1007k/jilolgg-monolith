@@ -43,7 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional  // 테스트 후 DB 롤백
 @ActiveProfiles("test")  // 테스트 실행 시 특정 프로필(test)을 강제로 활성화
 // 테스트 전 H2용 스키마 및 초기 데이터 실행
-@Sql(scripts = {"/db/h2/schema.sql", "/db/h2/data.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(scripts = {"/db/h2/user.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 public class UserIntegrationTestWithMockMvc {
     @Autowired
     private MockMvc mockMvc;  // HTTP 요청 테스트를 위한 MockMvc

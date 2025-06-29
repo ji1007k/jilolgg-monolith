@@ -3,6 +3,7 @@ package com.test.basic.lol.domain.league;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class LeagueService {
@@ -22,4 +23,7 @@ public class LeagueService {
                 .toList();
     }
 
+    public Optional<League> getLeagueByLeagueId(String leagueId) {
+        return leagueRepository.findByLeagueId(leagueId);
+    }
 }

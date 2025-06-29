@@ -6,9 +6,8 @@ import org.springframework.test.context.TestExecutionListener;
 
 import java.util.List;
 
-// 이전 테스트 결과로 변경된 DB 데이터 직접 초기화 (테스트 간 데이터 충돌 방지)
-// 실제 통합테스트에 적합한 방식.
-//  ??: Transactional 애너테이션은 보통 단위 테스트에 사용.
+// 이전 테스트 결과로 변경된 DB 모든 테이블을 TRUNCATE로 초기화 (테스트 간 데이터 충돌 방지)
+// 실제 통합테스트에 적합한 방식. (@Transactional은 보통 단위 테스트 시 사용)
 // https://mangkyu.tistory.com/264
 public class AcceptanceTestExecutionListener implements TestExecutionListener {
 

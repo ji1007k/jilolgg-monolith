@@ -61,8 +61,8 @@ jwt:
   public:
     key: classpath:jwt/app.pub
 
-#uploads:
-#  path: uploads/
+uploads:
+  path: uploads/
 
 # https://developer.riotgames.com/
 lol:

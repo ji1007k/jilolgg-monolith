@@ -1,14 +1,12 @@
 package com.test.basic.lol.batch;
 
-import com.test.basic.lol.api.esports.dto.MatchScheduleResponse;
 import com.test.basic.lol.domain.match.Match;
 import com.test.basic.lol.domain.match.MatchService;
 import com.test.basic.lol.domain.matchteam.MatchTeam;
 import com.test.basic.lol.domain.matchteam.MatchTeamService;
 import com.test.basic.lol.domain.team.Team;
 import com.test.basic.lol.domain.team.TeamService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
 
@@ -16,11 +14,10 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 public record MatchItemWriter(MatchService matchService,
                               TeamService teamService,
                               MatchTeamService matchTeamService) implements ItemWriter<MatchAggregate> {
-
-    private static final Logger logger = LoggerFactory.getLogger(MatchItemWriter.class);
 
     // Spring Batch 5 이상. Chunk 객체 사용. (내부에 List를 포함한 래퍼)
     @Override
@@ -35,11 +32,15 @@ public record MatchItemWriter(MatchService matchService,
                 .map(mag -> mag.match().getMatchId())
                 .collect(Collectors.toSet());
 
+        log.debug("Processing {} matches for matchIds: {}", mags.size(), matchIds);
+
         Map<String, Match> existingMatchMap = matchService.getMatchEntitiesByMatchIds(matchIds)
                 .stream()
                 .collect(Collectors.toMap(
                         Match::getMatchId,
                         Function.identity()));
+
+        log.debug("Found {} existing matches", existingMatchMap.size());
 
         // [1-2] 경기 정보 upsert 객체 준비
         List<Match> matchesToSave = new ArrayList<>();
@@ -47,6 +48,10 @@ public record MatchItemWriter(MatchService matchService,
         for (var mag : mags) {
             Match incoming = mag.match();
             Match merged;
+
+            // 모든 매치 ID를 로깅해서 실제로 중복되는지 확인
+            log.debug("파티션 [{}]에서 매치 [{}] 처리 중",
+                Thread.currentThread().getName(), incoming.getMatchId());
 
             // 저장된 경기정보 업데이트
             if (existingMatchMap.containsKey(incoming.getMatchId())) {
@@ -74,6 +79,8 @@ public record MatchItemWriter(MatchService matchService,
             }
         }
 
+        log.debug("Saving {} matches", matchesToSave.size());
+
         // [1-3] 변경된 경기 정보 bulk 저장
         if (!matchesToSave.isEmpty()) {
             matchService.saveMatches(matchesToSave);
@@ -92,6 +99,8 @@ public record MatchItemWriter(MatchService matchService,
                         Team::getName,
                         Function.identity()
                 ));
+
+        log.debug("Deleting MatchTeams for {} matches", matchIds.size());
 
         // [2-1] 기존 MatchTeam 삭제
         if (!matchIds.isEmpty()) {
@@ -120,6 +129,8 @@ public record MatchItemWriter(MatchService matchService,
                 matchTeamsToSave.add(matchTeam);
             }
         }
+
+        log.debug("Creating {} new MatchTeams", matchTeamsToSave.size());
 
         // [2-3] MatchTeam 정보 bulk 저장
         if (!matchTeamsToSave.isEmpty()) {

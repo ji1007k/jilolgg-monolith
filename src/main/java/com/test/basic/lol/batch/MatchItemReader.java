@@ -10,10 +10,7 @@ import org.springframework.batch.item.ItemReader;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Queue;
+import java.util.*;
 
 public class MatchItemReader implements ItemReader<MatchEventWithLeague> {
     private static final Logger logger = LoggerFactory.getLogger(MatchItemReader.class);
@@ -39,12 +36,16 @@ public class MatchItemReader implements ItemReader<MatchEventWithLeague> {
         this.matchApiService = matchApiService;
         this.leagueService = leagueService;
 
+        logger.debug("[Thread: {}] MatchItemReader 생성 - LeagueId: {}, TargetYear: {}",
+            Thread.currentThread().getName(), leagueId, targetYear);
+
         Optional<League> leagueOpt = leagueService.getLeagueByLeagueId(leagueId);
         if (leagueOpt.isEmpty()) {
             logger.warn("League not found with id: {}", leagueId);
             finished = true;
         } else {
             this.league = leagueOpt.get();
+            logger.debug("[Thread: {}] League 찾음: {}", Thread.currentThread().getName(), league.getName());
         }
     }
 
@@ -68,6 +69,9 @@ public class MatchItemReader implements ItemReader<MatchEventWithLeague> {
                 return null;
             }
 
+            logger.debug("[Thread: {}] API 호출 시작 - LeagueId: {}, PageToken: {}",
+                Thread.currentThread().getName(), leagueId, nextPageToken);
+                
             MatchScheduleResponse response = matchApiService.fetchScheduleByLeagueIdAndPageToken(leagueId, nextPageToken);
             firstFetch = false; // 호출 이후 false로 설정
 
@@ -87,9 +91,10 @@ public class MatchItemReader implements ItemReader<MatchEventWithLeague> {
                                 .toLocalDateTime().getYear() >= targetYear)
                     .toList();
 
-            logger.debug("[Thread: {}] MatchIds: {}",
+            logger.debug("[Thread: {}] 파티션 {} - MatchIds: {}",
                     Thread.currentThread().getName(),
-                    events.stream().map(event -> event.getMatch().getId())
+                    leagueId,
+                    events.stream().map(event -> event.getMatch().getId()).toList()
             );
 
             // 갱신 대상 이벤트가 없으면 reader 종료

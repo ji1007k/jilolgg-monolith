@@ -6,6 +6,8 @@ import com.test.basic.lol.domain.match.MatchApiService;
 import com.test.basic.lol.domain.match.MatchService;
 import com.test.basic.lol.domain.matchteam.MatchTeamService;
 import com.test.basic.lol.domain.team.TeamService;
+import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -26,6 +28,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
+import java.time.Year;
 
 /** Job, Step, Reader, Processor, Writer Bean 정의
     - Job: syncMatchJob
@@ -34,6 +37,7 @@ import javax.sql.DataSource;
     - Processor: MatchItemProcessor (EventDto -> MatchAggregate)
     - Writer: MatchItemWriter (MatchAggregate -> DB 저장)
 */
+@Slf4j
 @Configuration
 @EnableBatchProcessing
 public class MatchBatchConfig {
@@ -101,6 +105,7 @@ public class MatchBatchConfig {
                 .retryLimit(3)              // 최대 3회 재시도
                 .retry(Exception.class)     // 특정 예외만 재시도
                 .skip(DataIntegrityViolationException.class)   // 데이터 무결성 오류 스킵
+                .skip(ConstraintViolationException.class)     // 제약 조건 위반 스킵
                 .skipLimit(3)               // 최대 10개까지 건너뛰기
                 .build();
     }
@@ -109,14 +114,16 @@ public class MatchBatchConfig {
     // StepScope: 매 파티션마다 독립된 Reader 생성 (Spring Batch 추천 방식) -> Thread-safe를 위한 설정
     @StepScope
     public MatchItemReader matchItemReader(
-            @Value("#{jobParameters['leagueId']}") String leagueId,
-            @Value("#{jobParameters['targetYear']}") int targetYear,
+            @Value("#{stepExecutionContext['leagueId']}") String leagueId,
+            @Value("#{stepExecutionContext['targetYear']}") Integer targetYear,
             MatchApiService matchApiService,
             LeagueService leagueService) {
 
+        log.info("MatchItemReader Bean 생성 - LeagueId: {}, TargetYear: {}", leagueId, targetYear);
+        
         return new MatchItemReader(
                 leagueId,
-                targetYear,
+                targetYear != null ? targetYear : Year.now().getValue(),
                 matchApiService,
                 leagueService);
     }

@@ -23,189 +23,107 @@ public record MatchItemWriter(MatchService matchService,
     private static final Logger logger = LoggerFactory.getLogger(MatchItemWriter.class);
 
     // Spring Batch 5 이상. Chunk 객체 사용. (내부에 List를 포함한 래퍼)
-    // 데이터 + 배치 처리 관련 메타데이터
     @Override
     public void write(Chunk<? extends MatchAggregate> chunk) {
-        List<MatchAggregate> items = (List<MatchAggregate>) chunk.getItems();
+        // [1] MatchItemProcessor 에서 전처리 후 반환된 데이터 가져오기
+        List<MatchAggregate> mags = (List<MatchAggregate>) chunk.getItems();
 
-        // [1] 모든 팀 이름 수집 (TBD 제외)
-        Set<String> teamNames = items.stream()
-                .flatMap(m -> m.teams().stream())
-                .map(MatchScheduleResponse.TeamDto::getName)
-                .filter(name -> !"TBD".equalsIgnoreCase(name))
+        // [1] 경기 정보 갱신
+
+        // [1-1] 갱신 대상 경기 정보 bulk 조회
+        Set<String> matchIds = mags.stream()
+                .map(mag -> mag.match().getMatchId())
                 .collect(Collectors.toSet());
 
-        // [2] 팀 조회 + resolve map 생성
-        List<Team> teams = findUniqueTeamsByNameOrCode(teamNames, items);
-        Map<String, Team> codeToTeamMap = teams.stream()
-                .collect(Collectors.toMap(Team::getCode, Function.identity()));
-
-        // [3] matchId 수집
-        Set<String> matchIds = items.stream()
-                .map(m -> m.match().getMatchId())
-                .collect(Collectors.toSet());
-
-        // [4] Match bulk 조회 + 병합
-        Map<String, Match> existingMatches = matchService.getMatchEntitiesByMatchIds(matchIds).stream()
+        Map<String, Match> existingMatchMap = matchService.getMatchEntitiesByMatchIds(matchIds)
+                .stream()
                 .collect(Collectors.toMap(
                         Match::getMatchId,
-                        Function.identity())
-                );
+                        Function.identity()));
 
+        // [1-2] 경기 정보 upsert 객체 준비
         List<Match> matchesToSave = new ArrayList<>();
-        for (MatchAggregate mag : items) {
+
+        for (var mag : mags) {
             Match incoming = mag.match();
             Match merged;
 
-            if (existingMatches.containsKey(incoming.getMatchId())) {
-                Match existing = existingMatches.get(incoming.getMatchId());
+            // 저장된 경기정보 업데이트
+            if (existingMatchMap.containsKey(incoming.getMatchId())) {
+                Match existing = existingMatchMap.get(incoming.getMatchId());
 
-                // 기존 엔터티에 값 업데이트 (ID가 살아 있음)
-                existing.setStartTime(incoming.getStartTime());
-                existing.setState(incoming.getState());
-                existing.setBlockName(incoming.getBlockName());
-                existing.setGameCount(incoming.getGameCount());
-                existing.setStrategy(incoming.getStrategy());
-                existing.setLeague(incoming.getLeague());
+                // 변경된 값이 있을 때만 업데이트
+                if (!Objects.equals(existing, incoming)) {
+                    merged = existing;
 
-                merged = existing; // 꼭 기존 객체로 설정
+                    // 기존 엔터티에 값 업데이트 (ID가 살아 있음)
+                    existing.setStartTime(incoming.getStartTime());
+                    existing.setState(incoming.getState());
+                    existing.setBlockName(incoming.getBlockName());
+                    existing.setGameCount(incoming.getGameCount());
+                    existing.setStrategy(incoming.getStrategy());
+                    existing.setLeague(incoming.getLeague());
+
+                    matchesToSave.add(merged);
+                }
             } else {
-                merged = incoming; // 신규인 경우 그대로 사용
-            }
-
-            matchesToSave.add(merged);
-        }
-
-        List<Match> savedMatches = matchService.saveMatches(matchesToSave);
-        Map<String, Match> savedMatchMap = savedMatches.stream()
-                .collect(Collectors.toMap(Match::getMatchId, Function.identity()));
-
-        // [5] 기존 MatchTeam bulk 조회
-        List<MatchTeam> existingMatchTeams = matchTeamService.getMatchByMatchIds(matchIds);
-        Map<String, List<MatchTeam>> matchIdToTeamsMap = existingMatchTeams.stream()
-                .collect(Collectors.groupingBy(mt -> mt.getMatch().getMatchId()));
-
-        // [6] TBD 삭제 대상 식별
-        List<MatchTeam> matchTeamsToDelete = new ArrayList<>();
-        for (MatchAggregate mag : items) {
-            String matchId = mag.match().getMatchId();
-
-            // MatchTeam 갱신
-            // 기존 매치 팀 데이터 조회 (DB에 저장된 상태)
-            List<MatchTeam> existingTeams = matchIdToTeamsMap.getOrDefault(matchId, Collections.emptyList());
-
-            long existingTbdCnt = existingTeams.stream()
-                    .filter(mt -> "TBD".equalsIgnoreCase(mt.getTeam().getName()))
-                    .count();
-            long incomingTbdCnt = mag.teams().stream()
-                    .filter(t -> "TBD".equalsIgnoreCase(t.getName()))
-                    .count();
-
-            // 기존 TBD 개수 != 새로운 팀 목록 TBD 개수 -> 기존 TBD 삭제
-            if (existingTbdCnt != incomingTbdCnt) {
-                matchTeamsToDelete.addAll(
-                        existingTeams.stream()
-                                .filter(mt -> "TBD".equalsIgnoreCase(mt.getTeam().getName()))
-                                .toList()
-                );
+                // 신규 추가
+                merged = incoming;
+                matchesToSave.add(merged);
+                existingMatchMap.put(incoming.getMatchId(), incoming); // 맵에도 추가
             }
         }
 
-        // 삭제 대상 ID 수집
-        Set<Long> toDeleteIds = matchTeamsToDelete.stream()
-                .map(MatchTeam::getId)
+        // [1-3] 변경된 경기 정보 bulk 저장
+        if (!matchesToSave.isEmpty()) {
+            matchService.saveMatches(matchesToSave);
+        }
+
+        // [2] 팀 정보 준비 및 MatchTeam 삭제 + 재생성
+        Set<String> teamNames = mags.stream()
+                .flatMap(mag -> mag.teams()
+                        .stream()
+                        .map(team -> team.getName()))
                 .collect(Collectors.toSet());
 
-        // 메모리 필터링으로 삭제 대상 제외한 맵 생성
-        Map<String, MatchTeam> matchTeamMap = existingMatchTeams.stream()
-                .filter(mt -> !toDeleteIds.contains(mt.getId()))
-                .collect(Collectors.toMap(  // 리스트를 Map으로 변환. key, value, key 중복 시 처리 방법
-                        mt -> mt.getMatch().getMatchId() + "_" + mt.getTeam().getTeamId(),
-                        Function.identity(),    // MatchTeam 객체 그대로 value로 사용 (x -> x)
-                        (existing, replacement) -> existing // 중복 key일 때 하나만 남기기
+        Map<String, Team> teamsMap = teamService.getTeamsByName(teamNames)
+                .stream()
+                .collect(Collectors.toMap(
+                        Team::getName,
+                        Function.identity()
                 ));
 
+        // [2-1] 기존 MatchTeam 삭제
+        if (!matchIds.isEmpty()) {
+            matchTeamService.deleteByMatchIds(matchIds);
+        }
+
+        // [2-2] 새로운 MatchTeam 생성
         List<MatchTeam> matchTeamsToSave = new ArrayList<>();
 
-        for (MatchAggregate mag : items) {
-            Match match = savedMatchMap.get(mag.match().getMatchId());
+        for (var mag : mags) {
+            Match match = existingMatchMap.get(mag.match().getMatchId());
 
-            for (MatchScheduleResponse.TeamDto teamDto : mag.teams()) {
-                Team team = resolveTeam(teamDto, codeToTeamMap);
-                if (team == null) {
-                    logger.debug("Team not found with code: {}", teamDto.getCode());
-                    continue;
-                }
+            for (var teamDto : mag.teams()) {
+                Team team = teamsMap.get(teamDto.getName());
+                if (team == null) continue;
 
-                String key = match.getMatchId() + "_" + team.getTeamId();
-                MatchTeam mt = matchTeamMap.get(key);
-
-                if (mt == null) {
-                    mt = new MatchTeam();
-                    mt.setMatch(match);
-                    mt.setTeam(team);
-                }
+                MatchTeam matchTeam = new MatchTeam();
+                matchTeam.setMatch(match);
+                matchTeam.setTeam(team);
 
                 if (teamDto.getResult() != null) {
-                    mt.setOutcome(teamDto.getResult().getOutcome());
-                    mt.setGameWins(teamDto.getResult().getGameWins());
+                    matchTeam.setOutcome(teamDto.getResult().getOutcome());
+                    matchTeam.setGameWins(teamDto.getResult().getGameWins());
                 }
 
-                matchTeamsToSave.add(mt);
+                matchTeamsToSave.add(matchTeam);
             }
         }
 
-        if (!matchTeamsToDelete.isEmpty()) {
-            matchTeamService.deleteMatchTeams(matchTeamsToDelete);
+        // [2-3] MatchTeam 정보 bulk 저장
+        if (!matchTeamsToSave.isEmpty()) {
+            matchTeamService.saveMatchTeams(matchTeamsToSave);
         }
-
-        matchTeamService.saveMatchTeams(matchTeamsToSave);
     }
-
-
-    private List<Team> findUniqueTeamsByNameOrCode(Set<String> teamNames, List<MatchAggregate> items) {
-        // 1. name 기준 조회
-        List<Team> teamsByName = teamService.getTeamsByName(teamNames);
-
-        // 2. name 기준으로 그룹핑 → 중복된 name 찾아내기
-        Map<String, List<Team>> nameGrouped = teamsByName.stream()
-                .collect(Collectors.groupingBy(Team::getName));
-
-        // 3. 중복 name 리스트 뽑기
-        Set<String> duplicateNames = nameGrouped.entrySet().stream()
-                .filter(e -> e.getValue().size() > 1)
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toSet());
-
-        // 4. 중복된 팀들만 제거
-        List<Team> filteredTeamsByName = teamsByName.stream()
-                .filter(team -> !duplicateNames.contains(team.getName()))
-                .toList();
-
-        // 5. 중복된 팀 name → code 로 다시 조회
-        Set<String> duplicateCodes = items.stream()
-                .flatMap(mag -> mag.teams().stream())
-                .filter(teamDto -> duplicateNames.contains(teamDto.getName()))
-                .map(MatchScheduleResponse.TeamDto::getCode)
-                .collect(Collectors.toSet());
-
-        List<Team> teamsByCode = teamService.getTeamsByCode(duplicateCodes);
-
-        // 6. 합치기
-        List<Team> finalTeams = new ArrayList<>();
-        finalTeams.addAll(filteredTeamsByName);
-        finalTeams.addAll(teamsByCode);
-
-        return finalTeams;
-    }
-
-    private Team resolveTeam(MatchScheduleResponse.TeamDto teamDto, Map<String, Team> codeToTeamMap) {
-        if ("TBD".equalsIgnoreCase(teamDto.getName())) {
-            return teamService.getTeamByName("TBD");
-        }
-        return codeToTeamMap.get(teamDto.getCode());
-    }
-
-
-
 }

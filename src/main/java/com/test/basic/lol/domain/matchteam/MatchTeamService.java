@@ -18,15 +18,11 @@ public class MatchTeamService {
         return matchTeamRepository.findDistinctTeamIdByMatchIdIn(matchIds);
     }
 
-    public List<MatchTeam> getMatchByMatchIds(Set<String> matchIds) {
-        return matchTeamRepository.findByMatch_MatchIdIn(matchIds);
-    }
-
     public void saveMatchTeams(List<MatchTeam> matchTeamsToSave) {
         matchTeamRepository.saveAll(matchTeamsToSave);
     }
 
-    public void deleteMatchTeams(List<MatchTeam> matchTeams) {
-        matchTeamRepository.deleteAll(matchTeams);
+    public void deleteByMatchIds(Set<String> matchIds) {
+        matchTeamRepository.deleteByMatch_MatchIdIn(matchIds);
     }
 }

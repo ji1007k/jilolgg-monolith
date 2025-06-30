@@ -71,34 +71,24 @@ public class JobTriggerController {
         StopWatch sw = new StopWatch();
         sw.start();
 
-        List<String> leagueIds = leagueService.getAllLeagues()
-                .stream()
-                .map(LeagueDto::getLeagueId)
-                .toList();
-
-//        for (String leagueId : MAJOR_LEAGUE_IDS) {
-        for (String leagueId : leagueIds) {
+        try {
             JobParameters params = new JobParametersBuilder()
-                    .addString("leagueId", leagueId)
                     .addLong("targetYear", Long.valueOf(year))
                     .addLong("time", System.currentTimeMillis())
                     .toJobParameters();
 
-            try {
-                jobLauncher.run(syncMatchJob, params);
-            } catch (JobExecutionAlreadyRunningException | JobRestartException
-                     | JobInstanceAlreadyCompleteException | JobParametersInvalidException e) {
-                // 로그 출력
-//                log.error("Job 실행 실패 - leagueId: {}, year: {}", leagueId, year, e);
-                // 에러 메시지를 반환하거나, 필요에 따라 계속 진행할지 결정
-                return "Job 실행 실패: " + e.getMessage();
-            }
+            jobLauncher.run(syncMatchJob, params);  // 한 번만 실행
+        } catch (JobExecutionAlreadyRunningException | JobRestartException
+                 | JobInstanceAlreadyCompleteException | JobParametersInvalidException e) {
+            // 로그 출력
+            log.error("Job 실행 실패", e);
+            return "Job 실행 실패";
         }
 
         sw.stop();
         log.info(">>> 소요 시간: {}ms", sw.getTotalTimeMillis());
 
-        return "Match Job 실행 완료";
+        return "Match Job 실행 완료. 소요 시간: " + sw.getTotalTimeMillis() + "ms";
     }
 }
 

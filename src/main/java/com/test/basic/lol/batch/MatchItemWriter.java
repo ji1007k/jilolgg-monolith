@@ -97,7 +97,8 @@ public record MatchItemWriter(MatchService matchService,
                 .stream()
                 .collect(Collectors.toMap(
                         Team::getName,
-                        Function.identity()
+                        Function.identity(),
+                        (existing, replacement) -> existing
                 ));
 
         log.debug("Deleting MatchTeams for {} matches", matchIds.size());

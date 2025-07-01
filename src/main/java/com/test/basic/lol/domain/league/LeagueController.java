@@ -39,7 +39,7 @@ public class LeagueController {
     @GetMapping
     public ResponseEntity<List<LeagueDto>> getAllLeagues() {
         return ResponseEntity.ok(leagueService.getAllLeagues().stream()
-                .filter(league -> MAJOR_LEAGUE_IDS.contains(league.getLeagueId()))
+//                .filter(league -> MAJOR_LEAGUE_IDS.contains(league.getLeagueId()))
                 .toList()
         );
     }

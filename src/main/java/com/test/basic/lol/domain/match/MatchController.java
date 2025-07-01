@@ -67,7 +67,7 @@ public class MatchController {
 
     @GetMapping("/sync")
     @Operation(summary = "리그별 경기일정 수동 동기화", description = "리그별 경기일정 수동 동기화 API")
-    public ResponseEntity syncAllMatchesByLeagueIdFromApi(@RequestParam(required = false) String year) {
+    public ResponseEntity syncAllMatchesByLeagueIdFromApi(@RequestParam String year) {
 
         // 소요 시간 측정
         StopWatch sw = new StopWatch();
@@ -84,7 +84,7 @@ public class MatchController {
         sw.stop();
         log.info(">>> 소요 시간: {}ms", sw.getTotalTimeMillis());
 
-        return ResponseEntity.ok("리그별 경기 일정 동기화 완료");
+        return ResponseEntity.ok("리그별 경기 일정 동기화 완료. 소요시간: " + sw.getTotalTimeMillis() + "ms");
     }
 
 

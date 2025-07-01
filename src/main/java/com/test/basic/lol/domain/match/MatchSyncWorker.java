@@ -178,6 +178,7 @@ public class MatchSyncWorker {
         int targetYear = Integer.parseInt(year);
         String nextPageToken = null;
 
+        int count = 0;
         do {
             String finalToken = nextPageToken;
 
@@ -230,6 +231,7 @@ public class MatchSyncWorker {
                 match.setStrategy(matchDto.getStrategy().getType() + matchDto.getStrategy().getCount());
 
                 Match savedMatch = matchRepository.save(match);
+                count++;
 
 
                 // [2] MatchTeam 갱신
@@ -302,6 +304,8 @@ public class MatchSyncWorker {
             nextPageToken = response.getData().getSchedule().getPages().getOlder();
 
         } while (nextPageToken != null);
+
+        log.info("리그ID {} 데이터 갱신 완료 - {}건", leagueId, count);
     }
 
 

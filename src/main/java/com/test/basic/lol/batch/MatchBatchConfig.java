@@ -64,6 +64,7 @@ public class MatchBatchConfig {
     public Job syncMatchJob(JobRepository jobRepository, Step syncMatchStep) {
         return new JobBuilder("syncMatchJob", jobRepository)
                 .start(syncMatchStep)
+                .listener(new SimpleJobListener())
                 .build();
     }
 
@@ -106,7 +107,7 @@ public class MatchBatchConfig {
                 .retry(Exception.class)     // 특정 예외만 재시도
                 .skip(DataIntegrityViolationException.class)   // 데이터 무결성 오류 스킵
                 .skip(ConstraintViolationException.class)     // 제약 조건 위반 스킵
-                .skipLimit(3)               // 최대 10개까지 건너뛰기
+                .skipLimit(3)               // 최대 3개까지 건너뛰기
                 .build();
     }
 

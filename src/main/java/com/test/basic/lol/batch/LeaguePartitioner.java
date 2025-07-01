@@ -1,5 +1,6 @@
 package com.test.basic.lol.batch;
 
+import com.test.basic.lol.domain.league.League;
 import com.test.basic.lol.domain.league.LeagueRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.partition.support.Partitioner;
@@ -34,11 +35,15 @@ public class LeaguePartitioner implements Partitioner {
     @Override
     public Map<String, ExecutionContext> partition(int gridSize) {
         Map<String, ExecutionContext> partitions = new HashMap<>();
-//        List<League> leagues = leagueRepository.findAll();
 
-        for (int i = 0; i < MAJOR_LEAGUE_IDS.size(); i++) {
+        List<String> leagueIds = leagueRepository.findAll()
+                .stream()
+                .map(League::getLeagueId)
+                .toList();
+
+        for (int i = 0; i < leagueIds.size(); i++) {
             ExecutionContext context = new ExecutionContext();
-            context.putString("leagueId", MAJOR_LEAGUE_IDS.get(i));
+            context.putString("leagueId", leagueIds.get(i));
             context.putInt("targetYear", Year.now().getValue());
             partitions.put("partition_" + i, context);
         }

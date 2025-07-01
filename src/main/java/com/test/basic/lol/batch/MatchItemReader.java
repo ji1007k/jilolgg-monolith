@@ -94,7 +94,9 @@ public class MatchItemReader implements ItemReader<MatchEventWithLeague> {
             logger.debug("[Thread: {}] 파티션 {} - MatchIds: {}",
                     Thread.currentThread().getName(),
                     leagueId,
-                    events.stream().map(event -> event.getMatch().getId()).toList()
+                    events.stream()
+                            .filter(event -> event.getMatch() != null)
+                            .map(event -> event.getMatch().getId()).toList()
             );
 
             // 갱신 대상 이벤트가 없으면 reader 종료

@@ -7,6 +7,7 @@ import com.test.basic.lol.domain.match.MatchService;
 import com.test.basic.lol.domain.matchteam.MatchTeamService;
 import com.test.basic.lol.domain.team.TeamService;
 import jakarta.validation.ConstraintViolationException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -40,7 +41,12 @@ import java.time.Year;
 @Slf4j
 @Configuration
 @EnableBatchProcessing
+@RequiredArgsConstructor
 public class MatchBatchConfig {
+
+    public final SimpleJobListener simpleJobListener;
+    public final SimpleStepListener simpleStepListener;
+    public final SimpleRetryListener simpleRetryListener;
 
     // 기본 제공 스키마 파일을 실행하여 Job 실행 상태, 이력 등을 저장할 메타 테이블 생성 (쿼리 경로 직접 지정)
     @Profile({"dev", "prod"}) // 개발/운영만
@@ -64,11 +70,11 @@ public class MatchBatchConfig {
     public Job syncMatchJob(JobRepository jobRepository, Step syncMatchStep) {
         return new JobBuilder("syncMatchJob", jobRepository)
                 .start(syncMatchStep)
-                .listener(new SimpleJobListener())
+                .listener(simpleJobListener)
                 .build();
     }
 
-    // 마스터 Step
+    // 마스터 Step: 파티셔닝 관리. 데이터 처리x
     // 내부 Step 들이 chunk 기반이면 트랜잭션 매니저 필수
     //  ignored prefix: "사용 안 함"을 표현하는 네이밍 규칙(but. Spring은 의존성 요구함)
     @Bean
@@ -108,6 +114,8 @@ public class MatchBatchConfig {
                 .skip(DataIntegrityViolationException.class)   // 데이터 무결성 오류 스킵
                 .skip(ConstraintViolationException.class)     // 제약 조건 위반 스킵
                 .skipLimit(3)               // 최대 3개까지 건너뛰기
+                .listener(simpleStepListener)     // Step 리스너 (Step 시작/종료 시)
+                .listener(simpleRetryListener)    // 재시도 리스너 (재시도 시작/오류/종료 시)
                 .build();
     }
 

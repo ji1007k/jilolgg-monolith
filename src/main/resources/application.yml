@@ -22,6 +22,12 @@ spring:
 # logging 설정
 logging:
   config: classpath:logback-spring.xml
+  level:
+    # 쿼리 로그
+    org.hibernate.SQL: INFO  # 실제 실행되는 SQL 쿼리
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE  # 바인딩 파라미터 값 출력
+    org.hibernate.engine.internal.StatefulPersistenceContext: WARN  # 1차 캐시 관련 디버깅 로그
+    org.springframework.orm.jpa: ERROR
 
 jwt:
   private:

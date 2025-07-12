@@ -23,9 +23,9 @@ import java.util.List;
 public class MatchController {
     private final MatchService matchService;
     private final SyncMatchService syncMatchService;
-//    private final SyncLolEsportsApiService syncLolEsportsApiService;
-
-    private static final List<String> MAJOR_LEAGUE_IDS = List.of(
+    private final MatchCacheService matchCacheService;
+    private final LeagueService leagueService;
+    /*private static final List<String> MAJOR_LEAGUE_IDS = List.of(
             // LCK, LCK CL
             "98767991310872058",
             "98767991335774713",
@@ -36,8 +36,7 @@ public class MatchController {
             // LPL, LEC, LJL
             "98767991314006698",
             "98767991302996019",
-            "98767991349978712");
-    private final LeagueService leagueService;
+            "98767991349978712");*/
 
 
     @GetMapping
@@ -80,6 +79,9 @@ public class MatchController {
 
 //        syncMatchService.syncMatchesByLeagueIdsAndYear(MAJOR_LEAGUE_IDS, year);
         syncMatchService.syncMatchesByLeagueIdsAndYear(leagueIds, year);
+
+        // 경기 일정 수동동기화 후 캐시 무효화
+        matchCacheService.invalidateAllCaches();
 
         sw.stop();
         log.info(">>> 소요 시간: {}ms", sw.getTotalTimeMillis());

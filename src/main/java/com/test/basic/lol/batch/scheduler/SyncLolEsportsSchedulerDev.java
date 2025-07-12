@@ -1,6 +1,7 @@
 package com.test.basic.lol.batch.scheduler;
 
 import com.test.basic.lol.domain.match.Match;
+import com.test.basic.lol.domain.match.MatchCacheService;
 import com.test.basic.lol.domain.match.MatchService;
 import com.test.basic.lol.domain.match.SyncMatchService;
 import com.test.basic.lol.domain.team.SyncTeamService;
@@ -23,12 +24,14 @@ public class SyncLolEsportsSchedulerDev {
     private final SyncTeamService syncTeamService;
     private final SyncMatchService syncMatchService;
     private final MatchService matchService;
+    private final MatchCacheService matchCacheService;
 
     public SyncLolEsportsSchedulerDev(SyncTeamService syncTeamService,
-                                      SyncMatchService syncMatchService, MatchService matchService) {
+                                      SyncMatchService syncMatchService, MatchService matchService, MatchCacheService matchCacheService) {
         this.syncTeamService = syncTeamService;
         this.syncMatchService = syncMatchService;
         this.matchService = matchService;
+        this.matchCacheService = matchCacheService;
     }
 
     @Scheduled(cron = "0 0 * * * *", zone = "Asia/Seoul")
@@ -65,6 +68,8 @@ public class SyncLolEsportsSchedulerDev {
 
         logger.info(">>> 동기화 대상 경기 수: {}", todayMatches.size());
         syncMatchService.syncTodaysMatchesFromLolEsportsApi(todayMatches);
+        // 경기 일정 동기화 후 캐시 무효화
+        matchCacheService.invalidateAllCaches();
         logger.info("==================== [금일 경기 정보 자동 동기화 작업 완료] ====================");
     }
 

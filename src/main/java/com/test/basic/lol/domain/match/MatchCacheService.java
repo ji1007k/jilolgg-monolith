@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -52,6 +53,24 @@ public class MatchCacheService {
         cachedMatches = matches;
         lastFetchedTime = Instant.now();
         logger.info(">>> 메모리 캐시 저장 완료");
+    }
+
+    /**
+     * 경기 일정 캐시 무효화
+     */
+    public void invalidateAllCaches() {
+        // 1. Redis 캐시 삭제
+        Set<String> keys = matchRedisTemplate.keys("match:*");
+        if (keys != null && !keys.isEmpty()) {
+            matchRedisTemplate.delete(keys);
+            logger.info(">>> Redis 경기 일정 캐시 삭제 완료: {} 개 키", keys.size());
+        }
+
+        // 2. 메모리 캐시 초기화
+        cachedMatches = null;
+        lastFetchedTime = null;
+
+        logger.info(">>> 경기 일정 캐시 무효화 완료");
     }
 
 }

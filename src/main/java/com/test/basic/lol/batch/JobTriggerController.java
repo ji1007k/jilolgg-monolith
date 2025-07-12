@@ -1,7 +1,6 @@
 package com.test.basic.lol.batch;
 
-import com.test.basic.lol.domain.league.LeagueDto;
-import com.test.basic.lol.domain.league.LeagueService;
+import com.test.basic.lol.domain.match.MatchCacheService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 // TODO
 //  CommandLineRunner 또는 Scheduler로 실행하거나
 //  REST API 등을 통해 JobLauncher로 외부에서 실행
@@ -35,9 +32,11 @@ import java.util.List;
 public class JobTriggerController {
 
     private final JobLauncher jobLauncher;  // Job을 실행하는 컴포넌트 (Job 실행 트리거)
-//    private final Job exampleJob;
     private final Job syncMatchJob;
+//    private final Job exampleJob;
 
+    private final MatchCacheService matchCacheService;
+    /*private final LeagueService leagueService;
     private static final List<String> MAJOR_LEAGUE_IDS = List.of(
             // LCK, LCK CL
             "98767991310872058",
@@ -49,8 +48,8 @@ public class JobTriggerController {
             // LPL, LEC, LJL
             "98767991314006698",
             "98767991302996019",
-            "98767991349978712");
-    private final LeagueService leagueService;
+            "98767991349978712");*/
+
 
 /*
     @GetMapping("/run-sample")
@@ -78,6 +77,9 @@ public class JobTriggerController {
                     .toJobParameters();
 
             jobLauncher.run(syncMatchJob, params);  // 한 번만 실행
+
+            // 배치 종료 후 경기 일정 캐시 무효화
+            matchCacheService.invalidateAllCaches();
         } catch (JobExecutionAlreadyRunningException | JobRestartException
                  | JobInstanceAlreadyCompleteException | JobParametersInvalidException e) {
             // 로그 출력
@@ -91,4 +93,3 @@ public class JobTriggerController {
         return "Match Job 실행 완료. 소요 시간: " + sw.getTotalTimeMillis() + "ms";
     }
 }
-

@@ -44,6 +44,8 @@ public class Team {
     @JoinColumn(name = "league_id", referencedColumnName = "league_id", nullable = false)
     private League league;
 
+    // 기본값: LAZY. 연관 관계 테이블 데이터 필요할 때 조회
+    // N+1 문제 발생 가능. EX) MatchTeam.getTeam() <- MatchTeam마다 Team 조회
     @OneToMany(mappedBy = "team", fetch = FetchType.LAZY)
     private List<MatchTeam> matchTeams;
 

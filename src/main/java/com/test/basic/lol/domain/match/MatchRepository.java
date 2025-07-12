@@ -1,8 +1,9 @@
 package com.test.basic.lol.domain.match;
 
-import io.lettuce.core.dynamic.annotation.Param;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -41,6 +42,8 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
             @Param("endOfDay") LocalDateTime endOfDay
     );
 
+    // 연관 관계 테이블 데이터를 JOIN해서 미리 조회 (EAGER LOADING)
+    @EntityGraph(attributePaths = {"matchTeams", "matchTeams.team"})
     @Query("""
         SELECT m FROM Match m
         WHERE m.league.leagueId = :leagueId

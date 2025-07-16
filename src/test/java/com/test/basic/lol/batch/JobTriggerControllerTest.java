@@ -2,8 +2,7 @@ package com.test.basic.lol.batch;
 
 import com.test.basic.auth.jwt.JwtTokenProvider;
 import com.test.basic.auth.security.config.SecurityConfig;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+import com.test.basic.lol.batch.controller.JobTriggerController;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.batch.core.Job;
@@ -14,13 +13,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-
-import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 // @WebMvcTest를 쓰면 기본적으로 Spring Security 필터가 작동, 인증 필요
 @WebMvcTest(controllers = JobTriggerController.class)

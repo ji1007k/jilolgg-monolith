@@ -126,6 +126,7 @@ public class SyncMatchService {
             throw new RuntimeException("동기화 락 획득 중 인터럽트 발생", ie);
         } catch (Exception e) {
             logger.error("리그 동기화 실패: {}", e.getMessage(), e);
+            throw new RuntimeException(e.getMessage());
         } finally {
             cleanup();
         }

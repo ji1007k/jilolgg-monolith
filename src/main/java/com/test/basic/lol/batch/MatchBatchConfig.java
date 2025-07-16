@@ -14,6 +14,9 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.launch.support.TaskExecutorJobLauncher;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,6 +28,7 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.datasource.init.DataSourceInitializer;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
@@ -42,6 +46,7 @@ import java.time.Year;
 @Configuration
 @EnableBatchProcessing
 @RequiredArgsConstructor
+@EnableAsync
 public class MatchBatchConfig {
 
     public final SimpleJobListener simpleJobListener;
@@ -71,6 +76,7 @@ public class MatchBatchConfig {
         return new JobBuilder("syncMatchJob", jobRepository)
                 .start(syncMatchStep)
                 .listener(simpleJobListener)
+                .incrementer(new RunIdIncrementer()) // 고유 실행 ID 자동 생성
                 .build();
     }
 
@@ -86,7 +92,7 @@ public class MatchBatchConfig {
         return new StepBuilder("syncMatchStep", jobRepository)
                 .partitioner("partitionedMatchStep", leaguePartitioner)
                 .step(partitionedMatchStep)
-                .taskExecutor(limitedTaskExecutor)
+                .taskExecutor(limitedTaskExecutor)  // Step 내부에서 파티션들을 병렬로 실행
                 .gridSize(5)    // 병렬 작업(파티션) 수 조절
                 .allowStartIfComplete(true)       // 완료된 파티션 재시작 허용
                 .build();
@@ -172,16 +178,45 @@ public class MatchBatchConfig {
 
     // Spring Batch 5.x 부터 TaskExecutor 직접 설정해서 병렬 제어
     // 멀티스레드 Step 처리에서 스레드 풀을 설정
-    @Bean
+    @Bean(name = "limitedTaskExecutor")
     public TaskExecutor limitedTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(10);    // 기본적으로 유지할 병렬 스레드 수 (ex. CPU 수 * 2 이하)
         executor.setMaxPoolSize(20);     // 최대 확장 스레드 수
         executor.setQueueCapacity(30);   // 버퍼 역할 큐 0 -> 대기x 바로 실행
         executor.setThreadNamePrefix("thread-batch-match-partition-");
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(30);
         executor.initialize();
         return executor;
     }
 
+    // 현재 코드 동작 (동기 방식) - 결과 받을 수 있지만 분산락 안됨
+    //    Request 1: API → 분산락 획득 → jobLauncher.run() → Job 완료까지 5초 대기 → 락 해제 → 응답
+    //    Request 2: API → Request 1이 완료될 때까지 대기 → 분산락 획득 시도
+    //    락 획득 이전에 이미 Spring Batch 레벨에서 동기화가 일어나고 있어 분산락까지 도달하지 못함
+    // 비동기 JobLauncher 적용 후 - 분산락 되지만 결과 못받음
+    //    Request 1: API → 분산락 획득 → asyncJobLauncher.run() → 즉시 응답
+    //                      ↓
+    //              백그라운드에서 Job 실행 (5초) → Job 완료 → 락 해제
+    //    Request 2: API → 분산락 획득 시도 → 1초 후 실패 → 예외 응답
+    @Bean
+    public JobLauncher asyncJobLauncher(JobRepository jobRepository) {
+        TaskExecutorJobLauncher jobLauncher = new TaskExecutorJobLauncher();
+        jobLauncher.setJobRepository(jobRepository);
+
+        // API 요청이 Job 완료를 기다리지 않고 즉시 응답
+        // Job 시작 레벨의 비동기성
+        TaskExecutor taskExecutor = limitedTaskExecutor();
+        jobLauncher.setTaskExecutor(taskExecutor);  // Job 자체를 비동기로 시작
+
+        try {
+            jobLauncher.afterPropertiesSet();
+        } catch (Exception e) {
+            throw new RuntimeException("JobLauncher 초기화 실패", e);
+        }
+
+        return jobLauncher;
+    }
 
 }

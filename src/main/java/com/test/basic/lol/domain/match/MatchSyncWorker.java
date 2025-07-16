@@ -43,6 +43,7 @@ public class MatchSyncWorker {
         MatchDetailResponse response = monoResponse.block();    // 데이터 비교 위해 동기식으로 요청
 
         if (response == null || response.getData() == null || response.getData().getEvent() == null) {
+            log.warn("Data or event of Match [{}] is empty. {} ", matchId, response);
             throw new RuntimeException("No match detail found for ID: " + matchId);
         }
 

@@ -6,6 +6,7 @@ import com.test.basic.lol.domain.matchteam.MatchTeam;
 import com.test.basic.lol.domain.matchteam.MatchTeamService;
 import com.test.basic.lol.domain.team.Team;
 import com.test.basic.lol.domain.team.TeamService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
@@ -15,9 +16,12 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
-public record MatchItemWriter(MatchService matchService,
-                              TeamService teamService,
-                              MatchTeamService matchTeamService) implements ItemWriter<MatchAggregate> {
+@RequiredArgsConstructor
+public class MatchItemWriter implements ItemWriter<MatchAggregate> {
+
+    private final MatchService matchService;
+    private final TeamService teamService;
+    private final MatchTeamService matchTeamService;
 
     // Spring Batch 5 이상. Chunk 객체 사용. (내부에 List를 포함한 래퍼)
     @Override

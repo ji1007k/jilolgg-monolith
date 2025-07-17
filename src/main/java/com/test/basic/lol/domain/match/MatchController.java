@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StopWatch;
 import org.springframework.web.bind.annotation.*;
 
@@ -66,6 +67,7 @@ public class MatchController {
     }
 
     @GetMapping("/sync")
+    @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
     @Operation(summary = "리그별 경기일정 수동 동기화", description = "리그별 경기일정 수동 동기화 API")
     public ResponseEntity syncAllMatchesByLeagueIdFromApi(@RequestParam String year) {
 
@@ -98,6 +100,7 @@ public class MatchController {
 
     // 해당 API는 단일 페이지 데이터만 동기화함
     /*@GetMapping("/sync")
+    @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
     public Mono<ResponseEntity<List<MatchDto>>> syncAllMatchesByLeagueIdFromApi() {
         // LCK, LCK CL, FIRST STAND, MSI, WORLDS
         List<String> leagueIds = List.of(

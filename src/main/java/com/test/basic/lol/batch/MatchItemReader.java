@@ -16,7 +16,7 @@ public class MatchItemReader implements ItemReader<MatchEventWithLeague> {
     private static final Logger logger = LoggerFactory.getLogger(MatchItemReader.class);
 
     private final String leagueId;
-    private final int targetYear;
+    private final String targetYear;
     private final MatchApiService matchApiService;
     private final LeagueService leagueService;
 
@@ -28,7 +28,7 @@ public class MatchItemReader implements ItemReader<MatchEventWithLeague> {
     private League league;
 
 
-    public MatchItemReader(String leagueId, int targetYear,
+    public MatchItemReader(String leagueId, String targetYear,
                            MatchApiService matchApiService,
                            LeagueService leagueService) {
         this.leagueId = leagueId;
@@ -88,7 +88,7 @@ public class MatchItemReader implements ItemReader<MatchEventWithLeague> {
                     .filter(e -> e.getStartTime() != null)
                     .filter(e -> OffsetDateTime.parse(e.getStartTime())
                                 .atZoneSameInstant(ZoneId.of("Asia/Seoul"))
-                                .toLocalDateTime().getYear() >= targetYear)
+                                .toLocalDateTime().getYear() >= Integer.parseInt(targetYear))
                     .toList();
 
             logger.debug("[Thread: {}] 파티션 {} - MatchIds: {}",

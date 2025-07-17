@@ -1,31 +1,30 @@
 package com.test.basic.lol.api.esports;
 
-import com.test.basic.lol.domain.league.LeagueDto;
-import com.test.basic.lol.domain.league.LeagueResponse;
 import com.test.basic.lol.api.esports.dto.MatchDetailResponse;
 import com.test.basic.lol.api.esports.dto.MatchScheduleResponse;
 import com.test.basic.lol.api.esports.dto.StandingsResponse;
+import com.test.basic.lol.domain.league.LeagueDto;
+import com.test.basic.lol.domain.league.LeagueResponse;
 import com.test.basic.lol.domain.tournament.TournamentDto;
 import com.test.basic.lol.domain.tournament.TournamentResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.List;
 
-// TODO
-//  - response를 DTO로 받는 것 고려하기
-//  - LeagueId로 경기 일정 조회 (LCK CUP, LCK, MSI, EWC, WORLDS)
-//  - 연도별 경기 일정 배치 처리 + DB 저장(2022~)
 
 @Component
+@Slf4j
 public class LolEsportsApiClient {
 
     private final WebClient webClient;
-    private static final String HL = "ko-KR";
 
+    private static final String HL = "ko-KR";
 //    LCK 리그ID: 98767991310872058
 //    https://esports-api.lolesports.com/persisted/gw/getSchedule?hl=ko-KR&leagueId=98767991302996019
 
@@ -116,7 +115,8 @@ public class LolEsportsApiClient {
                     return uriBuilder.build();
                 })
                 .retrieve()
-                .bodyToMono(MatchScheduleResponse.class);
+                .bodyToMono(MatchScheduleResponse.class)
+                .timeout(Duration.ofSeconds(30));
     }
 
     /*public Mono<String> fetchScheduleJsonByLeagueIdAndPageToken(String leagueId, String finalToken) {

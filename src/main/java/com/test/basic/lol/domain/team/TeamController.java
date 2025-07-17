@@ -53,7 +53,7 @@ public class TeamController {
 
 
     @PostMapping("/sync")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
     @SecurityRequirement(name = "03_CSRF")
     @SecurityRequirement(name = "04_IgnoreCSRF")
     @Operation(summary = "LOL 팀 정보 수동 동기화", description = "LOL 팀 정보 수동 동기화 API")

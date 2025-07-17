@@ -35,7 +35,7 @@ public class BatchJobService {
 
     @Async("limitedTaskExecutor") // 명시적으로 TaskExecutor 지정
     public void executeMatchSyncJob(String year) {
-        String lockKey = "batch:sync-match:" + year;  // 연도별 락
+        String lockKey = "batch:sync-match";
         RLock matchSyncLock = redissonClient.getLock(lockKey);
 
         try {
@@ -60,7 +60,7 @@ public class BatchJobService {
             sw.start();
 
             JobParameters params = new JobParametersBuilder()
-                    .addLong("targetYear", Long.valueOf(year))
+                    .addString("targetYear", year)
                     .addLong("time", System.currentTimeMillis())
                     .addString("uuid", java.util.UUID.randomUUID().toString()) // 고유성 보장
                     .addString("thread", Thread.currentThread().getName()) // 디버깅용

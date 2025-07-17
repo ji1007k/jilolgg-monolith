@@ -3,6 +3,7 @@ package com.test.basic.lol.domain.league;
 import com.test.basic.lol.api.esports.SyncLolEsportsApiService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,6 +46,7 @@ public class LeagueController {
     }
 
     @GetMapping("/sync")
+    @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
     public ResponseEntity<List<LeagueDto>> getAllLeaguesFromApi() {
         syncLolEsportsApiService.syncLeaguesFromLolEsportsApi();
         return ResponseEntity.ok(leagueService.getAllLeagues());

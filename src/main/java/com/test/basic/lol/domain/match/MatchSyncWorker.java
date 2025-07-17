@@ -44,7 +44,8 @@ public class MatchSyncWorker {
 
         if (response == null || response.getData() == null || response.getData().getEvent() == null) {
             log.warn("Data or event of Match [{}] is empty. {} ", matchId, response);
-            throw new RuntimeException("No match detail found for ID: " + matchId);
+//            throw new RuntimeException("No match detail found for ID: " + matchId);
+            return;
         }
 
         // 응답 결과와 db 데이터 비교

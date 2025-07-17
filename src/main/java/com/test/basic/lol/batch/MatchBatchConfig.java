@@ -130,7 +130,7 @@ public class MatchBatchConfig {
     @StepScope
     public MatchItemReader matchItemReader(
             @Value("#{stepExecutionContext['leagueId']}") String leagueId,
-            @Value("#{stepExecutionContext['targetYear']}") Integer targetYear,
+            @Value("#{stepExecutionContext['targetYear']}") String targetYear,
             MatchApiService matchApiService,
             LeagueService leagueService) {
 
@@ -138,17 +138,19 @@ public class MatchBatchConfig {
         
         return new MatchItemReader(
                 leagueId,
-                targetYear != null ? targetYear : Year.now().getValue(),
+                targetYear,
                 matchApiService,
                 leagueService);
     }
 
     @Bean
+    @StepScope
     public MatchItemProcessor matchItemProcessor() {
         return new MatchItemProcessor();
     }
 
     @Bean
+    @StepScope
     public MatchItemWriter matchItemWriter(
             MatchService matchService,
             TeamService teamService,

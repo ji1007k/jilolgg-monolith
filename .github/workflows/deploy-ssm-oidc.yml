@@ -62,13 +62,17 @@ jobs:
           
           # 현재 이미지 백업
           echo "현재 이미지 백업..."
+          # 컨테이너 존재 여부 확인
           if sudo docker ps -a --format '{{.Names}}' | grep -wq "basic-be"; then
-            BACKUP_IMAGE=$(sudo docker inspect basic-be --format='{{.Config.Image}}')
+            echo "컨테이너 basic-be 존재. 이미지 백업 시도..."
+            BACKUP_IMAGE=$(sudo docker inspect basic-be --format='{{.Config.Image}}' 2>/dev/null || echo "<inspect 실패>")
           else
-            echo "basic-be 컨테이너가 존재하지 않습니다. 백업 생략"
-            BACKUP_IMAGE=""
+            echo "basic-be 컨테이너 없음. 백업 생략"
+            BACKUP_IMAGE="<없음>"
           fi
-          echo "백업된 이미지: $BACKUP_IMAGE"
+          
+          # 로그가 너무 길어지지 않도록 echo는 제한
+          echo "백업된 이미지: ${BACKUP_IMAGE:0:80}..."
           
           # 새 버전 배포
           echo "새 버전 배포..."

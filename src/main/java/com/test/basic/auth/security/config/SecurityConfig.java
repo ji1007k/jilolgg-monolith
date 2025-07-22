@@ -115,7 +115,11 @@ public class SecurityConfig {
 						// post
 						.requestMatchers(HttpMethod.GET, "/posts").permitAll()
 						.requestMatchers(HttpMethod.POST, "/posts", "/posts/**").authenticated()
-						.requestMatchers("/mypage/manager").hasAuthority("SCOPE_ADMIN")  // 특정 권한 필요
+						// 특정 권한 필요
+						.requestMatchers(
+								"/mypage/manager",
+								"/actuator/**"
+						).hasAuthority("SCOPE_ADMIN")
 						.anyRequest().authenticated()  // 나머지 요청은 인증 필요
 				)
 

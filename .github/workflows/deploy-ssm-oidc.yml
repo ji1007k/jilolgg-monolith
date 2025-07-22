@@ -40,7 +40,7 @@ jobs:
           # 멀티라인 스크립트를 변수로 생성
           DEPLOY_SCRIPT=$(cat << 'SCRIPT_EOF'
           #!/bin/bash
-          set -e
+          set +e
           
           echo "=========================================="
           echo "Spring Boot 배포 시작"

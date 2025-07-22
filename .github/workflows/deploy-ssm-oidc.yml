@@ -94,7 +94,7 @@ jobs:
           
           for i in {1..6}; do
               echo "Health Check 시도 $i/6..."
-              if curl -f http://localhost/jikimi/api/actuator/health --connect-timeout 10 --max-time 15; then
+              if curl -u admin:admin -f http://localhost:8080/actuator/health --connect-timeout 10 --max-time 15; then
                   echo "Health Check 성공!"
                   HEALTH_CHECK_PASSED=true
                   break

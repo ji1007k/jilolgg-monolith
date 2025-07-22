@@ -19,6 +19,17 @@ spring:
     cache: false
     check-template-location: true
 
+# actuator 모니터링
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env,configprops,beans,loggers,threaddump,mappings
+  endpoint:
+    health:
+      show-details: when-authorized
+
+
 # logging 설정
 logging:
   config: classpath:logback-spring.xml

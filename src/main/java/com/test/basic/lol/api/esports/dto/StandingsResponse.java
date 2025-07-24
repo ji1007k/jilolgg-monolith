@@ -1,5 +1,6 @@
 package com.test.basic.lol.api.esports.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -54,19 +55,13 @@ public class StandingsResponse {
     @Setter
     @NoArgsConstructor
     public static class MatchDto {
-        @JsonProperty("id")
+        @JsonAlias({"id", "matchId"})
         public String matchId;
         public String state;   // unstarted, inProgress, completed, unneeded
 
         public List<String> previousMatchIds;
         public List<String> flags; // hasVod,
         public List<TeamDto> teams;
-
-        // JSON 에서 받을 땐(역직렬화 시) id로 사용
-        @JsonProperty("id")
-        public void setMatchId(String id) {
-            this.matchId = id;
-        }
 
         // 프론트에 데이터 전송할 땐 matchId 사용
         @JsonProperty("matchId")
@@ -79,9 +74,8 @@ public class StandingsResponse {
     @Setter
     @NoArgsConstructor
     public static class TeamDto {
-        // WRITE_ONLY: JSON에서 받을 때만 id로 사용 (역직렬화)
-        @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-        public String teamId;
+        @JsonAlias({"id", "teamId"})
+        private String teamId;  // JSON 입력과 출력을 모두 "id" 필드와 매핑
         public String slug;
         public String name;
         public String code;
@@ -90,10 +84,10 @@ public class StandingsResponse {
         public ResultDto result;    // matches
         public RecordDto record;    // rankings
 
-        // 프론트에 데이터 전송할 땐 teamId 사용
-        @JsonProperty("id")
-        public void setTeamId(String id) {
-            this.teamId = id;
+        // JSON 출력 시 필드명 변경
+        @JsonProperty("teamId")
+        public String getTeamId() {
+            return teamId;
         }
     }
 

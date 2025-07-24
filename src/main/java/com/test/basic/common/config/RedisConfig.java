@@ -6,9 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.test.basic.chat.RedisMessageListener;
+import com.test.basic.lol.api.esports.dto.StandingsResponse;
 import com.test.basic.lol.domain.league.LeagueDto;
 import com.test.basic.lol.domain.match.MatchDto;
-import com.test.basic.lol.domain.standings.dto.StandingsDto;
 import com.test.basic.lol.domain.team.TeamDto;
 import com.test.basic.lol.domain.tournament.TournamentDto;
 import org.springframework.cache.CacheManager;
@@ -70,7 +70,7 @@ public class RedisConfig {
         ObjectMapper objectMapper = createCacheObjectMapper();
 
         // 순위표 캐시 30분
-        JavaType standingsListType = objectMapper.getTypeFactory().constructCollectionType(List.class, StandingsDto.class);
+        JavaType standingsListType = objectMapper.getTypeFactory().constructCollectionType(List.class, StandingsResponse.StandingsData.class);
         configs.put("standings", RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofMinutes(30))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair

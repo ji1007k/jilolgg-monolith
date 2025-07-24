@@ -1,5 +1,5 @@
 
-# JIKIM.GG
+# JILoL.gg
 
 > League of Legends(LoL) e스포츠 경기 일정 정보를 제공하는 웹 서비스  
 > [서비스 바로가기](https://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com/jikimi)
@@ -8,7 +8,7 @@
 
 ## 1. 프로젝트 개요
 
-JIKIM.GG는 LoL Esports API를 활용해 리그, 팀, 경기 정보를 수집하고 실시간으로 제공하는 웹 기반 e스포츠 정보 서비스입니다.  
+JILoL.gg는 LoL Esports API를 활용해 리그, 팀, 경기 정보를 수집하고 실시간으로 제공하는 웹 기반 e스포츠 정보 서비스입니다.  
 또한, JWT 인증, 실시간 채팅, 팀 즐겨찾기 등 사용자 편의 기능을 웹 및 모바일 환경에서 제공합니다.  
 실시간 데이터 처리, 인증/보안 등 다양한 백엔드 기술 학습 목적을 포함합니다.
 

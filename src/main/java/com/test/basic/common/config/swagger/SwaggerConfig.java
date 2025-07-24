@@ -32,11 +32,11 @@ public class SwaggerConfig {
     @Bean
     public OpenAPI customOpenAPI() {
         Info info = new Info()
-                .title("JIKIM.GG API")
+                .title("JILoL.gg API")
                 .version("1.0.0")
-                .description("Spring Boot를 이용한 Demo 웹 애플리케이션 API 문서입니다.")
+                .description("Spring Boot를 이용한 Demo 웹 애플리케이션 API 문서")
                 .contact(new Contact()
-                        .name("JIKIM.GG")
+                        .name("JILoL.gg")
                         .email("ji1007k@gmail.com")
                         .url("https://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com/jikimi")
                 );

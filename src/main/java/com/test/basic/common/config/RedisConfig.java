@@ -8,7 +8,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.test.basic.chat.RedisMessageListener;
 import com.test.basic.lol.domain.league.LeagueDto;
 import com.test.basic.lol.domain.match.MatchDto;
-import com.test.basic.lol.domain.matchhistory.SummonerDto;
 import com.test.basic.lol.domain.standings.dto.StandingsDto;
 import com.test.basic.lol.domain.team.TeamDto;
 import com.test.basic.lol.domain.tournament.TournamentDto;
@@ -122,6 +121,7 @@ public class RedisConfig {
         return redisTemplate;
     }
 
+    // TODO 채널 키값에서 roomId 제거 및 단일 채널에서 roomId로 방구분하기
     // Redis Pub/Sub 메시지를 처리하는 리스너를 등록
     // 채팅, 알림, 실시간 이벤트 같은 "메시지 브로드캐스트"에만 사용
     @Bean
@@ -149,7 +149,6 @@ public class RedisConfig {
         return new ChannelTopic("chat:room:1");
     }
 
-
     // [2] 롤 경기일정용 ==================================================================
     // [2-1] MatchDto 직렬화용 RedisTemplate 등록
     // - pub/sub를 사용하지 않고 get/set과 같은 단순 데이터 저장/조회만 하면 되므로 리스너 등록 불필요
@@ -158,10 +157,12 @@ public class RedisConfig {
         RedisTemplate<String, List<MatchDto>> template = new RedisTemplate<>();
         template.setConnectionFactory(factory);
         template.setKeySerializer(new StringRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
 
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         // 직렬화 대상 데이터 타입 명시
         JavaType type = objectMapper.getTypeFactory().constructCollectionType(List.class, MatchDto.class);
@@ -170,6 +171,19 @@ public class RedisConfig {
         template.setValueSerializer(serializer);
         return template;
     }
+
+
+    // TODO [3] 롤 전적검색용 ==================================================================
+    /*@Bean
+    public RedisTemplate<String, SummonerDto> summonerRedisTemplate(RedisConnectionFactory factory) {
+        RedisTemplate<String, SummonerDto> template = new RedisTemplate<>();
+        template.setConnectionFactory(factory);
+        // RedisTemplate 설정 시 key serializer가 없으면 key가 바이트로 직렬화됨 → �� 바이트 에러 발생
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new Jackson2JsonRedisSerializer<>(SummonerDto.class));
+        return template;
+    }*/
 
 
    /* @Bean

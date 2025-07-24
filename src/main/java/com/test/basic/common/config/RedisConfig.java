@@ -70,11 +70,10 @@ public class RedisConfig {
         ObjectMapper objectMapper = createCacheObjectMapper();
 
         // 순위표 캐시 30분
-        JavaType standingsListType = objectMapper.getTypeFactory().constructCollectionType(List.class, StandingsResponse.StandingsData.class);
         configs.put("standings", RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofMinutes(30))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair
-                        .fromSerializer(new Jackson2JsonRedisSerializer<>(objectMapper, standingsListType))));
+                        .fromSerializer(new Jackson2JsonRedisSerializer<>(objectMapper, StandingsResponse.StandingsData.class))));
 
         // 리그, 토너먼트 캐시 3일
         JavaType leagueListType = objectMapper.getTypeFactory().constructCollectionType(List.class, LeagueDto.class);

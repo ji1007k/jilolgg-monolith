@@ -10,6 +10,7 @@ import com.test.basic.lol.domain.tournament.Tournament;
 import com.test.basic.lol.domain.tournament.TournamentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -59,6 +60,7 @@ public class SyncLolEsportsApiService {
         }
     }
 
+    @CacheEvict(value = "tournaments", allEntries = true)
     public void syncTournaments() {
         List<League> savedLeagues = leagueRepository.findAll();
 

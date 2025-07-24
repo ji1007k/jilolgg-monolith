@@ -1,5 +1,6 @@
 package com.test.basic.lol.domain.league;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class LeagueService {
         this.leagueMapper = leagueMapper;
     }
 
+    @Cacheable("leagues")
     public List<LeagueDto> getAllLeagues() {
         return leagueRepository.findAll().stream()
                 .map(leagueMapper::entityToLeagueDto)

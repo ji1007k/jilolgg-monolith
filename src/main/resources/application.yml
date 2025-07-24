@@ -7,6 +7,13 @@ spring:
     # 환경변수로 오버라이드 가능
     default: ${SPRING_PROFILES_ACTIVE:prod}
 
+  # 캐시 설정
+  cache:
+    type: redis
+  autoconfigure:
+    exclude:
+      - org.redisson.spring.starter.RedissonAutoConfigurationV2  # 캐시 자동설정만 비활성화
+
   # 정적 파일 설정
   mvc:
     static-path-pattern: /**
@@ -40,6 +47,7 @@ logging:
     org.hibernate.engine.internal.StatefulPersistenceContext: WARN  # 1차 캐시 관련 디버깅 로그
     org.springframework.orm.jpa: ERROR
 
+
 jwt:
   private:
     key: classpath:jwt/app.key
@@ -62,6 +70,7 @@ cookie:
   secure: true
   same-site: None
 
+# Swagger OpenAPI
 springdoc:
   swagger-ui:
     csrf:

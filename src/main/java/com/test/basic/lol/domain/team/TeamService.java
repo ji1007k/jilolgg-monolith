@@ -2,16 +2,14 @@ package com.test.basic.lol.domain.team;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.test.basic.lol.api.esports.LolEsportsApiClient;
-import com.test.basic.lol.domain.league.League;
 import com.test.basic.lol.domain.league.LeagueRepository;
 import com.test.basic.lol.domain.matchteam.MatchTeamService;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 // TODO 외부 API 데이터 바로 가져오는 로직 분리
@@ -40,29 +38,44 @@ public class TeamService {
         this.matchTeamService = matchTeamService;
     }
 
+    @Cacheable("teams")
     public List<Team> getAllTeamsFromDB() {
         return teamRepository.findAll();
     }
 
+    @Cacheable(value = "teams", key = "#leagueId + '_' + #slugs")
     public List<TeamDto> getTeamsFromDB(String leagueId, List<String> slugs) {
-        List<Team> teams;
+        List<Team> teams = getTeamsByCondition(leagueId, slugs);
+        return teams.stream().map(teamMapper::teamToTeamDto).toList();
+    }
 
-        // 둘 다 null 또는 비어있으면 전체 조회
-        if ((leagueId == null || leagueId.isBlank()) && (slugs == null || slugs.isEmpty())) {
-            teams = teamRepository.findTeamsWithMatches();
-        } else {
-            Optional<League> league = leagueRepository.findByLeagueId(leagueId);
-
-            if (league.get().getRegion().equals("국제 대회")) {
-                // 국제 대회 경기 일정이 있는 팀 목록 조회
-                List<String> teamIds = matchTeamService.findTeamIdsByLeagueId(leagueId);
-                teams = teamRepository.findByTeamIdIn(teamIds);
-            } else {
-                teams = teamRepository.findTeamsWithMatchesFiltered(leagueId, slugs);
-            }
+    public List<Team> getTeamsByCondition(String leagueId, List<String> slugs) {
+        // 전체 조회 (필터x)
+        if (isEmptyCondition(leagueId, slugs)) {
+            return teamRepository.findTeamsWithMatches();
         }
 
-        return teams.stream().map(teamMapper::teamToTeamDto).toList();
+        // 국제 대회 처리
+        if (isInternationalLeague(leagueId)) {
+            // 국제 대회 경기 일정이 있는 팀 목록 조회
+            List<String> teamIds = matchTeamService.findTeamIdsByLeagueId(leagueId);
+            return teamRepository.findByTeamIdIn(teamIds);
+        }
+
+        return teamRepository.findTeamsWithMatchesFiltered(leagueId, slugs);
+    }
+
+    private boolean isEmptyCondition(String leagueId, List<String> slugs) {
+        return (leagueId == null || leagueId.isBlank()) &&
+                (slugs == null || slugs.isEmpty());
+    }
+
+    private boolean isInternationalLeague(String leagueId) {
+        if (leagueId == null || leagueId.isBlank()) return false;
+
+        return leagueRepository.findByLeagueId(leagueId)
+                .map(league -> "국제 대회".equals(league.getRegion()))
+                .orElse(false);
     }
 
     public Team getTeamBySlugFromDB(String slug) {
@@ -99,16 +112,24 @@ public class TeamService {
         return teamRepository.findByNameIn(teamNames);
     }
 
-    public List<Team> getTeamsByCode(Set<String> duplicateCodes) {
+    @Cacheable(value = "teams", key = "#leagueId")
+    public List<TeamDto> getTeamsByLeagueId(String leagueId) {
+        return teamRepository.findByLeague_LeagueId(leagueId)
+                .stream()
+                .map(teamMapper::teamToTeamDto)
+                .toList();
+    }
+
+
+    // TODO 삭제 또는 리팩토링 =======================================================
+
+   /* public List<Team> getTeamsByCode(Set<String> duplicateCodes) {
         return teamRepository.findByCodeIn(duplicateCodes);
     }
 
     public Team getTeamByName(String teamName) {
         return teamRepository.findByName("TBD").orElse(null);
-    }
-
-
-    // TODO 삭제 또는 리팩토링 =======================================================
+    }*/
 
     // FIXME API 응답 데이터 DTO 따로 생성
     /*public TeamSyncDto getTeamBySlugFromExternalApi(String slug) {

@@ -10,6 +10,7 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
@@ -49,6 +50,7 @@ public class SyncTeamService {
     // RLock은 자동적으로 락 타임아웃을 처리. 
     // 락을 획득한 스레드가 락을 해제하지 않더라도, 일정 시간이 지나면 자동으로 락을 해제함
     @Transactional
+    @CacheEvict(value = "teams", allEntries = true)
     public String syncTeamsFromLolEsportsApi() {
         lock = redissonClient.getLock("sync-teams-lock");
         boolean isLocked = false;

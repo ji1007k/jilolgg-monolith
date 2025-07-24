@@ -1,13 +1,24 @@
 package com.test.basic.common.config;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.test.basic.chat.RedisMessageListener;
+import com.test.basic.lol.domain.league.LeagueDto;
 import com.test.basic.lol.domain.match.MatchDto;
+import com.test.basic.lol.domain.matchhistory.SummonerDto;
+import com.test.basic.lol.domain.standings.dto.StandingsDto;
+import com.test.basic.lol.domain.team.TeamDto;
+import com.test.basic.lol.domain.tournament.TournamentDto;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -15,11 +26,16 @@ import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Configuration
+@EnableCaching
 public class RedisConfig {
 
     private final StringRedisTemplate redisTemplate;    // 문자열(String) 데이터만 저장
@@ -29,6 +45,73 @@ public class RedisConfig {
         this.redisTemplate = redisTemplate;
         this.redisMessageListener = redisMessageListener;
     }
+
+    /**
+     * Spring Cache 전용 ObjectMapper 설정
+     * - DTO 전용으로 사용하여 순환 참조 방지
+     * - 타입 정보 저장 비활성화로 보안 및 호환성 개선
+     */
+    private ObjectMapper createCacheObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        // activateDefaultTyping 제거 - 보안 및 호환성 문제 해결
+        return mapper;
+    }
+
+    /**
+     * Spring Data Redis 캐시 매니저 (단일 캐시 매니저 사용)
+     * 각 캐시별 타입 지정된 직렬화 설정
+     */
+    @Bean
+    @Primary  // Redisson 캐시 매니저보다 우선 사용
+    public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+        Map<String, RedisCacheConfiguration> configs = new HashMap<>();
+
+        ObjectMapper objectMapper = createCacheObjectMapper();
+
+        // 순위표 캐시 30분
+        JavaType standingsListType = objectMapper.getTypeFactory().constructCollectionType(List.class, StandingsDto.class);
+        configs.put("standings", RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(30))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair
+                        .fromSerializer(new Jackson2JsonRedisSerializer<>(objectMapper, standingsListType))));
+
+        // 리그, 토너먼트 캐시 3일
+        JavaType leagueListType = objectMapper.getTypeFactory().constructCollectionType(List.class, LeagueDto.class);
+        Jackson2JsonRedisSerializer<Object> leagueSerializer = new Jackson2JsonRedisSerializer<>(objectMapper, leagueListType);
+        configs.put("leagues", RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofDays(3))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair
+                        .fromSerializer(leagueSerializer)));
+
+        JavaType tournamentListType = objectMapper.getTypeFactory().constructCollectionType(List.class, TournamentDto.class);
+        configs.put("tournaments", RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofDays(3))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair
+                        .fromSerializer(new Jackson2JsonRedisSerializer<>(objectMapper, tournamentListType))));
+
+        // 팀 캐시 7일
+        JavaType teamListType = objectMapper.getTypeFactory().constructCollectionType(List.class, TeamDto.class);
+        configs.put("teams", RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofDays(7))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair
+                        .fromSerializer(new Jackson2JsonRedisSerializer<>(objectMapper, teamListType))));
+
+        return RedisCacheManager.builder(connectionFactory)
+                // 기본 30분 TTL
+                .cacheDefaults(RedisCacheConfiguration.defaultCacheConfig()
+                        .entryTtl(Duration.ofMinutes(30))
+                        // Redis에 저장할 객체 직렬화 설정
+                        .serializeKeysWith(RedisSerializationContext.SerializationPair
+                                .fromSerializer(new StringRedisSerializer()))   // 캐시 키를 문자열로 저장. 예: "teams::league1_[slug1,slug2]"
+                        .serializeValuesWith(RedisSerializationContext.SerializationPair
+                                .fromSerializer(new Jackson2JsonRedisSerializer<>(createCacheObjectMapper(), Object.class)))  // 캐시 값을 JSON으로 저장. 예: [{"teamId":"1","name":"팀A"}, {"teamId":"2","name":"팀B"}]
+                )
+                .withInitialCacheConfigurations(configs)
+                .build();
+    }
+
 
     // [1] 채팅용 ==================================================================
     // [1-1] 채팅 메시지 문자열 저장용 레디스 템플릿 등록

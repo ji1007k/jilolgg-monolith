@@ -23,7 +23,7 @@ public class SyncMatchService {
 
     private final RedissonClient redissonClient;
     private RLock lock;
-    private String LOCK_KEY = "sync-matches-lock";
+    private final String LOCK_KEY = "sync-matches-lock";
 
     @PersistenceContext
     private EntityManager entityManager;

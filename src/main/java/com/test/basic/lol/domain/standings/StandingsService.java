@@ -3,6 +3,7 @@ package com.test.basic.lol.domain.standings;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.test.basic.lol.api.esports.LolEsportsApiClient;
 import com.test.basic.lol.api.esports.dto.StandingsResponse;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -23,6 +24,7 @@ public class StandingsService {
         this.objectMapper = objectMapper;
     }
 
+    @Cacheable(value = "standings", key = "#tournamentId")
     public Mono<StandingsResponse.StandingsData> getStandingsByTournamentIdFromApi(String tournamentId) {
         return lolEsportsApiClient
                 .fetchStandings(tournamentId)

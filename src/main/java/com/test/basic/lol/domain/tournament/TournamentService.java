@@ -3,6 +3,7 @@ package com.test.basic.lol.domain.tournament;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.test.basic.lol.api.esports.LolEsportsApiClient;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -61,6 +62,7 @@ public class TournamentService {
 
     }*/
 
+    @Cacheable("tournaments")
     public List<TournamentDto> getAllTournaments() {
         return tournamentRepository.findAll()
                 .stream()
@@ -73,6 +75,7 @@ public class TournamentService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "tournaments", key = "#leagueId + '_' + #targetYear")
     public List<TournamentDto> getTournamentsByLeagueIdAndYear(String leagueId, String targetYear) {
         LocalDate today = LocalDate.now();
 

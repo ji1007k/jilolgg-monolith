@@ -7,6 +7,7 @@ import com.test.basic.lol.domain.tournament.Tournament;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
 import java.util.List;
 
@@ -40,9 +41,11 @@ public class League {
     private String displayStatus;
 
     @OneToMany(mappedBy = "league") // 연관관계 엔티티에서 사용중인 필드명
+    @JsonIgnore  // JSON 직렬화에서 제외
     private List<Tournament> tournaments;
 
     @OneToMany(mappedBy = "league")
+    @JsonIgnore  // JSON 직렬화에서 제외
     private List<Match> matches;
 
     public League(LeagueDto leagueDto) {

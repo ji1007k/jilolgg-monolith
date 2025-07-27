@@ -38,6 +38,7 @@ public class CustomJwtFilter extends OncePerRequestFilter {
 
         this.authoritiesConverter = new JwtGrantedAuthoritiesConverter();
         this.authoritiesConverter.setAuthorityPrefix("");    // "SCOPE_" 자동 추가 방지
+        this.authoritiesConverter.setAuthoritiesClaimName("authorities");  // authorities 클레임 사용
     }
 
     @Override

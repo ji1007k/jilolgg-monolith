@@ -73,7 +73,7 @@ public class JwtTokenProvider {
                 .subject(userId)
                 .claim("email", email)
                 .claim("username", username)
-                .claim("scope", scope) // FIXME: 필요한 경우 제외
+                .claim("authorities", scope) // scope 대신 authorities 사용
                 .build();
 
         return this.encoder.encode(JwtEncoderParameters.from(claims));

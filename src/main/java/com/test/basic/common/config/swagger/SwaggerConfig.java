@@ -77,7 +77,7 @@ public class SwaggerConfig {
                                 .url("https://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com/api")
                                 .description("Production Server"),
                         new Server()
-                                .url("http://localhost:8080")
+                                .url("https://localhost:8080")
                                 .description("Local Server")
                 ));
     }

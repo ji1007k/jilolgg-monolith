@@ -10,6 +10,7 @@ import com.test.basic.lol.domain.match.MatchDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -91,16 +92,17 @@ public class RedisTemplateConfig {
 
 
     // TODO [3] 롤 전적검색용 ==================================================================
-    /*@Bean
-    public RedisTemplate<String, SummonerDto> summonerRedisTemplate(RedisConnectionFactory factory) {
-        RedisTemplate<String, SummonerDto> template = new RedisTemplate<>();
+    @Bean
+    @Profile({"dev", "test"})
+    public RedisTemplate<String, com.test.basic.lol.domain.matchhistory.SummonerDto> summonerRedisTemplate(RedisConnectionFactory factory) {
+        RedisTemplate<String, com.test.basic.lol.domain.matchhistory.SummonerDto> template = new RedisTemplate<>();
         template.setConnectionFactory(factory);
         // RedisTemplate 설정 시 key serializer가 없으면 key가 바이트로 직렬화됨 → �� 바이트 에러 발생
         template.setKeySerializer(new StringRedisSerializer());
         template.setHashKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new Jackson2JsonRedisSerializer<>(SummonerDto.class));
+        template.setValueSerializer(new Jackson2JsonRedisSerializer<>(com.test.basic.lol.domain.matchhistory.SummonerDto.class));
         return template;
-    }*/
+    }
 
 
    /* @Bean

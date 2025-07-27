@@ -76,7 +76,7 @@ public class UserIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        String baseUrl = "http://localhost:" + port;
+        String baseUrl = "https://localhost:" + port;
         logger.info(baseUrl);
 
         user = new UserEntity();

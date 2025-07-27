@@ -88,7 +88,7 @@ public class SecurityConfig {
 		// @formatter:off
 		http
 				.authorizeHttpRequests((authorize) -> authorize
-						.requestMatchers("/", "/favicon.ico").permitAll()
+						.requestMatchers(HttpMethod.OPTIONS, "/", "/favicon.ico").permitAll()
 						// 정적 리소스
 						.requestMatchers( "/css/**", "/js/**", "/images/**", "/html/**").permitAll()
 						// Swagger

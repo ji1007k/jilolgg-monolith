@@ -8,6 +8,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.util.List;
 
@@ -42,6 +43,7 @@ public class Team {
 
     @ManyToOne
     @JoinColumn(name = "league_id", referencedColumnName = "league_id", nullable = false)
+    @ToString.Exclude  // toString에서 제외 (순환 참조 방지)
     private League league;
 
     // 기본값: LAZY. 연관 관계 테이블 데이터 필요할 때 조회

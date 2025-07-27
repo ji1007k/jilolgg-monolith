@@ -92,7 +92,7 @@ public class RedisTemplateConfig {
 
 
     // TODO [3] 롤 전적검색용 ==================================================================
-    @Bean
+    /*@Bean
     @Profile({"dev", "test"})
     public RedisTemplate<String, com.test.basic.lol.domain.matchhistory.SummonerDto> summonerRedisTemplate(RedisConnectionFactory factory) {
         RedisTemplate<String, com.test.basic.lol.domain.matchhistory.SummonerDto> template = new RedisTemplate<>();
@@ -102,7 +102,7 @@ public class RedisTemplateConfig {
         template.setHashKeySerializer(new StringRedisSerializer());
         template.setValueSerializer(new Jackson2JsonRedisSerializer<>(com.test.basic.lol.domain.matchhistory.SummonerDto.class));
         return template;
-    }
+    }*/
 
 
    /* @Bean

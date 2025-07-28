@@ -30,20 +30,46 @@ GitHub Actions와 AWS 리소스 간 안전한 인증을 위해 GitHub OIDC(OpenI
 
 ## CI/CD 아키텍처 흐름도
 
-```plaintext
-   GitHub Repository
-    ├── Pull Request (main 브랜치 기준)
-    │     ↓
-    │  [CI] GitHub Actions
-    │     ├── Docker 이미지 빌드
-    │     └── GHCR에 push
-    │
-    └── Push to main 브랜치
-          ↓
-       [CD] GitHub Actions
-          ├── EC2에 SSM 접속
-          ├── 최신 이미지 pull
-          └── 컨테이너 재실행 (Stop → Remove → Run)
+```mermaid
+graph TB
+		PR[PR 생성]
+		Merge[main 브랜치 머지]
+    subgraph CI ["[CI] Github Actions"]
+        DockerBuild --> PushGHCR[GHCR에 이미지 푸시]
+    end
+    
+    subgraph CD ["[CD] Github Actions"]
+        OIDCAuth --> SSMConnect[AWS SSM으로 EC2 접속]
+        SSMConnect --> PullImage[GHCR에서 이미지 Pull]
+        PullImage --> RestartContainer[컨테이너 재시작]
+    end
+    
+    subgraph Storage ["GHCR"]
+        GHCR[(GitHub Container Registry)]
+    end
+    
+    subgraph Infrastructure ["☁️ AWS EC2"]
+        Frontend[Frontend<br/>Next.js]
+        Backend[Backend<br/>Spring Boot]
+    end
+     
+    PR --> DockerBuild[Docker 이미지 빌드]
+    Merge --> OIDCAuth[GitHub OIDC로 AWS 인증]
+    
+    PushGHCR --> GHCR
+    GHCR -.-> PullImage
+    RestartContainer --> Frontend
+    RestartContainer --> Backend
+    
+    classDef ciStyle fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    classDef cdStyle fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    classDef storageStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef infraStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    
+    class DockerBuild,PushGHCR ciStyle
+    class OIDCAuth,SSMConnect,PullImage,RestartContainer cdStyle
+    class GHCR storageStyle
+    class EC2 infraStyle
 ```
 
 ---

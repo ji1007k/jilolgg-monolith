@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Component
@@ -29,7 +30,7 @@ public class JwtTokenProvider {
     private static JwtDecoder decoder;
 
     private static final long ACCESS_TOKEN_EXPIRY = 3600L;
-    private static final long REFRESH_TOKEN_EXPIRY = 3600L;
+    private static final long REFRESH_TOKEN_EXPIRY = 7L;
 
 
     public JwtTokenProvider(JwtEncoder encoder, JwtDecoder decoder) throws Exception {
@@ -87,7 +88,7 @@ public class JwtTokenProvider {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("self")  // JWT를 발급한 주체
                 .issuedAt(now)    // JWT가 발급된 시간
-                .expiresAt(now.plusSeconds(REFRESH_TOKEN_EXPIRY))  // 리프레시 토큰의 만료 시간 (몇 일 뒤)
+                .expiresAt(now.plus(REFRESH_TOKEN_EXPIRY, TimeUnit.DAYS.toChronoUnit()))  // 리프레시 토큰의 만료 시간 (7일)
                 .subject(authentication.getName())   // 주체 (사용자 정보). 여기서는 jwt.getClaim("sub") 값 == userId
                 .claim("type", "refresh") // 리프레시 토큰 구분을 위한 "type" 클레임
                 .build();

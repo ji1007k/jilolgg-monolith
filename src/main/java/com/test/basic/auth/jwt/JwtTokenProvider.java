@@ -29,8 +29,8 @@ public class JwtTokenProvider {
     private static JwtEncoder encoder;
     private static JwtDecoder decoder;
 
-    private static final long ACCESS_TOKEN_EXPIRY = 3600L;
-    private static final long REFRESH_TOKEN_EXPIRY = 7L;
+    private static final long ACCESS_TOKEN_EXPIRY = 60L * 60L;   // 1시간 (초)
+    private static final long REFRESH_TOKEN_EXPIRY = 7L * 24L * 60L * 60L;  // 7일 (초)
 
 
     public JwtTokenProvider(JwtEncoder encoder, JwtDecoder decoder) throws Exception {
@@ -88,7 +88,7 @@ public class JwtTokenProvider {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("self")  // JWT를 발급한 주체
                 .issuedAt(now)    // JWT가 발급된 시간
-                .expiresAt(now.plus(REFRESH_TOKEN_EXPIRY, TimeUnit.DAYS.toChronoUnit()))  // 리프레시 토큰의 만료 시간 (7일)
+                .expiresAt(now.plusSeconds(REFRESH_TOKEN_EXPIRY))  // 리프레시 토큰의 만료 시간 (7일)
                 .subject(authentication.getName())   // 주체 (사용자 정보). 여기서는 jwt.getClaim("sub") 값 == userId
                 .claim("type", "refresh") // 리프레시 토큰 구분을 위한 "type" 클레임
                 .build();
@@ -96,10 +96,10 @@ public class JwtTokenProvider {
         // 리프레시 토큰 생성 (JWT 인코딩)
         String refreshToken = this.encoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
 
-        return makeResponseCookie("refresh_token", refreshToken);
+        return makeResponseCookie("refresh_token", refreshToken, REFRESH_TOKEN_EXPIRY);
     }
 
-    public ResponseCookie makeResponseCookie(String key, String token) {
+    public ResponseCookie makeResponseCookie(String key, String token, long maxAgeInSeconds) {
         //  **ResponseCookie**는 서버에서 클라이언트에게 응답을 보낼 때 설정되는 것이고,
         //  클라이언트는 서버로부터 받은 쿠키를 자동으로 저장하고,
         //  그 후의 요청에서 그 쿠키를 자동으로 포함시켜 서버로 보낸다
@@ -107,7 +107,7 @@ public class JwtTokenProvider {
                 .httpOnly(true)  // 클라이언트 JS에서 접근 불가능. XSS 공격이 JWT를 읽을 수 없으므로 보안성이 향상
                 .secure(isSecure)    // true: HTTPS에서만 전송. false: HTTP 허용
                 .path("/")       // 모든 경로에서 쿠키 사용 가능
-                .maxAge(ACCESS_TOKEN_EXPIRY)    // 만료 시간 설정
+                .maxAge(maxAgeInSeconds)    // 만료 시간 설정
                 .sameSite(sameSite)    // Lax: GET 메소드 요청에 한해 CORS 허용. None: 모든 요청에 CORS 허용.
                 .build();
 

@@ -1,8 +1,8 @@
 [← 이전 페이지로 돌아가기](../README.md)
 
-## 개선 및 최적화 경험
+## 문제 해결 경험
 
-1. **JWT 무상태 인증 + CSRF 방어**
+1. **JWT 무상태 인증 구현**
    - **JWT 저장 방식**: httpOnly 쿠키 사용으로 XSS 방어
    - **CSRF 방어**: SameSite + CORS 조합으로 악의적 cross-site 요청 차단
    - **CORS 환경에서 쿠키 저장 이슈 해결**:
@@ -11,9 +11,9 @@
 ---
 
 2. **데이터 갱신 및 처리 최적화**
-    - LoL Esports API 응답 구조 복잡, 검색 조건 제한 → 서버에서 정제 후 DB 저장 방식으로 전환
+    - LoL Esports API 응답 구조 복잡, 검색 조건 제한적 → 서버에서 정제 후 DB 저장 방식으로 전환
     - 스케줄러 도입으로 실시간성 개선
-      - 수동 갱신 시 Redisson 분산 락 적용 → 중복 실행 방지로 데이터 정합성 확보
+      - 수동 갱신 시 Redisson 분산 락 적용 → 중복 실행 방지
     - Spring Batch + 파티셔닝 적용 → 병렬 처리로 데이터 양이 많아질수록 갱신 소요시간 단축
 
 ---
@@ -37,12 +37,11 @@
 ---
 
 6. **배포 방식 개선**
-    - 초기: SSH 수동 배포
-    - 이후: GitHub Actions 기반 CI/CD 구성 (SSH 접속 방식)
-    - 보안 강화:
-        - Nginx에서 HTTPS 포트만 허용, 루트 접근 제한, 의심 요청 차단 설정
-        - AWS Systems Manager (SSM) 도입
-        - 최종 배포는 GitHub OIDC + SSM 접속 방식으로 전환 (SSH는 본인 IP만 허용)
+   - 초기 SSH 수동 배포의 번거로움과 Nginx access.log 다수의 해킹봇 연결 시도 확인 후 배포 방식 변경
+   - GitHub Actions 기반 CI/CD 배포 자동화 (SSH 접속 방식)
+   - AWS Systems Manager (SSM) 도입
+   - Nginx에서 HTTPS 포트만 허용, 루트 접근 제한, 의심 요청 차단 설정
+   - 최종 배포는 GitHub OIDC + SSM 접속 방식으로 전환 (SSH는 특정 IP만 허용)
 
 ---
 
@@ -52,7 +51,7 @@
       - PostgreSQL DB를 Docker → EC2 설치 → AWS RDS로 전환
       - Redis, JVM, 도커 컨테이너 메모리 제한 + 스왑 메모리 활성화
       - 싱글 코어에 맞춰 SerialGC 사용
-      - 데이터 갱신 후 영속성 컨텍스트 flush/clear
+      - 데이터 갱신 후 EntityManager flush/clear로 메모리 사용량 제어
       - JDK 도구(jps, jstat 등)를 활용해 GC 동작 상태와 메모리 사용 현황 모니터링
 
 ---

@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Component
@@ -29,6 +28,8 @@ public class JwtTokenProvider {
     private static JwtEncoder encoder;
     private static JwtDecoder decoder;
 
+    public static final String ACCESS_TOKEN_KEY = "access_token";
+    public static final String REFRESH_TOKEN_KEY = "refresh_token";
     private static final long ACCESS_TOKEN_EXPIRY = 60L * 60L;   // 1시간 (초)
     private static final long REFRESH_TOKEN_EXPIRY = 7L * 24L * 60L * 60L;  // 7일 (초)
 
@@ -38,14 +39,11 @@ public class JwtTokenProvider {
         this.decoder = decoder;
     }
 
-    // JWT 토큰 생성
-    public Jwt createToken(Authentication authentication) {
-        Jwt accessToken = makeAccessToken(authentication);
-        return accessToken;
-    }
-
+    /**
+     * jwt access 토큰 생성
+     * @param authentication
+     */
     public Jwt makeAccessToken(Authentication authentication) {
-
         Instant now = Instant.now();
 
         String scope = authentication.getAuthorities().stream()
@@ -80,8 +78,11 @@ public class JwtTokenProvider {
         return this.encoder.encode(JwtEncoderParameters.from(claims));
     }
 
-    public ResponseCookie makeRefreshToken(Authentication authentication) {
-
+    /**
+     * jwt refresh 토큰 생성
+     * @param authentication
+     */
+    public Jwt makeRefreshToken(Authentication authentication) {
         Instant now = Instant.now();
 
         // 리프레시 토큰 클레임(payload)
@@ -94,9 +95,24 @@ public class JwtTokenProvider {
                 .build();
 
         // 리프레시 토큰 생성 (JWT 인코딩)
-        String refreshToken = this.encoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+        return this.encoder.encode(JwtEncoderParameters.from(claims));
+    }
 
-        return makeResponseCookie("refresh_token", refreshToken, REFRESH_TOKEN_EXPIRY);
+    // JwtTokenProvider에 추가
+    public ResponseCookie makeAccessTokenCookie(String token) {
+        return makeResponseCookie(ACCESS_TOKEN_KEY, token);
+    }
+
+    public ResponseCookie makeRefreshTokenCookie(String token) {
+        return makeResponseCookie(REFRESH_TOKEN_KEY, token);
+    }
+
+    public ResponseCookie makeResponseCookie(String key, String token) {
+        if (key.equalsIgnoreCase(REFRESH_TOKEN_KEY)) {
+            return makeResponseCookie(key, token, REFRESH_TOKEN_EXPIRY);
+        }
+
+        return makeResponseCookie(key, token, ACCESS_TOKEN_EXPIRY);
     }
 
     public ResponseCookie makeResponseCookie(String key, String token, long maxAgeInSeconds) {

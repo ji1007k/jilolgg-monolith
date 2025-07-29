@@ -6,7 +6,6 @@ import com.test.basic.user.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,10 +76,11 @@ public class AuthController {
         // 2. 인증 성공 시 JWT 토큰 생성
         // authentication이 이미 인증된 상태라면 불필요한 authenticate() 호출을 방지
         logger.info("Login successful for username: {}", authentication.getName()); // 여기선 UserDetails의 username
-        Jwt accessToken = jwtTokenProvider.createToken(authentication); // JWT 토큰 생성
+        Jwt accessToken = jwtTokenProvider.makeAccessToken(authentication); // JWT 토큰 생성
+        Jwt refreshToken = jwtTokenProvider.makeRefreshToken(authentication);
 
-        ResponseCookie accessTokenCookie = jwtTokenProvider.makeResponseCookie("access_token", accessToken.getTokenValue());
-        ResponseCookie refreshTokenCookie = jwtTokenProvider.makeRefreshToken(authentication);
+        ResponseCookie accessTokenCookie = jwtTokenProvider.makeAccessTokenCookie(accessToken.getTokenValue());
+        ResponseCookie refreshTokenCookie = jwtTokenProvider.makeRefreshTokenCookie(refreshToken.getTokenValue());
 
         // 서버가 Set-Cookie 헤더로 보낸 쿠키는 자동으로 클라이언트 브라우저에 저장된다
         // 사용자는 쿠키를 수동으로 저장할 필요가 없으며, 브라우저가 이를 처리.
@@ -114,7 +114,7 @@ public class AuthController {
     @Operation(summary = "로그아웃", description = "로그아웃 API")
     public ResponseEntity logout(HttpServletResponse response) {
         // 세션 쿠키를 만료시켜서 삭제
-        ResponseCookie cookie = ResponseCookie.from("access_token", null)
+        ResponseCookie cookie = ResponseCookie.from(JwtTokenProvider.ACCESS_TOKEN_KEY, null)
                 .httpOnly(true)
                 .path("/")
                 .secure(isSecure)
@@ -125,7 +125,7 @@ public class AuthController {
         response.addHeader("Set-Cookie", cookie.toString());  // 쿠키를 응답에 추가하여 클라이언트에서 삭제되도록 함
 
         // refreshToken 쿠키에 대해서도 동일하게 설정
-        ResponseCookie refreshTokenCookie = ResponseCookie.from("refresh_token", null)
+        ResponseCookie refreshTokenCookie = ResponseCookie.from(JwtTokenProvider.REFRESH_TOKEN_KEY, null)
                 .httpOnly(true)
                 .path("/")
                 .secure(isSecure)
@@ -155,8 +155,9 @@ public class AuthController {
     @Operation(summary = "JWT 토큰 갱신", description = "JWT 토큰 갱신 API")
     public ResponseEntity refreshToken(Authentication authentication, HttpServletResponse response) {
         Jwt accessToken = jwtTokenProvider.makeAccessToken(authentication);
-        ResponseCookie accessTokenCookie = jwtTokenProvider.makeResponseCookie("access_token", accessToken.getTokenValue());
-        ResponseCookie refreshTokenCookie = jwtTokenProvider.makeRefreshToken(authentication);
+        Jwt refreshToken = jwtTokenProvider.makeRefreshToken(authentication);
+        ResponseCookie accessTokenCookie = jwtTokenProvider.makeAccessTokenCookie(accessToken.getTokenValue());
+        ResponseCookie refreshTokenCookie = jwtTokenProvider.makeRefreshTokenCookie(refreshToken.getTokenValue());
 
         // 서버가 Set-Cookie 헤더로 보낸 쿠키는 자동으로 클라이언트 브라우저에 저장된다
         // 사용자는 쿠키를 수동으로 저장할 필요가 없으며, 브라우저가 이를 처리.

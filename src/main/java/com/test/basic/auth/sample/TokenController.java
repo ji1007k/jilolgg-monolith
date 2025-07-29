@@ -76,7 +76,7 @@ public class TokenController {
 				.build();
 		// @formatter:on*/
 
-		return ResponseEntity.ok(jwtTokenProvider.createToken(authentication).getTokenValue());
+		return ResponseEntity.ok(jwtTokenProvider.makeAccessToken(authentication).getTokenValue());
 	}
 
 }

@@ -24,7 +24,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
@@ -42,8 +41,10 @@ public class JwtController {
 	@Value("${jwt.private.key}")
 	RSAPrivateKey priv;
 
-	private static final long ACCESS_TOKEN_EXPIRY = 3600L;
-	private static final long REFRESH_TOKEN_EXPIRY = 7L;
+	public static final String ACCESS_TOKEN_KEY = "access_token";
+	public static final String REFRESH_TOKEN_KEY = "refresh_token";
+	private static final long ACCESS_TOKEN_EXPIRY = 60L * 60L;
+	private static final long REFRESH_TOKEN_EXPIRY = 7L * 24L * 60L * 60L;
 
 	@Autowired
 	public JwtController(JwtEncoder encoder) {
@@ -53,8 +54,9 @@ public class JwtController {
 //	@PostMapping(value = { "/generate/sc" })
 	public ResponseEntity generateTokenWithSessionCookie(Authentication authentication, HttpServletResponse response) {
 		Jwt accessToken = makeAccessToken(authentication);
-		ResponseCookie accessTokenCookie = makeResponseCookie("access_token", accessToken.getTokenValue());
-		ResponseCookie refreshTokenCookie = makeRefreshToken(authentication);
+		Jwt refreshToken = makeRefreshToken(authentication);
+		ResponseCookie accessTokenCookie = makeAccessTokenCookie(accessToken.getTokenValue());
+		ResponseCookie refreshTokenCookie = makeRefreshTokenCookie(refreshToken.getTokenValue());
 
 		// 서버가 Set-Cookie 헤더로 보낸 쿠키는 자동으로 클라이언트 브라우저에 저장된다
 		// 사용자는 쿠키를 수동으로 저장할 필요가 없으며, 브라우저가 이를 처리.
@@ -81,8 +83,9 @@ public class JwtController {
 //	@PostMapping(value = {  "/refresh" })
 	public ResponseEntity refreshToken(Authentication authentication, HttpServletResponse response) {
 		Jwt accessToken = makeAccessToken(authentication);
-		ResponseCookie accessTokenCookie = makeResponseCookie("access_token", accessToken.getTokenValue());
-		ResponseCookie refreshTokenCookie = makeRefreshToken(authentication);
+		Jwt refreshToken = makeRefreshToken(authentication);
+		ResponseCookie accessTokenCookie = makeAccessTokenCookie(accessToken.getTokenValue());
+		ResponseCookie refreshTokenCookie = makeRefreshTokenCookie(refreshToken.getTokenValue());
 
 		// 서버가 Set-Cookie 헤더로 보낸 쿠키는 자동으로 클라이언트 브라우저에 저장된다
 		// 사용자는 쿠키를 수동으로 저장할 필요가 없으며, 브라우저가 이를 처리.
@@ -126,7 +129,40 @@ public class JwtController {
 		return this.encoder.encode(JwtEncoderParameters.from(claims));
 	}
 
+	public Jwt makeRefreshToken(Authentication authentication) {
+		Instant now = Instant.now();
+
+		// 리프레시 토큰 클레임(payload)
+		JwtClaimsSet claims = JwtClaimsSet.builder()
+				.issuer("self")  // JWT를 발급한 주체
+				.issuedAt(now)    // JWT가 발급된 시간
+				.expiresAt(now.plusSeconds(REFRESH_TOKEN_EXPIRY))  // 리프레시 토큰의 만료 시간 (7일)
+				.subject(authentication.getName())   // 주체 (사용자 정보)
+				.claim("type", "refresh") // 리프레시 토큰 구분을 위한 "type" 클레임
+				.build();
+
+		// 리프레시 토큰 생성 (JWT 인코딩)
+		return this.encoder.encode(JwtEncoderParameters.from(claims));
+	}
+
+	// JwtTokenProvider에 추가
+	public ResponseCookie makeAccessTokenCookie(String token) {
+		return makeResponseCookie(ACCESS_TOKEN_KEY, token);
+	}
+
+	public ResponseCookie makeRefreshTokenCookie(String token) {
+		return makeResponseCookie(REFRESH_TOKEN_KEY, token);
+	}
+
 	public ResponseCookie makeResponseCookie(String key, String token) {
+		if (key.toLowerCase().startsWith("refresh")) {
+			return makeResponseCookie(key, token, REFRESH_TOKEN_EXPIRY);
+		}
+
+		return makeResponseCookie(key, token, ACCESS_TOKEN_EXPIRY);
+	}
+
+	public ResponseCookie makeResponseCookie(String key, String token, long maxAgeInSeconds) {
 		//  **ResponseCookie**는 서버에서 클라이언트에게 응답을 보낼 때 설정되는 것이고,
 		//  클라이언트는 서버로부터 받은 쿠키를 자동으로 저장하고,
 		//  그 후의 요청에서 그 쿠키를 자동으로 포함시켜 서버로 보낸다
@@ -134,30 +170,12 @@ public class JwtController {
 				.httpOnly(true)  // 클라이언트 JS에서 접근 불가능. XSS 공격이 JWT를 읽을 수 없으므로 보안성이 향상
 				.secure(true)    // HTTPS에서만 전송
 				.path("/")       // 모든 경로에서 쿠키 사용 가능
-				.maxAge(ACCESS_TOKEN_EXPIRY)    // 만료 시간 설정
+				.maxAge(maxAgeInSeconds)    // 만료 시간 설정
 //				.sameSite("Lax")	// GET 메소드 요청에 한해 CORS 허용
 				.sameSite("None")  // CORS 환경에서 사용 가능하도록 설정 (필요하면 변경 가능)
 				.build();
 
 		return cookie;
-	}
-
-	public ResponseCookie makeRefreshToken(Authentication authentication) {
-		Instant now = Instant.now();
-
-		// 리프레시 토큰 클레임(payload)
-		JwtClaimsSet claims = JwtClaimsSet.builder()
-				.issuer("self")  // JWT를 발급한 주체
-				.issuedAt(now)    // JWT가 발급된 시간
-				.expiresAt(now.plus(REFRESH_TOKEN_EXPIRY, TimeUnit.DAYS.toChronoUnit()))  // 리프레시 토큰의 만료 시간 (7일)
-				.subject(authentication.getName())   // 주체 (사용자 정보)
-				.claim("type", "refresh") // 리프레시 토큰 구분을 위한 "type" 클레임
-				.build();
-
-		// 리프레시 토큰 생성 (JWT 인코딩)
-		String refreshToken = this.encoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
-
-		return makeResponseCookie("refresh_token", refreshToken);
 	}
 
 

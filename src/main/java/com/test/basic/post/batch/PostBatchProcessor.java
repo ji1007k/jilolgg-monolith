@@ -23,10 +23,10 @@ public class PostBatchProcessor {
     private final Queue<Post> postQueue = new ConcurrentLinkedQueue<>();
     private final PostService postService;
 
-    // 10개 모이거나 1000ms 시간 지나면 즉시 배치 처리
+    // MAX_BATCH_SIZE개 모이거나 MAX_WAIT_MS 시간 지나면 즉시 배치 처리
     // 큐에서 10개씩 처리 → JPA가 jpa:batch_size개까지 모아서 DB 전송
-    private static final int BATCH_SIZE = 10;  // 최대 큐 용량
-    private static final int MAX_WAIT_MS = 500; // 대기시간
+    private static final int MAX_BATCH_SIZE = 10;  // 최대 큐 용량
+    private static final int MAX_WAIT_MS = 30000; // 대기시간
 
     // 개별 요청을 큐에 저장
     public CompletableFuture<Post> addPostToQueue(Post post) {
@@ -34,12 +34,12 @@ public class PostBatchProcessor {
         return CompletableFuture.completedFuture(post);
     }
 
-    // 500밀리초마다 큐를 확인하여 배치 처리
+    // 일정 시간마다 큐를 확인하여 배치 처리
     @Scheduled(fixedDelay = MAX_WAIT_MS)
     public void processBatch() {
         List<Post> batch = new ArrayList<>();
 
-        for (int i=0; i<BATCH_SIZE && !postQueue.isEmpty(); i++) {
+        for (int i=0; i<MAX_BATCH_SIZE && !postQueue.isEmpty(); i++) {
             Post post = postQueue.poll();
             if (post != null) {
                 batch.add(post);

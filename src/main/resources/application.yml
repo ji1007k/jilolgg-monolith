@@ -14,6 +14,16 @@ spring:
     exclude:
       - org.redisson.spring.starter.RedissonAutoConfigurationV2  # 캐시 자동설정만 비활성화
 
+  # JPA 배치 설정
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 50    # 배치 사이즈
+        order_inserts: true # INSERT 순서 최적화
+        order_updates: true # UPDATE 순서 최적화
+        batch_versioned_data: true
+
   # 정적 파일 설정
   mvc:
     static-path-pattern: /**

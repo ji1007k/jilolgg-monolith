@@ -12,8 +12,11 @@ import java.time.LocalDateTime;
 @Entity
 @NoArgsConstructor
 public class Post {
+    // 250731 JPA 배치 INSERT 적용을 위해 ID 전략 변경
+    // allocationSize == DB 시퀀스의 INCREMENT BY 값
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "post_seq")
+    @SequenceGenerator(name = "post_seq", sequenceName = "post_sequence", allocationSize = 50, initialValue = 1)
     @Setter(AccessLevel.NONE)
     private Long id;
 

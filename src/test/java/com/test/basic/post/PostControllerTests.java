@@ -10,6 +10,7 @@ import com.test.basic.auth.jwt.JwtTokenProvider;
 import com.test.basic.auth.security.config.SecurityConfig;
 import com.test.basic.auth.security.user.CustomUserDetails;
 import com.test.basic.auth.security.user.CustomUserDetailsService;
+import com.test.basic.post.batch.PostBatchProcessor;
 import com.test.basic.user.UserService;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.AfterAll;
@@ -65,6 +66,9 @@ public class PostControllerTests {
 
     @MockBean
     private PostService postService;
+
+    @MockBean
+    private PostBatchProcessor postBatchProcessor;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -154,7 +158,7 @@ public class PostControllerTests {
 
         // 2. 추출한 CSRF 토큰을 POST 요청에 헤더로 포함시킴
         MvcResult result = mockMvc
-                .perform(post("/posts")
+                .perform(post("/posts/non-batch")
 //                        .header("X-CSRF-TOKEN", this.csrfToken) // CSRF 토큰 포함
                         .with(csrf())
                         .cookie(this.jwtTokenCookie)

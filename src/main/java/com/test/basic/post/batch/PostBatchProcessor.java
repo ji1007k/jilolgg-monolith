@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @RequiredArgsConstructor
 public class PostBatchProcessor {
     // 인메모리 큐
-    // ✅ ConcurrentLinkedQueue - 스레드 안전
+    // ✅ ConcurrentLinkedQueue - 스레드 안전한 큐
     // Lock-free 알고리즘으로 고성능 + 안전성
     private final Queue<Post> postQueue = new ConcurrentLinkedQueue<>();
     private final PostService postService;

@@ -1,5 +1,7 @@
 package com.test.basic.post;
 
+import com.test.basic.post.batch.PostBatchProcessor;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -7,12 +9,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -25,13 +29,22 @@ public class PostServiceTests {
     @Mock
     private PostRepository postRepository;
 
+    @Mock
+    private EntityManager entityManager;
+
+    @Mock
+    private PostBatchProcessor postBatchProcessor;
+
     @InjectMocks
-    private PostService postService;
+    private PostService postService;    // 테스트 대상 (Mock들을 주입받는 실제 객체)
 
     private Post post;
 
     @BeforeEach
     void setUp() {
+        // @InjectMocks는 생성자나 setter로만 주입하고, @PersistenceContext 같은 어노테이션 필드는 못 찾음.
+        // -> ReflectionTestUtils 로 강제 주입
+        ReflectionTestUtils.setField(postService, "entityManager", entityManager);
 
         post = new Post();
         post.setId(1L);
@@ -119,4 +132,30 @@ public class PostServiceTests {
         verify(postRepository, times(1)).findById(post.getId());
         verify(postRepository, times(1)).delete(post);
     }
+
+    @Test
+    void 인메모리큐에_게시글추가_성공테스트() {
+        // when
+        postService.addPostToQueue(post);
+
+        // then - postBatchProcessor.addPostToQueue 호출여부 확인
+        verify(postBatchProcessor).addPostToQueue(post);
+    }
+
+    @Test
+    void 게시글등록배치_예외발생시_저장실패() {
+        // 1. 예외 강제 발생시키기
+        when(postRepository.saveAll(any()))
+                .thenThrow(new RuntimeException("DB 저장 실패"));
+
+        // 2. 스케줄러 실행 - 예외가 발생해도 테스트는 계속 진행
+        assertThatThrownBy(() -> {
+            postService.createPostsBatch(List.of(post));
+        }).isInstanceOf(RuntimeException.class).hasMessage("DB 저장 실패");
+
+        // 3. saveAll 호출되었는지 확인
+        verify(postRepository).saveAll(any());
+        verify(entityManager, never()).flush(); // 예외로 인해 flush 실행 안됨
+    }
+
 }

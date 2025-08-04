@@ -1,10 +1,7 @@
 package com.test.basic.post;
 
-import com.test.basic.post.batch.PostBatchProcessor;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,18 +17,16 @@ import java.util.Optional;
 @Tag(name="Post API", description="게시글 관리 API")
 public class PostController {
     private final PostService postService;
-    private final PostBatchProcessor postBatchProcessor;
 
-    public PostController(PostService postService, PostBatchProcessor postBatchProcessor) {
+    public PostController(PostService postService) {
         this.postService = postService;
-        this.postBatchProcessor = postBatchProcessor;
     }
 
     @PostMapping
     @Operation(summary="게시글 등록 대기열에 추가", description="게시글 등록 대기열에 추가 API")
     public ResponseEntity<Map<String, Object>> addPostToQueue(@RequestBody Post post) {
         // 큐에 추가하고 즉시 응답
-        postBatchProcessor.addPostToQueue(post);
+        postService.addPostToQueue(post);
 
         return ResponseEntity.accepted()    // 202 즉시 응답
                 .body(Map.of(
@@ -57,7 +52,7 @@ public class PostController {
     }
 
     @PostMapping("/batch")
-    @Operation(summary="게시글 배치 등록", description="여러 게시글을 한 번에 등록하는 최적화된 API")
+    @Operation(summary="게시글 배치 등록", description="여러 게시글을 한 번에 등록하는 수동 API")
     public ResponseEntity<List<Post>> createPostsBatch(@RequestBody List<Post> posts) {
 
         // 배치 크기 제한 (메모리 보호)

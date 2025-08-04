@@ -1,5 +1,6 @@
 package com.test.basic.post;
 
+import com.test.basic.post.batch.PostBatchProcessor;
 import com.test.basic.user.UserEntity;
 import com.test.basic.user.UserRepository;
 import jakarta.persistence.EntityManager;
@@ -23,6 +24,7 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final PostBatchProcessor postBatchProcessor;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -31,34 +33,14 @@ public class PostService {
     private String UPLOAD_DIR;
 
 
-    public PostService(PostRepository postRepository, UserRepository userRepository) {
+    public PostService(PostRepository postRepository, UserRepository userRepository, PostBatchProcessor postBatchProcessor) {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
+        this.postBatchProcessor = postBatchProcessor;
     }
 
     public Post createPost(Post post) {
         return postRepository.save(post);
-    }
-
-    /**
-     * 배치 INSERT 최적화 - 여러 게시글 한 번에 처리
-     * JPA saveAll()을 사용하여 배치 처리 성능 향상
-     */
-    @Transactional
-    public List<Post> createPostsBatch(List<Post> posts) {
-        logger.info("배치 INSERT 시작: {} 개 게시글", posts.size());
-        long startTime = System.currentTimeMillis();
-        
-        List<Post> savedPosts = postRepository.saveAll(posts);
-        
-        long endTime = System.currentTimeMillis();
-        logger.info("배치 INSERT 완료: {} 개 게시글, 소요시간: {}ms", 
-                   savedPosts.size(), (endTime - startTime));
-
-        entityManager.flush(); // 즉시 DB 반영
-        entityManager.clear(); // 영속성 컨텍스트 클리어
-        
-        return savedPosts;
     }
 
     public Optional<Post> getPostById(Long id) {
@@ -146,5 +128,33 @@ public class PostService {
         // 실제 DB 저장 로직을 여기에 구현
         // 예: fileRepository.save(new FileInfo(title, fileName, filePath));
         logger.info("DB에 파일 정보 저장됨: {} -> {}", fileName, filePath);
+    }
+
+    /**
+     * 인메모리 큐에 게시글 추가
+     */
+    public void addPostToQueue(Post post) {
+        postBatchProcessor.addPostToQueue(post);
+    }
+
+    /**
+     * 배치 INSERT 최적화 - 여러 게시글 한 번에 처리
+     * JPA saveAll()을 사용하여 배치 처리 성능 향상
+     */
+    @Transactional
+    public List<Post> createPostsBatch(List<Post> posts) {
+        logger.info("배치 INSERT 시작: {} 개 게시글", posts.size());
+        long startTime = System.currentTimeMillis();
+
+        List<Post> savedPosts = postRepository.saveAll(posts);
+
+        long endTime = System.currentTimeMillis();
+        logger.info("배치 INSERT 완료: {} 개 게시글, 소요시간: {}ms",
+                savedPosts.size(), (endTime - startTime));
+
+        entityManager.flush(); // 즉시 DB 반영
+        entityManager.clear(); // 영속성 컨텍스트 클리어
+
+        return savedPosts;
     }
 }

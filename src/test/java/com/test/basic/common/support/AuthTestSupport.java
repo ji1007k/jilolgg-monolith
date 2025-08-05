@@ -74,6 +74,7 @@ public class AuthTestSupport {
         MvcResult result = mockMvc
                 .perform(get("/auth/login")
                         .header(HttpHeaders.AUTHORIZATION, "Basic " + base64Encoded)
+//                        .with(httpBasic("user", "password")))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();

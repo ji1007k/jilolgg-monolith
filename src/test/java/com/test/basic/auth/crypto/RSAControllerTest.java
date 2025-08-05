@@ -1,13 +1,10 @@
 package com.test.basic.auth.crypto;
 
-import com.nimbusds.jose.util.Base64;
 import com.test.basic.auth.AuthController;
-import com.test.basic.auth.jwt.JwtTokenProvider;
 import com.test.basic.auth.security.config.SecurityConfig;
-import com.test.basic.auth.security.user.CustomUserDetails;
 import com.test.basic.auth.security.user.CustomUserDetailsService;
+import com.test.basic.common.support.AuthTestSupport;
 import com.test.basic.user.UserService;
-import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,15 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-
-import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -33,7 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest({RSAController.class, AuthController.class})
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, AuthTestSupport.class})
 public class RSAControllerTest {
     private static final Logger logger = LoggerFactory.getLogger(RSAControllerTest.class);
 
@@ -42,55 +33,32 @@ public class RSAControllerTest {
     MockMvc mockMvc;
 
     // 사용자 인증 ====================
-    @MockBean   
+    @MockBean
     private UserService userService;    // AuthController 의존성 주입용
     @MockBean
     private CustomUserDetailsService customUserDetailsService;
+
     @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-    private String jwtAccess;
-    private Cookie jwtAccessCookie;
+    private AuthTestSupport authTestSupport;
+
+    private AuthTestSupport.JwtTokenInfo jwtTokenInfo;
 
 
     @BeforeEach
-    void loginAdminAndGenerateJWT() throws Exception {
-        logger.info("======================================================");
-        logger.info("...테스트용 관리자 계정 로그인 및 JWT 토큰 발급");
-        logger.info("======================================================");
-        UserDetails mockUser = new CustomUserDetails(
-                1L, // 혹은 UUID.randomUUID()
-                "admin",           // email
-                "$2b$12$JgK.Du5J.DbMQ6zQ1Tx58OoKCEGr3NUG.p45zDQb0qALy9T5MczJy", // password
-                "admin",           // username
-                List.of(new SimpleGrantedAuthority("SCOPE_ADMIN"))
-        );
-
+    void setup() throws Exception {
+        authTestSupport.createTestAdminUser();
+        UserDetails mockUser = authTestSupport.createTestAdminUser();
         when(customUserDetailsService.loadUserByUsername(mockUser.getUsername())).thenReturn(mockUser);
 
-        String userInfo = "admin:admin";
-        Base64 base64Encoded = Base64.encode(userInfo.getBytes(StandardCharsets.UTF_8));
-
-        MvcResult result = mockMvc
-                .perform(get("/auth/login")
-                        .header(HttpHeaders.AUTHORIZATION, "Basic " + base64Encoded)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        String setCookieHeader = result.getResponse().getHeader("Set-Cookie");
-        logger.info("Set-Cookie: {}", setCookieHeader);
-
-        this.jwtAccess = jwtTokenProvider.getJwtStrFromCookie(result.getResponse().getCookies(), "access_token");
-        this.jwtAccessCookie = new Cookie("access_token", this.jwtAccess);
+        this.jwtTokenInfo = authTestSupport.loginAdminAndCreateJWT("admin", "admin");
     }
 
     @Test
     @DisplayName("RSA 암호화 키페어 생성 테스트")
     void testGenerateRSA() throws Exception {
-
         MvcResult response = mockMvc
                 .perform(get("/rsa/generate")
-                        .cookie(this.jwtAccessCookie))
+                        .cookie(this.jwtTokenInfo.getJwtAccessCookie()))
                 .andExpect(status().isOk())
                 .andReturn();
 

@@ -1,11 +1,8 @@
 package com.test.basic.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jose.util.Base64;
-import com.test.basic.auth.jwt.JwtTokenProvider;
-import com.test.basic.auth.security.user.CustomUserDetails;
 import com.test.basic.auth.security.user.CustomUserDetailsService;
-import jakarta.servlet.http.Cookie;
+import com.test.basic.common.support.AuthTestSupport;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -14,18 +11,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpHeaders;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -38,32 +31,37 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 // 실제 내장 톰캣 없이 Spring context만 띄움
 @SpringBootTest(webEnvironment = MOCK)
-// MockMvc 자동 설정 (가짜 HTTP 요청 테스트용)
-@AutoConfigureMockMvc
-@Transactional  // 테스트 후 DB 롤백
 @ActiveProfiles("test")  // 테스트 실행 시 특정 프로필(test)을 강제로 활성화
-// 테스트 전 H2용 스키마 및 초기 데이터 실행
-@Sql(scripts = {"/db/h2/user.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@AutoConfigureMockMvc   // MockMvc 자동 설정 (가짜 HTTP 요청 테스트용)
+@Import(AuthTestSupport.class)
+@Transactional  // 테스트 후 DB 롤백
+@Sql(
+        scripts = {"/db/h2/user.sql"},
+        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
+) // 테스트 전 H2용 스키마 및 초기 데이터 실행
 public class UserIntegrationTestWithMockMvc {
+    // 기본 테스트 도구 ====================
     @Autowired
     private MockMvc mockMvc;  // HTTP 요청 테스트를 위한 MockMvc
 
     @Autowired
-    private JwtTokenProvider jwtTokenProvider;
+    private ObjectMapper objectMapper;  // JSON 변환을 위한 ObjectMapper
 
-    @MockBean
-    private CustomUserDetailsService customUserDetailsService;
-
+    // Repository ====================
     @Autowired
     private UserRepository userRepository;  // DB 검증을 위한 Repository
 
+    // Mock Bean ====================
+    @MockBean
+    private CustomUserDetailsService customUserDetailsService;
+
+    // Test Support ====================
     @Autowired
-    private ObjectMapper objectMapper;  // JSON 변환을 위한 ObjectMapper
+    private AuthTestSupport authTestSupport;
 
+    // Test Data ====================
     private UserEntity testUser;
-
-    private String jwtAccess;
-    private Cookie jwtAccessCookie;
+    private AuthTestSupport.JwtTokenInfo jwtTokenInfo;
 
 
     @BeforeEach
@@ -73,32 +71,9 @@ public class UserIntegrationTestWithMockMvc {
         testUser.setEmail("email@example.com");
         testUser = userRepository.save(testUser);  // DB에 실제 저장
 
-        loginAdminAndGenerateJWT();
-    }
-
-    void loginAdminAndGenerateJWT() throws Exception {
-        UserDetails mockUser = new CustomUserDetails(
-                1L, // 혹은 UUID.randomUUID()
-                "admin",           // email
-                "$2b$12$JgK.Du5J.DbMQ6zQ1Tx58OoKCEGr3NUG.p45zDQb0qALy9T5MczJy", // password
-                "admin",           // username
-                List.of(new SimpleGrantedAuthority("SCOPE_ADMIN"))
-        );
-
+        UserDetails mockUser = authTestSupport.createTestAdminUser();
         when(customUserDetailsService.loadUserByUsername(mockUser.getUsername())).thenReturn(mockUser);
-
-        String userInfo = "admin:admin";
-        Base64 base64Encoded = Base64.encode(userInfo.getBytes(StandardCharsets.UTF_8));
-
-        MvcResult result = mockMvc
-                .perform(get("/auth/login")
-                        .header(HttpHeaders.AUTHORIZATION, "Basic " + base64Encoded)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        this.jwtAccess = jwtTokenProvider.getJwtStrFromCookie(result.getResponse().getCookies(), "access_token");
-        this.jwtAccessCookie = new Cookie("access_token", this.jwtAccess);
+        this.jwtTokenInfo = authTestSupport.loginAdminAndCreateJWT("admin", "admin");
     }
 
     @Test
@@ -112,7 +87,7 @@ public class UserIntegrationTestWithMockMvc {
 
         mockMvc.perform(post("/users")
                         .with(csrf())
-                        .cookie(this.jwtAccessCookie)
+                        .cookie(this.jwtTokenInfo.getJwtAccessCookie())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userJson))
                 .andExpect(status().isCreated())  // HTTP 201 응답 확인
@@ -131,7 +106,7 @@ public class UserIntegrationTestWithMockMvc {
         mockMvc.perform(get("/users")
                         .param("page", "0")
                         .param("size", "10")
-                        .cookie(this.jwtAccessCookie))
+                        .cookie(this.jwtTokenInfo.getJwtAccessCookie()))
                 .andExpect(status().isOk())  // HTTP 200 응답 확인
                 .andExpect(jsonPath("$").isArray())  // body로 담겨온 데이터가 배열인지 확인
                 .andExpect(jsonPath("$.length()").value(Matchers.greaterThanOrEqualTo(0)))  // 최소 0개 이상인지 확인
@@ -142,7 +117,7 @@ public class UserIntegrationTestWithMockMvc {
     @DisplayName("유저 단건 조회 - DB와 HTTP 응답 검증")
     void testGetUserById() throws Exception {
         mockMvc.perform(get("/users/{id}", testUser.getId())
-                        .cookie(this.jwtAccessCookie))
+                        .cookie(this.jwtTokenInfo.getJwtAccessCookie()))
                 .andExpect(status().isOk())  // HTTP 200 응답 확인
                 .andExpect(jsonPath("$.id").value(testUser.getId()))  // ID 검증
                 .andExpect(jsonPath("$.email").value("email@example.com"));  // 이메일 검증
@@ -157,7 +132,7 @@ public class UserIntegrationTestWithMockMvc {
 
         mockMvc.perform(put("/users/{id}", updateUser.getId())
                     .with(csrf())
-                    .cookie(this.jwtAccessCookie)
+                    .cookie(this.jwtTokenInfo.getJwtAccessCookie())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(updateUser)))
                 .andExpect(status().isOk())  // HTTP 200 응답 확인
@@ -170,7 +145,7 @@ public class UserIntegrationTestWithMockMvc {
     void testDeleteUser() throws Exception {
         mockMvc.perform(delete("/users/{id}", testUser.getId())
                         .with(csrf())
-                        .cookie(this.jwtAccessCookie))
+                        .cookie(this.jwtTokenInfo.getJwtAccessCookie()))
                 .andExpect(status().isNoContent());  // HTTP 204 응답 확인
 
         // DB에서 삭제되었는지 확인

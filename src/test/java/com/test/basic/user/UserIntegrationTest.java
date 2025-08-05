@@ -1,9 +1,7 @@
 package com.test.basic.user;
 
-import com.test.basic.auth.jwt.JwtTokenProvider;
-import com.test.basic.auth.security.user.CustomUserDetails;
 import com.test.basic.auth.security.user.CustomUserDetailsService;
-import com.test.basic.common.handler.AcceptanceTestExecutionListener;
+import com.test.basic.common.support.AuthRestTemplateTestSupport;
 import com.test.basic.common.utils.RSAUtil;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
@@ -13,20 +11,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestExecutionListeners;
-import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,17 +28,21 @@ import static org.mockito.Mockito.when;
 
 // Spring Boot 애플리케이션의 통합 테스트를 실행하기 위한 애너테이션.
 // Spring 애플리케이션 컨텍스트(ApplicationContext) 를 로드하고, 필요한 빈(bean)을 주입
-// webEnvironment : 랜덤 포트에서 실제 서버 실행
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+
 @ActiveProfiles("test")  // 테스트 실행 시 특정 프로필(test)을 강제로 활성화
-//@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-// 이렇게 실행된 쿼리는 Hibernate를 거치지 않고, 스프링의 DataSource를 통해 직접 실행되기 때문에
-// Hibernate SQL 로그에 출력 안됨
-@Sql(scripts = "/db/h2/user.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
-@DisplayName("== 사용자 관리 통합 테스트 ==")
-@TestInstance(TestInstance.Lifecycle.PER_CLASS) // 테스트 인스턴스를 클래스 단위로 유지 -> 인스턴스 변수 공유
+@Import(AuthRestTemplateTestSupport.class)
+
 @Transactional  // 각 테스트가 트랜잭션 내에서 실행
 @Rollback       // 테스트 후 자동 롤백
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS) // 테스트 인스턴스를 클래스 단위로 유지 -> 인스턴스 변수 공유
+@DisplayName("== 사용자 관리 통합 테스트 ==")
+
+// 이렇게 실행된 쿼리는 Hibernate를 거치지 않고, 스프링의 DataSource를 통해 직접 실행되기 때문에
+// Hibernate SQL 로그에 출력 안됨
+//@Sql(scripts = "/db/h2/user.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+//@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 /*@TestExecutionListeners(
         value = {AcceptanceTestExecutionListener.class},
         mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS
@@ -53,26 +50,23 @@ import static org.mockito.Mockito.when;
 public class UserIntegrationTest {
     private static final Logger logger = LoggerFactory.getLogger(UserIntegrationTest.class);
 
-    @LocalServerPort
-    private int port;
+    @Autowired
+    private TestRestTemplate restTemplate;
 
     @Autowired
-    private TestRestTemplate restTemplate;  // 실제 HTTP 요청을 보내는 객체. + CSRF 자동 처리
+    private AuthRestTemplateTestSupport authRestTemplateTestSupport;  // 실제 HTTP 요청을 보내는 객체. + CSRF 자동 처리
 
     @MockBean
     private CustomUserDetailsService customUserDetailsService;  // ✅ MockBean으로 주입
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-
     private UserEntity user;
-
-    // jwt 토큰 저장
-    private String cookie;
+    private String cookie;  // jwt 토큰 저장
 
     // CSRF 토큰은 세션과 연결되므로, 발급받은 세션을 유지하면서 전송해야 유효함
     private String csrfToken;
     private String sessionId;
+
+    @LocalServerPort private int port;
 
     @BeforeEach
     void setUp() {
@@ -84,84 +78,24 @@ public class UserIntegrationTest {
         user.setPassword("password123");
         user.setName("user123");
 
-        loginAdminAndGenerateJWT();
+        UserDetails mockUser = authRestTemplateTestSupport.createTestAdminUser();
+        when(customUserDetailsService.loadUserByUsername(mockUser.getUsername())).thenReturn(mockUser);
+        cookie = authRestTemplateTestSupport.loginAdminAndCreateJWT("admin", "admin"); // 쿠키를 한 줄로 합치기
+
         generateCsrfToken();
     }
 
-    void loginAdminAndGenerateJWT() {
-        logger.info("======================================================");
-        logger.info("...테스트용 관리자 계정 로그인 및 JWT 토큰 발급");
-        logger.info("======================================================");
-
-        UserDetails mockUser = new CustomUserDetails(
-                1L, // 혹은 UUID.randomUUID()
-                "admin",           // email
-                "$2b$12$JgK.Du5J.DbMQ6zQ1Tx58OoKCEGr3NUG.p45zDQb0qALy9T5MczJy", // password
-                "admin",           // username
-                List.of(new SimpleGrantedAuthority("SCOPE_ADMIN"))
-        );
-
-        when(customUserDetailsService.loadUserByUsername(mockUser.getUsername())).thenReturn(mockUser);
-
-        String userInfo = "admin:admin";
-        String base64Encoded = Base64.getEncoder().encodeToString(userInfo.getBytes(StandardCharsets.UTF_8));
-
-        // ✅ 로그인 요청
-        ResponseEntity<String> response = restTemplate.exchange(
-                "/auth/login",
-                HttpMethod.GET,
-                new HttpEntity<>(null, createHeaders("Basic " + base64Encoded)),
-                String.class
-        );
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-
-        // ✅ 쿠키에서 JWT 토큰 추출
-        List<String> cookies = response.getHeaders().get(HttpHeaders.SET_COOKIE);
-        logger.info("Set-Cookie: {}", cookies);
-
-        List<String> filteredCookies = new ArrayList<>();
-        for (String cookie : cookies) {
-            filteredCookies.add(cookie.split(";")[0]); // 첫 번째 값만 저장 (만료일, secure 등 옵션 제거)
-        }
-
-        cookie = String.join("; ", filteredCookies); // 쿠키를 한 줄로 합치기
-    }
-
     void generateCsrfToken() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.COOKIE, cookie);
-
-        HttpEntity<Void> request = new HttpEntity<>(headers);  // Body 없이 헤더만 포함
-        ResponseEntity<String> csrfResponse = restTemplate.exchange(
-                "/csrf",
-                HttpMethod.GET,
-                request,
-                String.class
-        );
-
-        // 1. 쿠키에 저장 후 추출 방법 (STATELESS)
-        // XSRF-TOKEN=e1b7a378-b833-4e20-8d20-3756b9173fa6; Path=/
-        List<String> setCookies = csrfResponse.getHeaders().get(HttpHeaders.SET_COOKIE);
-        StringBuilder cookieBuilder = new StringBuilder();
-
-        for (String c : setCookies) {
-            String[] parts = c.split(";", 2); // "XSRF-TOKEN=xxx; Path=/..."
-            String cookiePart = parts[0];
-            cookieBuilder.append(cookiePart).append("; ");
-
-            if (cookiePart.startsWith("XSRF-TOKEN")) {
-                csrfToken = cookiePart.split("=")[1];
-            }
-        }
+        // 방법 1. 쿠키 저장 O - 쿠키에서 CSRF 토큰 추출 (STATELESS) ============
+        List<String> setCookies = authRestTemplateTestSupport.createCsrfToken(cookie);
+        csrfToken = authRestTemplateTestSupport.getCsrfTokenFromCookies(setCookies);
 
         // csrf 요청 시 받은 모든 Set-Cookie 값을 다시 전송해야 함
-        this.cookie = this.cookie + "; " + cookieBuilder;
+        this.cookie = this.cookie + "; " + authRestTemplateTestSupport.getCookieBuilder(setCookies);
 
-
-        // =========================================
-        // 2. 쿠키 저장 전 방법: CSRF 토큰을 헤더에서 추출 (JSESSIONID도 함꼐 필요)
-//        csrfToken = csrfResponse.getHeaders().getFirst("X-CSRF-TOKEN");
+        // 방법 2. 쿠키 저장X - 헤더에서 CSRF 토큰 추출 (JSESSIONID 필요) ============
+//        csrfToken = authRestTemplateTestSupport.getCsrfTokenFromHeader(
+//                csrfResponse.getHeaders(), "X-CSRF-TOKEN");
 
         // 🚨 CSRF 토큰이 없으면 예외 발생
         assertNotNull(csrfToken, "CSRF Token이 없습니다!");
@@ -169,21 +103,10 @@ public class UserIntegrationTest {
 
         // ✅ 세션 쿠키 추출
         /*List<String> cookies = csrfResponse.getHeaders().get("Set-Cookie");
-        sessionId = null;
-        for (String cookie : cookies) {
-            if (cookie.startsWith("JSESSIONID")) {
-                sessionId = cookie.split(";")[0].split("=")[1];  // JSESSIONID 값 추출
-            }
-        }
-        assertNotNull(sessionId, "세션ID가 없습니다.");
-        System.out.println("Session ID: " + sessionId);*/
-    }
+        sessionId = authRestTemplateTestSupport.getJSessionIdFromHeader(cookies, "JSESSIONID");
 
-    private HttpHeaders createHeaders(String authHeader) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(HttpHeaders.AUTHORIZATION, authHeader);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        return headers;
+        assertNotNull(sessionId, "세션ID가 없습니다.");
+        logger.info("Session ID: {}", sessionId);*/
     }
 
     @Test
@@ -308,7 +231,7 @@ public class UserIntegrationTest {
                 request,
                 UserEntity.class,
                 updateUser.getId()   // ID 값 전달
-         );
+        );
 
         // t
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -334,11 +257,11 @@ public class UserIntegrationTest {
         HttpEntity<Void> request = new HttpEntity<>(headers);
 
         ResponseEntity<Void> res = restTemplate.exchange(
-            url,
-            HttpMethod.DELETE,
-            request,
-            Void.class,
-            userId
+                url,
+                HttpMethod.DELETE,
+                request,
+                Void.class,
+                userId
         );
 
         // t
@@ -391,3 +314,6 @@ public class UserIntegrationTest {
         user.setPassword(encryptedPassword);
     }
 }
+
+// webEnvironment : 랜덤 포트에서 실제 서버 실행
+

@@ -1,15 +1,12 @@
 package com.test.basic.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jose.util.Base64;
 import com.test.basic.auth.AuthController;
 import com.test.basic.auth.csrf.CsrfTokenController;
-import com.test.basic.auth.jwt.JwtTokenProvider;
 import com.test.basic.auth.security.config.SecurityConfig;
-import com.test.basic.auth.security.user.CustomUserDetails;
 import com.test.basic.auth.security.user.CustomUserDetailsService;
+import com.test.basic.common.support.AuthTestSupport;
 import com.test.basic.common.utils.RSAUtil;
-import jakarta.servlet.http.Cookie;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,15 +19,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
-import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.List;
@@ -52,10 +45,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // Spring 컨텍스트를 로드하지 않고 가벼운 단위 테스트 가능
 @ExtendWith(MockitoExtension.class)
 // Spring Security 인증/인가 설정 로드 => 인증/인가 테스트 정상 실행 위함
-@Import({ SecurityConfig.class })
+@Import({ SecurityConfig.class, AuthTestSupport.class })
 public class UserControllerTest {
     private static final Logger logger = LoggerFactory.getLogger(UserControllerTest.class);
 
+    // 기본 테스트 도구 ====================
     // 실제 HTTP 요청 없이 가상의 HTTP 요청을 만들어 컨트롤러를 테스트
     // 실제 서버를 실행하지 않고도 빠르고 독립적인 컨트롤러 테스트 가능
     @Autowired
@@ -64,28 +58,25 @@ public class UserControllerTest {
     @Autowired
     private ObjectMapper objectMapper;  // ObjectMapper를 사용하여 JSON 변환
 
+    // Mock Bean ====================
     // UserService를 Mock 처리하여 실제 서비스 호출을 Mocking
     // @MockBean을 사용했지만, Spring Boot 3.4부터는 @MockitoBean을 사용
-    // 25-02-06 jikim: Swagger ui 와 spring boot 3.4 버전 충돌로 sb 버전 3.3.1 로 변경함에 따라 MockBean 사용
+    // **25-02-06 jikim: Swagger ui 와 spring boot 3.4 버전 충돌로 sb 버전 3.3.1 로 변경함에 따라 MockBean 사용
     @MockBean   // 테스트에 필요한 서비스 계층 주입 (Spring 컨텍스트가 포함되는 경우)
-    private UserService userService;
+    private UserService userService;    // AuthController 의존성 주입용
 
-    // 사용자 인증 ====================
     @MockBean
     private CustomUserDetailsService customUserDetailsService;  // Security의 인증 로직 Mocking
 
+    // Test Support ====================
     @Autowired
-    private JwtTokenProvider jwtTokenProvider;
+    private AuthTestSupport authTestSupport;
 
+    // Test Data ====================
+    private AuthTestSupport.JwtTokenInfo jwtTokenInfo;
     private UserEntity user;
-
-    private String jwtAccess;
-    private String jwtRefresh;
-    private Cookie jwtAccessCookie;
-    private Cookie jwtRefreshCookie;
     private MockHttpSession mockSession;
     private String csrfToken;   // POST, PUT, DELETE 요청에서 CSRF 공격 방지
-    // ==============================
 
 
     @BeforeEach
@@ -107,56 +98,19 @@ public class UserControllerTest {
         user.setPassword(RSAUtil.encryptWithPublicKey("password", pubKey));
         user.setName("username");
 
-        loginAdminAndGenerateJWT();
-        generateCsrfToken();
-    }
-
-    void loginAdminAndGenerateJWT() throws Exception {
-        logger.info("======================================================");
-        logger.info("...테스트용 관리자 계정 로그인 및 JWT 토큰 발급");
-        logger.info("======================================================");
-        UserDetails mockUser = new CustomUserDetails(
-                1L, // 혹은 UUID.randomUUID()
-                "admin",           // email
-                "$2b$12$JgK.Du5J.DbMQ6zQ1Tx58OoKCEGr3NUG.p45zDQb0qALy9T5MczJy", // password
-                "admin",           // username
-                List.of(new SimpleGrantedAuthority("SCOPE_ADMIN"))
-        );
-
+        // 테스트 계정 초기화 =====================
+        // 1) 로그인&JWT토큰 발급
+        authTestSupport.createTestAdminUser();
+        UserDetails mockUser = authTestSupport.createTestAdminUser();
         when(customUserDetailsService.loadUserByUsername(mockUser.getUsername())).thenReturn(mockUser);
+        this.jwtTokenInfo = authTestSupport.loginAdminAndCreateJWT("admin", "admin");
 
-        String userInfo = "admin:admin";
-        Base64 base64Encoded = Base64.encode(userInfo.getBytes(StandardCharsets.UTF_8));
-
-        MvcResult result = mockMvc
-                .perform(get("/auth/login")
-                        .header(HttpHeaders.AUTHORIZATION, "Basic " + base64Encoded)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        String setCookieHeader = result.getResponse().getHeader("Set-Cookie");
-        logger.info("Set-Cookie: {}", setCookieHeader);
-
-        this.jwtAccess = jwtTokenProvider.getJwtStrFromCookie(result.getResponse().getCookies(), "access_token");
-        this.jwtRefresh = jwtTokenProvider.getJwtStrFromCookie(result.getResponse().getCookies(), "refresh_token");
-        this.jwtAccessCookie = new Cookie("access_token", this.jwtAccess);
-        this.jwtRefreshCookie = new Cookie("refresh_token", this.jwtRefresh);
+        // 2) CSRF 토큰 발급
+        this.csrfToken = authTestSupport.createCsrfToken(
+                this.jwtTokenInfo.getJwtAccessCookie(),
+                this.mockSession
+        );
     }
-
-    void generateCsrfToken() throws Exception {
-        logger.info("======================================================");
-        logger.info("...CSRF 토큰 발급");
-        logger.info("======================================================");
-        this.csrfToken = mockMvc
-                .perform(get("/csrf")
-                        .cookie(this.jwtAccessCookie)
-                        .session(this.mockSession))
-                .andReturn()
-                .getResponse()
-                .getHeader("X-CSRF-TOKEN");
-    }
-
     @Test
     @DisplayName("유저 생성 - HTTP 응답만 검증")
     void testCreateUser() throws Exception {
@@ -174,7 +128,7 @@ public class UserControllerTest {
 //                        .session(mockSession)  // csrf 토큰 공유용
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(user))
-                        .cookie(this.jwtAccessCookie))
+                        .cookie(this.jwtTokenInfo.getJwtAccessCookie()))
                 .andExpect(status().isCreated())  // HTTP 201 상태 확인
                 .andExpect(jsonPath("$.email").value(user.getEmail()))  // 이메일 검증
                 .andExpect(jsonPath("$.name").value(user.getName()));  // 이름 검증
@@ -198,7 +152,7 @@ public class UserControllerTest {
                         .param("size", "10")
                         .param("keyword", "")
                         .param("sort", "id,asc")
-                        .cookie(this.jwtAccessCookie))
+                        .cookie(this.jwtTokenInfo.getJwtAccessCookie()))
                 .andExpect(status().isOk())  // HTTP 200 상태 확인
                 .andExpect(jsonPath("$").isArray())  // 배열 형태로 응답인지 확인
                 .andExpect(jsonPath("$.length()").value(Matchers.greaterThanOrEqualTo(1)));  // 1개 이상의 유저가 있는지 확인
@@ -212,7 +166,7 @@ public class UserControllerTest {
 
         // 특정 ID로 유저 조회
         mockMvc.perform(get("/users/{id}", 1L)
-                        .cookie(this.jwtAccessCookie))  // 예시 ID: 1
+                        .cookie(this.jwtTokenInfo.getJwtAccessCookie()))  // 예시 ID: 1
                 .andExpect(status().isOk())  // HTTP 200 상태 확인
                 .andExpect(jsonPath("$.id").value(1L))  // ID 검증
                 .andExpect(jsonPath("$.email").value(user.getEmail()));  // 이메일 검증
@@ -235,7 +189,7 @@ public class UserControllerTest {
                             .with(csrf())
 //                        .header("X-CSRF-TOKEN", this.csrfToken)
 //                        .session(this.mockSession)
-                        .cookie(this.jwtAccessCookie)
+                        .cookie(this.jwtTokenInfo.getJwtAccessCookie())
                         .contentType(MediaType.APPLICATION_JSON)  // JSON 형식으로 요청
                         .content(objectMapper.writeValueAsString(updatedUser)))  // updatedUser를 JSON으로 변환하여 본문에 담기
                 .andExpect(status().isOk())  // HTTP 200 상태 확인
@@ -252,7 +206,7 @@ public class UserControllerTest {
         // DELETE 요청을 보내고 HTTP 상태 코드가 204 (No Content)인지를 검증
         mockMvc.perform(delete("/users/{id}", 1L)
                         .header("X-CSRF-TOKEN", this.csrfToken)
-                        .cookie(this.jwtAccessCookie)
+                        .cookie(this.jwtTokenInfo.getJwtAccessCookie())
                         .session(this.mockSession))
                 .andExpect(status().isNoContent());
     }
@@ -270,7 +224,7 @@ public class UserControllerTest {
 
         // When & Then
         mockMvc.perform(get("/users/rsa")
-                        .cookie(this.jwtAccessCookie)
+                        .cookie(this.jwtTokenInfo.getJwtAccessCookie())
                         .session(this.mockSession))  // 세션을 포함한 요청
                 .andExpect(status().isOk())  // 응답 상태가 OK인지 검증
                 .andExpect(content().string(containsString(publicKey.toString())));  // 반환된 공개키 포함 여부 확인

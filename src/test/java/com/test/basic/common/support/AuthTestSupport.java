@@ -109,6 +109,20 @@ public class AuthTestSupport {
                 .getHeader("X-CSRF-TOKEN");
     }
 
+    public String createJwtTokenStr(String email, String password) throws Exception {
+        String userInfo = String.join(":", List.of(email, password));
+        Base64 base64Encoded = Base64.encode(userInfo.getBytes(StandardCharsets.UTF_8));
+
+        // @formatter:off
+        return this.mockMvc.perform(get("/token/generate")
+                        .header(HttpHeaders.AUTHORIZATION, "Basic " + base64Encoded)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString(StandardCharsets.UTF_8);
+    }
+
     // TODO 자주 사용하는 MockMvc 요청 패턴들 메서드로 추상화
     //  ..
 

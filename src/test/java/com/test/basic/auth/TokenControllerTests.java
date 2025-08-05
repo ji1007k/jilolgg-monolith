@@ -1,4 +1,4 @@
-package com.test.basic;
+package com.test.basic.auth;
 //package example.web;
 
 /*
@@ -17,15 +17,23 @@ package com.test.basic;
  * limitations under the License.
  */
 
+import com.test.basic.HomeController;
+import com.test.basic.auth.sample.TokenController;
 import com.test.basic.auth.security.config.SecurityConfig;
+import com.test.basic.auth.security.user.CustomUserDetailsService;
+import com.test.basic.common.support.AuthTestSupport;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -34,22 +42,36 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * @author Josh Cummings
  */
-@WebMvcTest(HomeController.class)
+@WebMvcTest(TokenController.class)
 @ActiveProfiles("test")
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, AuthTestSupport.class})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class HomeControllerTests {
+public class TokenControllerTests {
 
     @Autowired
     private MockMvc mvc;
 
+    @Autowired
+    private AuthTestSupport authTestSupport;
+
+    @MockBean
+    private CustomUserDetailsService customUserDetailsService;
+
 
     @Test
-    void testIndexPage_moveSuccessfully() throws Exception {
-        // @formatter:off
-        this.mvc.perform(get("/"))
-                .andExpect(status().isOk());
-        // @formatter:on
+    void testTokenGeneration_withCredentials200() throws Exception {
+        UserDetails mockUser = authTestSupport.createTestAdminUser();
+        when(customUserDetailsService.loadUserByUsername("admin")).thenReturn(mockUser);
+
+        String token = authTestSupport.createJwtTokenStr("admin", "admin");
+        assertNotNull(token);
     }
 
+    @Test
+    void testTokenGeneration_badCredentials401() throws Exception {
+        // @formatter:off
+        this.mvc.perform(get("/token/generate"))
+                .andExpect(status().isUnauthorized());
+        // @formatter:on
+    }
 }

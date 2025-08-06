@@ -20,6 +20,7 @@ public class UserEntity {
     @Schema(description = "사용자 ID", example = "1")
     private Long id;
     private String password;
+    @Column(unique = true, nullable = false)
     private String email;
     private String name;
     private String authority;

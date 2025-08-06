@@ -24,6 +24,10 @@ public class UserService {
 //        String encodedPwd = new BCryptPasswordEncoder().encode(user.getPassword());
 //        user.setPassword(encodedPwd);
 
+        if (user.getEmail() == null || user.getEmail().isEmpty()) {
+            throw new IllegalArgumentException("Email is required");
+        }
+
         String hashedPwd = PasswordUtils.hashPassword(user.getPassword());
         user.setPassword(hashedPwd);
         return userRepository.save(user);
@@ -46,6 +50,10 @@ public class UserService {
     }
 
     public Optional<UserEntity> getUserById(Long id) {
+        if (id < 1) {
+            throw new IllegalArgumentException("Invalid ID");
+        }
+
         return userRepository.findById(id);
     }
 
@@ -83,6 +91,10 @@ public class UserService {
     }
 
     public boolean changePassword(Long id, String newPassword) {
+        if (newPassword.isEmpty()) {
+            throw new IllegalArgumentException("New Password is required");
+        }
+
         Optional<UserEntity> user = userRepository.findById(id);
 
         if (user.isPresent()) {

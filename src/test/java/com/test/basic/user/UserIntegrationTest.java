@@ -212,7 +212,7 @@ public class UserIntegrationTest {
         // g
         Long userId = createTestUser();
         String url = "/users/{id}";
-        UserEntity updateUser = new UserEntity();
+        UserEntity updateUser = UserFixture.defaultUser();
         updateUser.setId(userId);
         updateUser.setName("newname");
 

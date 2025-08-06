@@ -17,11 +17,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.KeyPair;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -232,5 +232,32 @@ public class UserServiceTest {
         // Verify the exception details
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
         assertEquals("User not found", exception.getReason());
+    }
+
+    @Test
+    @DisplayName("유저생성_이메일없음_예외발생")
+    void createUser_NoEmail_ThrowsException() {
+        UserEntity user = UserFixture.defaultUser();
+        user.setEmail(null);
+
+        assertThatThrownBy(() -> userService.createUser(user))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Email is required");
+    }
+
+    @Test
+    @DisplayName("유저조회_음수ID_예외발생")
+    void getUser_NegativeId_ThrowsException() {
+        // when & then
+        assertThatThrownBy(() -> userService.getUserById(-10L))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("비밀번호변경_빈문자열_예외발생")
+    void changePassword_EmptyString_ThrowsException() {
+
+        assertThatThrownBy(() -> userService.changePassword(user.getId(), ""))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

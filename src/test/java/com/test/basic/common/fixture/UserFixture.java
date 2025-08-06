@@ -11,14 +11,14 @@ import java.time.LocalDateTime;
 public class UserFixture {
 
     public static UserEntity adminUser() {
-        UserEntity user = new UserEntity();
-        user.setEmail("testadmin@email.com");
-        user.setPassword("password123");
-//        user.setPassword(RSAUtil.encryptWithPublicKey("password", pubKey));
-        user.setName("testadmin");
-        user.setAuthority("SCOPE_ADMIN");
-        user.setCreatedDt(LocalDateTime.now());
-        return user;
+        return UserEntity.builder()
+                .email("testadmin@email.com")
+                .password("password123")
+//                .password(RSAUtil.encryptWithPublicKey("password", pubKey))
+                .name("admin")
+                .authority("ROLE_ADMIN")
+                .createdDt(LocalDateTime.now())
+                .build();
     }
 
     public static UserEntity adminUser(Long id) {
@@ -28,13 +28,13 @@ public class UserFixture {
     }
 
     public static UserEntity defaultUser() {
-        UserEntity user = new UserEntity();
-        user.setEmail("testuser@email.com");
-        user.setPassword("password123");
-        user.setName("testuser");
-        user.setAuthority("SCOPE_USER");
-        user.setCreatedDt(LocalDateTime.now());
-        return user;
+        return UserEntity.builder()
+                .email("testuser@email.com")
+                .password("password123")
+                .name("testuser")
+                .authority("SCOPE_USER")
+                .createdDt(LocalDateTime.now())
+                .build();
     }
 
     public static UserEntity defaultUser(Long id) {
@@ -44,13 +44,13 @@ public class UserFixture {
     }
 
     public static UserEntity managerUser() {
-        UserEntity user = new UserEntity();
-        user.setEmail("testmanager@email.com");
-        user.setPassword("password123");
-        user.setName("testmanager");
-        user.setAuthority("SCOPE_MANAGER");
-        user.setCreatedDt(LocalDateTime.now());
-        return user;
+        return UserEntity.builder()
+                .email("testmanager@email.com")
+                .password("password123")
+                .name("testmanager")
+                .authority("SCOPE_MANAGER")
+                .createdDt(LocalDateTime.now())
+                .build();
     }
 
     public static UserEntity managerUser(Long id) {

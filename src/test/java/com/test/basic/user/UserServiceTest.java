@@ -69,7 +69,7 @@ public class UserServiceTest {
         // Then
         assertNotNull(createdUser);
         assertThat(createdUser.getId()).isNotNull();
-        assertThat(createdUser.getName()).isEqualTo("username");
+        assertThat(createdUser.getName()).isEqualTo(user.getName());
         assertTrue(new BCryptPasswordEncoder().matches(orgPwd, createdUser.getPassword()));
     }
 

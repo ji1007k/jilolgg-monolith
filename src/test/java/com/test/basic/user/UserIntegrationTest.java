@@ -1,6 +1,7 @@
 package com.test.basic.user;
 
 import com.test.basic.auth.security.user.CustomUserDetailsService;
+import com.test.basic.common.fixture.UserFixture;
 import com.test.basic.common.support.AuthRestTemplateTestSupport;
 import com.test.basic.common.utils.RSAUtil;
 import org.junit.jupiter.api.*;
@@ -73,11 +74,9 @@ public class UserIntegrationTest {
         String baseUrl = "https://localhost:" + port;
         logger.info(baseUrl);
 
-        user = new UserEntity();
-        user.setEmail("email123@example.com");
-        user.setPassword("password123");
-        user.setName("user123");
+        user = UserFixture.defaultUser();
 
+        // 권한 검증용 사용자정보 등록
         UserDetails mockUser = authRestTemplateTestSupport.createTestAdminUser();
         when(customUserDetailsService.loadUserByUsername(mockUser.getUsername())).thenReturn(mockUser);
         cookie = authRestTemplateTestSupport.loginAdminAndCreateJWT("admin", "admin"); // 쿠키를 한 줄로 합치기
@@ -110,8 +109,8 @@ public class UserIntegrationTest {
     }
 
     @Test
+    @DisplayName("사용자생성_정상_201응답및DB저장")
 //    @Order(1)
-    @DisplayName("유저 생성 - DB 저장 및 HTTP 응답 테스트")
     void testCreateUser() {
         createTestUser();
     }
@@ -143,7 +142,7 @@ public class UserIntegrationTest {
 
     @Test
 //    @Order(2)
-    @DisplayName("유저 목록 조회 - DB 데이터 검증 및 HTTP 응답 테스트")
+    @DisplayName("사용자목록조회_정상_200응답및리스트반환")
     void testGetUsers() {
         // given
         createTestUser();
@@ -176,7 +175,7 @@ public class UserIntegrationTest {
     }
 
     @Test
-    @DisplayName("유저 단건 조회 - DB와 HTTP 응답 검증")
+    @DisplayName("사용자단건조회_정상_200응답및데이터반환")
     void testGetUserById() {
         // g
         Long userId = createTestUser();
@@ -208,7 +207,7 @@ public class UserIntegrationTest {
     }
 
     @Test
-    @DisplayName("유저 수정 - DB 및 HTTP 응답 검증")
+    @DisplayName("사용자수정_정상_200응답및DB반영")
     void testUpdateUser() {
         // g
         Long userId = createTestUser();
@@ -243,7 +242,7 @@ public class UserIntegrationTest {
     }
 
     @Test
-    @DisplayName("유저 삭제 - DB 및 HTTP 응답 검증")
+    @DisplayName("사용자삭제_정상_204응답및DB삭제")
     void testDeleteUser() {
         // g
         Long userId = createTestUser();
@@ -316,4 +315,23 @@ public class UserIntegrationTest {
 }
 
 // webEnvironment : 랜덤 포트에서 실제 서버 실행
+/**
+ * @DisplayName 명명 규칙. 대상_조건_결과
+ *
+ * // ***완전한 통합테스트 (실제 서버 띄움)  ← 전체 플로우 검증
+ * @DisplayName("== 사용자 관리 통합테스트 ==")
+ * // ***서비스 단위테스트    ← 비즈니스 로직 검증
+ * @DisplayName("== 사용자 관리 Service 단위테스트 ==")
+ * // ***레포지토리 단위테스트 ← 데이터 접근 검증
+ * @DisplayName("== 사용자 관리 Repository 단위테스트 ==")
+ * // API 컨트롤러 단위테스트 ← 생략되는 추세
+ * @DisplayName("== 사용자 관리 API 단위테스트 ==")
+ * // MockMvc 통합테스트 (웹계층 + DB)
+ * @DisplayName("== 사용자 관리 MockMvc 통합테스트 ==")
+ *
+ * @DisplayName("유저생성_정상_성공")
+ * @DisplayName("유저생성_중복이메일_실패")
+ * @DisplayName("유저조회_존재하지않는ID_404반환")
+ * @DisplayName("비밀번호변경_잘못된비밀번호_실패")
+ */
 

@@ -2,10 +2,7 @@ package com.test.basic.user;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -13,8 +10,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "users")
 @Schema(description = "사용자 정보")
-@Setter
-@Getter
+@Setter @Getter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserEntity {

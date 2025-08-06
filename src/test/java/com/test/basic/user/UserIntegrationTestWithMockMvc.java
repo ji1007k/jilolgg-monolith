@@ -2,6 +2,7 @@ package com.test.basic.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.test.basic.auth.security.user.CustomUserDetailsService;
+import com.test.basic.common.fixture.UserFixture;
 import com.test.basic.common.support.AuthTestSupport;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         scripts = {"/db/h2/user.sql"},
         executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD
 ) // 테스트 전 H2용 스키마 및 초기 데이터 실행
+@DisplayName("== 사용자 관리 MockMvc 통합테스트 ==")
 public class UserIntegrationTestWithMockMvc {
     // 기본 테스트 도구 ====================
     @Autowired
@@ -66,10 +68,7 @@ public class UserIntegrationTestWithMockMvc {
 
     @BeforeEach
     void setUp() throws Exception {
-//        testUser = new UserEntity(null, "password123", "email@example.com", "username", null, null, null);
-        testUser = new UserEntity();
-        testUser.setEmail("email@example.com");
-        testUser = userRepository.save(testUser);  // DB에 실제 저장
+        testUser = userRepository.save(UserFixture.defaultUser());  // DB에 실제 저장
 
         UserDetails mockUser = authTestSupport.createTestAdminUser();
         when(customUserDetailsService.loadUserByUsername(mockUser.getUsername())).thenReturn(mockUser);
@@ -77,12 +76,9 @@ public class UserIntegrationTestWithMockMvc {
     }
 
     @Test
-    @DisplayName("유저 생성 - DB 저장 및 HTTP 응답 테스트")
+    @DisplayName("사용자생성_정상_201응답및DB저장")
     void testCreateUser() throws Exception {
-        UserEntity newUser = new UserEntity();
-        newUser.setName("newUser");
-        newUser.setPassword("newPassword");
-        newUser.setEmail("newEmail@example.com");
+        UserEntity newUser = UserFixture.managerUser();
         String userJson = objectMapper.writeValueAsString(newUser);
 
         mockMvc.perform(post("/users")
@@ -92,16 +88,16 @@ public class UserIntegrationTestWithMockMvc {
                         .content(userJson))
                 .andExpect(status().isCreated())  // HTTP 201 응답 확인
                 .andExpect(jsonPath("$.id").isNumber())  // ID가 숫자인지 확인
-                .andExpect(jsonPath("$.email").value("newEmail@example.com"));  // 이메일 검증
+                .andExpect(jsonPath("$.email").value(newUser.getEmail()));  // 이메일 검증
 
         // DB에 저장되었는지 확인
-        Optional<UserEntity> savedUser = userRepository.findByEmail("newEmail@example.com");
+        Optional<UserEntity> savedUser = userRepository.findByEmail(newUser.getEmail());
         assertTrue(savedUser.isPresent());  // DB에 존재하는지 확인
-        assertEquals("newUser", savedUser.get().getName());  // 저장된 데이터 검증
+        assertEquals(newUser.getName(), savedUser.get().getName());  // 저장된 데이터 검증
     }
 
     @Test
-    @DisplayName("유저 목록 조회 - DB 데이터 검증 및 HTTP 응답 테스트")
+    @DisplayName("사용자목록조회_정상_200응답및리스트반환")
     void testGetUsers() throws Exception {
         mockMvc.perform(get("/users")
                         .param("page", "0")
@@ -114,20 +110,19 @@ public class UserIntegrationTestWithMockMvc {
     }
 
     @Test
-    @DisplayName("유저 단건 조회 - DB와 HTTP 응답 검증")
+    @DisplayName("사용자단건조회_정상_200응답및데이터반환")
     void testGetUserById() throws Exception {
         mockMvc.perform(get("/users/{id}", testUser.getId())
                         .cookie(this.jwtTokenInfo.getJwtAccessCookie()))
                 .andExpect(status().isOk())  // HTTP 200 응답 확인
                 .andExpect(jsonPath("$.id").value(testUser.getId()))  // ID 검증
-                .andExpect(jsonPath("$.email").value("email@example.com"));  // 이메일 검증
+                .andExpect(jsonPath("$.email").value(testUser.getEmail()));  // 이메일 검증
     }
 
     @Test
-    @DisplayName("유저 수정 - DB 및 HTTP 응답 검증")
+    @DisplayName("사용자수정_정상_200응답및DB반영")
     void testUpdateUser() throws Exception {
-        UserEntity updateUser = new UserEntity();
-        updateUser.setId(testUser.getId());
+        UserEntity updateUser = UserFixture.defaultUser(testUser.getId());
         updateUser.setName("newname");
 
         mockMvc.perform(put("/users/{id}", updateUser.getId())
@@ -141,7 +136,7 @@ public class UserIntegrationTestWithMockMvc {
     }
 
     @Test
-    @DisplayName("유저 삭제 - DB 및 HTTP 응답 검증")
+    @DisplayName("사용자삭제_정상_204응답및DB삭제")
     void testDeleteUser() throws Exception {
         mockMvc.perform(delete("/users/{id}", testUser.getId())
                         .with(csrf())

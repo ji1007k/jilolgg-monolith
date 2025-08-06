@@ -1,5 +1,6 @@
 package com.test.basic.user;
 
+import com.test.basic.common.fixture.UserFixture;
 import com.test.basic.common.utils.PasswordUtils;
 import com.test.basic.common.utils.RSAUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,7 +28,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("User Service Test")
+@DisplayName("== 사용자 관리 Service 단위테스트 ==")
 public class UserServiceTest {
     private static final Logger logger = LoggerFactory.getLogger(UserServiceTest.class);
 
@@ -44,18 +45,12 @@ public class UserServiceTest {
 
     @BeforeEach
     void setUp() {
-        user = new UserEntity();
-        user.setId(1L);
-        user.setEmail("email@example.com");
-        user.setPassword("password123");
-//        user.setPassword(RSAUtil.encryptWithPublicKey("password", pubKey));
-        user.setName("username");
-        user.setCreatedDt(LocalDateTime.now());
+        user = UserFixture.defaultUser(1L);
     }
 
 
     @Test
-    @DisplayName("유저 생성 테스트")
+    @DisplayName("사용자생성_정상_ID생성및비밀번호암호화")
     void testCreateUser() {
         String orgPwd = user.getPassword();
 
@@ -74,12 +69,12 @@ public class UserServiceTest {
         // Then
         assertNotNull(createdUser);
         assertThat(createdUser.getId()).isNotNull();
-        assertThat(createdUser.getName()).isEqualTo("username");
+        assertThat(createdUser.getName()).isEqualTo(user.getName());
         assertTrue(new BCryptPasswordEncoder().matches(orgPwd, createdUser.getPassword()));
     }
 
     @Test
-    @DisplayName("유저 목록 조회 테스트")
+    @DisplayName("유저목록조회_정상_리스트반환")
     void testGetAllUsers() {
         UserEntity user2 = new UserEntity();
 
@@ -91,7 +86,7 @@ public class UserServiceTest {
     }
 
     @Test
-    @DisplayName("유저 조회 테스트")
+    @DisplayName("유저단건조회_존재ID_사용자데이터반환")
     void testGetUserById() {
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
 
@@ -102,7 +97,7 @@ public class UserServiceTest {
     }
 
     @Test
-    @DisplayName("유저 수정 테스트")
+    @DisplayName("사용자수정_정상_수정된사용자정보반환")
     void testUpdateUser() {
         UserEntity newUser = new UserEntity(user);
         newUser.setId(user.getId());
@@ -120,7 +115,7 @@ public class UserServiceTest {
 
     // 비밀번호 확인
     @Test
-    @DisplayName("비밀번호 일치여부 확인 테스트 - BCrypt")
+    @DisplayName("비밀번호검증_정상_BCrypt일치")
     void testCheckPasswordWithBCrypt() {
         String password = user.getPassword();
         String hashedPassword = PasswordUtils.hashPassword(user.getPassword());
@@ -130,7 +125,7 @@ public class UserServiceTest {
 
     // 비밀번호 확인
     @Test
-    @DisplayName("비밀번호 일치 테스트 - BCrypt + RSA")
+    @DisplayName("비밀번호검증_RSA암호화된올바른비밀번호_복호화후일치확인")
     void testSuccessCheckPasswordWithBCryptAndRSA() throws Exception {
         String originalPassword = "testPassword";
         user.setPassword(PasswordUtils.hashPassword(originalPassword));
@@ -152,7 +147,7 @@ public class UserServiceTest {
     }
 
     @Test
-    @DisplayName("비밀번호 불일치 테스트 - BCrypt + RSA")
+    @DisplayName("비밀번호검증_RSA암호화된잘못된비밀번호_복호화후불일치확인")
     void testFailCheckPasswordWithBCryptAndRSA() throws Exception {
         String originalPassword = "testPassword";
         user.setPassword(PasswordUtils.hashPassword(originalPassword));
@@ -174,7 +169,7 @@ public class UserServiceTest {
     }
 
     @Test
-    @DisplayName("비밀번호 변경 테스트")
+    @DisplayName("비밀번호변경_새로운비밀번호_암호화된비밀번호저장")
     void testChangePassword() {
         // Given
         String newPassword = "newPassword";
@@ -205,7 +200,7 @@ public class UserServiceTest {
 
 
     @Test
-    @DisplayName("유저 삭제 테스트 - 유저가 존재하는 경우")
+    @DisplayName("사용자삭제_존재ID_성공")
     void testDeleteUser_UserExists() {
         Long userId = user.getId();
 
@@ -220,7 +215,7 @@ public class UserServiceTest {
     }
 
     @Test
-    @DisplayName("유저 삭제 테스트 - 유저가 존재하지 않는 경우")
+    @DisplayName("사용자삭제_존재하지않는ID_NOTFOUND예외발생")
     void testDeleteUser_UserNotFound() {
         // Given
         Long userId = 1L;

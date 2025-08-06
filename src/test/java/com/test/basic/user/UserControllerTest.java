@@ -5,6 +5,7 @@ import com.test.basic.auth.AuthController;
 import com.test.basic.auth.csrf.CsrfTokenController;
 import com.test.basic.auth.security.config.SecurityConfig;
 import com.test.basic.auth.security.user.CustomUserDetailsService;
+import com.test.basic.common.fixture.UserFixture;
 import com.test.basic.common.support.AuthTestSupport;
 import com.test.basic.common.utils.RSAUtil;
 import org.hamcrest.Matchers;
@@ -46,6 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 // Spring Security 인증/인가 설정 로드 => 인증/인가 테스트 정상 실행 위함
 @Import({ SecurityConfig.class, AuthTestSupport.class })
+@DisplayName("== 사용자 관리 API 단위테스트 ==")
 public class UserControllerTest {
     private static final Logger logger = LoggerFactory.getLogger(UserControllerTest.class);
 
@@ -92,11 +94,8 @@ public class UserControllerTest {
         KeyPair keyPair = RSAUtil.generateRSAKeyPair();
         PublicKey pubKey = keyPair.getPublic();
 
-        user = new UserEntity();
-        user.setId(1L);
-        user.setEmail("email@example.com");
-        user.setPassword(RSAUtil.encryptWithPublicKey("password", pubKey));
-        user.setName("username");
+        user = UserFixture.defaultUser(1L);
+        user.setPassword(RSAUtil.encryptWithPublicKey(user.getPassword(), pubKey));
 
         // 테스트 계정 초기화 =====================
         // 1) 로그인&JWT토큰 발급
@@ -112,13 +111,14 @@ public class UserControllerTest {
         );
     }
     @Test
-    @DisplayName("유저 생성 - HTTP 응답만 검증")
+    @DisplayName("사용자생성_정상_201반환")
     void testCreateUser() throws Exception {
 
-        // 테스트용 유저 데이터 (서비스 없이 컨트롤러 단위 테스트)
-        when(userService.decryptPassword(anyString(), any(MockHttpSession.class))).thenReturn("password");
+        // 테스트용 사용자 데이터 (서비스 없이 컨트롤러 단위 테스트)
+        when(userService.decryptPassword(anyString(), any(MockHttpSession.class)))
+                .thenReturn(UserFixture.adminUser().getPassword());
 
-        // Mocking된 서비스가 반환할 유저 설정
+        // Mocking된 서비스가 반환할 사용자 설정
         when(userService.createUser(any(UserEntity.class))).thenReturn(user);
 
         // 서비스 없이 컨트롤러에서 HTTP 응답만 확인
@@ -135,18 +135,17 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName("유저 목록 조회 - HTTP 응답만 검증")
+    @DisplayName("사용자목록조회_정상_200반환")
     void testGetUsers() throws Exception {
-        // 테스트용 유저 데이터 (서비스 없이 컨트롤러 단위 테스트)
-//        UserEntity newUser = new UserEntity(null, "password123", "email@example.com", "username", null, null, null);
-        UserEntity newUser = new UserEntity();
+        // 테스트용 사용자 데이터 (서비스 없이 컨트롤러 단위 테스트)
+        UserEntity newUser = UserFixture.defaultUser();
 
         List<UserEntity> users = List.of(newUser);
 
-        // Mocking된 서비스가 반환할 유저 목록 설정
+        // Mocking된 서비스가 반환할 사용자 목록 설정
         when(userService.getAllUsers(1, 10, "", "id,asc")).thenReturn(users);
 
-        // GET 요청으로 유저 목록 조회
+        // GET 요청으로 사용자 목록 조회
         mockMvc.perform(get("/users")
                         .param("page", "1")
                         .param("size", "10")
@@ -155,16 +154,16 @@ public class UserControllerTest {
                         .cookie(this.jwtTokenInfo.getJwtAccessCookie()))
                 .andExpect(status().isOk())  // HTTP 200 상태 확인
                 .andExpect(jsonPath("$").isArray())  // 배열 형태로 응답인지 확인
-                .andExpect(jsonPath("$.length()").value(Matchers.greaterThanOrEqualTo(1)));  // 1개 이상의 유저가 있는지 확인
+                .andExpect(jsonPath("$.length()").value(Matchers.greaterThanOrEqualTo(1)));  // 1개 이상의 사용자가 있는지 확인
     }
 
     @Test
-    @DisplayName("유저 단건 조회 - HTTP 응답만 검증")
+    @DisplayName("사용자단건조회_정상_200반환")
     void testGetUserById() throws Exception {
-        // Mocking된 서비스가 반환할 유저 설정
+        // Mocking된 서비스가 반환할 사용자 설정
         when(userService.getUserById(1L)).thenReturn(Optional.of(user));
 
-        // 특정 ID로 유저 조회
+        // 특정 ID로 사용자 조회
         mockMvc.perform(get("/users/{id}", 1L)
                         .cookie(this.jwtTokenInfo.getJwtAccessCookie()))  // 예시 ID: 1
                 .andExpect(status().isOk())  // HTTP 200 상태 확인
@@ -173,18 +172,19 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName("유저 수정 - HTTP 응답만 검증")
+    @DisplayName("사용자수정_정상_200반환")
     void testUpdateUser() throws Exception {
-        // 수정하려는 기존 유저 데이터 (서비스 없이 컨트롤러 단위 테스트)
-        UserEntity updatedUser = new UserEntity(user);
-        updatedUser.setId(user.getId());// 수정할 유저의 ID를 설정
-        updatedUser.setName("newname");// 수정할 유저의 ID를 설정
+        // 수정하려는 기존 사용자 데이터 (서비스 없이 컨트롤러 단위 테스트)
 
-        // Mocking된 서비스가 반환할 유저 설정
+        UserEntity updatedUser = UserFixture.defaultUser();
+        updatedUser.setId(user.getId());// 수정할 사용자의 ID를 설정
+        updatedUser.setName("newname");// 수정할 사용자의 ID를 설정
+
+        // Mocking된 서비스가 반환할 사용자 설정
         // Mockito는 모든 인자에 ArgumentMatchers를 사용해야 함
         when(userService.updateUser(eq(1L), any(UserEntity.class))).thenReturn(Optional.of(updatedUser));
 
-        // 특정 ID로 유저 수정
+        // 특정 ID로 사용자 수정
         mockMvc.perform(put("/users/{id}", 1L)  // URL 경로에서 id 값을 1L로 전달
                             .with(csrf())
 //                        .header("X-CSRF-TOKEN", this.csrfToken)
@@ -198,7 +198,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName("유저 삭제 - HTTP 응답만 검증")
+    @DisplayName("사용자삭제_정상_204반환")
     void testDeleteUser() throws Exception {
         // UserService의 deleteUser 메서드를 호출할 때, 아무것도 반환하지 않도록 설정
         doNothing().when(userService).deleteUser(eq(1L));

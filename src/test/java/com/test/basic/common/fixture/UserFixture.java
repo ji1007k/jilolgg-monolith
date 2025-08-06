@@ -12,7 +12,7 @@ public class UserFixture {
 
     public static UserEntity adminUser() {
         return UserEntity.builder()
-                .email("testadmin@email.com")
+                .email("testadmin" + System.currentTimeMillis() + "@email.com")
                 .password("password123")
 //                .password(RSAUtil.encryptWithPublicKey("password", pubKey))
                 .name("admin")
@@ -29,7 +29,7 @@ public class UserFixture {
 
     public static UserEntity defaultUser() {
         return UserEntity.builder()
-                .email("testuser@email.com")
+                .email("testuser" + System.currentTimeMillis() + "@email.com")
                 .password("password123")
                 .name("testuser")
                 .authority("SCOPE_USER")
@@ -45,7 +45,7 @@ public class UserFixture {
 
     public static UserEntity managerUser() {
         return UserEntity.builder()
-                .email("testmanager@email.com")
+                .email("testmanager" + System.currentTimeMillis() + "@email.com")
                 .password("password123")
                 .name("testmanager")
                 .authority("SCOPE_MANAGER")

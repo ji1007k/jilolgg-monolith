@@ -13,6 +13,14 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 // TODO 객체 저장 RedisTemplate<String, Object> 사용 - 추후 이미지, 파일 등 저장 위함
+
+/**
+ * 채팅 비즈니스 로직
+ * - 메시지 포맷팅
+ * - Redis에 메시지 저장
+ * - Publisher 호출 -> 메시지 발행
+ * - 채팅 히스토리 조회
+ */
 @Service
 public class ChatService {
     private final StringRedisTemplate redisTemplate;

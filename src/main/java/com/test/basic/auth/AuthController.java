@@ -135,9 +135,6 @@ public class AuthController {
 
         response.addHeader("Set-Cookie", refreshTokenCookie.toString());
 
-        // 추가적으로 헤더에서 JWT 토큰 삭제 (필터에서 처리되는 부분)
-        response.setHeader("Authorization", ""); // Authorization 헤더를 비워서 토큰 삭제
-
         // 로그아웃 후 인증 정보를 삭제
         SecurityContextHolder.clearContext();
 

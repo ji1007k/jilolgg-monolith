@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.test.basic.chat.RedisMessageListener;
+import com.test.basic.chat.RedisSubscriber;
 import com.test.basic.lol.domain.match.MatchDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -27,7 +27,7 @@ import java.util.List;
 public class RedisTemplateConfig {
 
     private final StringRedisTemplate redisTemplate;    // 문자열(String) 데이터만 저장
-    private final RedisMessageListener redisMessageListener;
+    private final RedisSubscriber redisSubscriber;
 
 
     // [1] 채팅용 ==================================================================
@@ -49,7 +49,7 @@ public class RedisTemplateConfig {
 
         // 특정 채널(topic) 구독(Subscribe)
         // chat:room:1 으로 들어온 모든 메시지를 redisMessageListener로 전달
-        container.addMessageListener(new MessageListenerAdapter(redisMessageListener),
+        container.addMessageListener(new MessageListenerAdapter(redisSubscriber),
                 topic());
 
         // Ex) 채팅방마다 다른 채널 사용 -> 리소스 사용량 증가

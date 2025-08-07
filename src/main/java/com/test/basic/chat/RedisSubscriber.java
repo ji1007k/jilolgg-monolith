@@ -11,17 +11,21 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 
+/**
+ * Redis 채널에서 메시지 구독 - Redis Pub/Sub 계층
+ * - 메시지 수신
+ * - JSON 파싱 후 웹소켓 핸들러에 전달
+ */
 @Service
-public class RedisMessageListener implements MessageListener {
-    private static final Logger logger = LoggerFactory.getLogger(RedisMessageListener.class);
+public class RedisSubscriber implements MessageListener {
+    private static final Logger logger = LoggerFactory.getLogger(RedisSubscriber.class);
 
     private final ChatWebSocketHandler chatHandler;
 
     @Autowired
     private ObjectMapper om;
 
-    // WebSocket 핸들러 인젝션
-    public RedisMessageListener(ChatWebSocketHandler chatHandler) {
+    public RedisSubscriber(ChatWebSocketHandler chatHandler) {
         this.chatHandler = chatHandler;
     }
 

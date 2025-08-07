@@ -3,6 +3,9 @@ package com.test.basic.chat;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+/**
+ * Redis 채널에 메시지 발행 - Redis Pub/Sub 계층
+ */
 @Service
 public class RedisPublisher {
 

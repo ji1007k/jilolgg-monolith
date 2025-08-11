@@ -19,13 +19,14 @@
 ---
 
 3. **데이터 조회 성능 최적화**
-  - 반복 API 호출 최소화 위해 Redis 캐시 도입 → 유의미한 조회 속도 향상 확인
+  - 반복 API 호출 최소화를 위해 Redis 캐시 도입
+  - 데이터 특성에 따라 변동성이 낮은 데이터일수록 긴 TTL 적용
 
 ---
 
 4. **WebSocket + Redis Pub/Sub 기반 실시간 채팅 기능**
     - Redis Pub/Sub 구조 적용 → 다중 인스턴스 간 메시지 처리 안정화
-    - 연결 유지 및 UX 개선을 위해 Ping/Pong 전략 적용 
+    - 연결 유지를 위해 30초 주기 Ping 메시지 전송 
 
 ---
 
@@ -37,7 +38,7 @@
 ---
 
 6. **배포 방식 개선**
-   - 초기 SSH 수동 배포의 번거로움과 Nginx access.log 다수의 해킹봇 연결 시도 확인 후 배포 방식 변경
+   - 초기 SSH 수동 배포의 번거로움과 Nginx access.log 다수의 해킹봇 연결 시도를 확인한 후 배포 방식 변경
    - GitHub Actions 기반 CI/CD 배포 자동화 (SSH 접속 방식)
    - AWS Systems Manager (SSM) 도입
    - Nginx에서 HTTPS 포트만 허용, 루트 접근 제한, 의심 요청 차단 설정
@@ -51,7 +52,7 @@
       - PostgreSQL DB를 Docker → EC2 설치 → AWS RDS로 전환
       - Redis, JVM, 도커 컨테이너 메모리 제한 + 스왑 메모리 활성화
       - 싱글 코어에 맞춰 SerialGC 사용
-      - 데이터 갱신 후 EntityManager flush/clear로 메모리 사용량 제어
+      - 데이터 갱신 후 영속성 컨텍스트 초기화로 메모리 정리
       - JDK 도구(jps, jstat 등)를 활용해 GC 동작 상태와 메모리 사용 현황 모니터링
 
 ---

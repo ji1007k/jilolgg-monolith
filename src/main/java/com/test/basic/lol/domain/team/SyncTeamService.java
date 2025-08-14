@@ -1,33 +1,29 @@
 package com.test.basic.lol.domain.team;
 
 import com.test.basic.lol.api.esports.LolEsportsApiClient;
-import com.test.basic.lol.domain.league.League;
-import com.test.basic.lol.domain.league.LeagueRepository;
 import jakarta.annotation.PreDestroy;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
+@RequiredArgsConstructor
 public class SyncTeamService {
     private static final Logger logger = LoggerFactory.getLogger(SyncTeamService.class);
 
     private final TeamService teamService;
-    private final TeamRepository teamRepository;
-    private final LeagueRepository leagueRepository;
 
     private final LolEsportsApiClient apiClient;
     private final RedissonClient redissonClient;
@@ -36,22 +32,11 @@ public class SyncTeamService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    public SyncTeamService(TeamRepository teamRepository,
-                           LolEsportsApiClient apiClient,
-                           RedissonClient redissonClient, LeagueRepository leagueRepository,
-                           TeamService teamService) {
-        this.teamRepository = teamRepository;
-        this.apiClient = apiClient;
-        this.redissonClient = redissonClient;
-        this.leagueRepository = leagueRepository;
-        this.teamService = teamService;
-    }
 
-    // RLock은 자동적으로 락 타임아웃을 처리. 
-    // 락을 획득한 스레드가 락을 해제하지 않더라도, 일정 시간이 지나면 자동으로 락을 해제함
-    @Transactional
     @CacheEvict(value = "teams", allEntries = true)
     public String syncTeamsFromLolEsportsApi() {
+        // RLock은 자동적으로 락 타임아웃을 처리.
+        // 락을 획득한 스레드가 락을 해제하지 않더라도, 일정 시간이 지나면 자동으로 락을 해제함
         lock = redissonClient.getLock("sync-teams-lock");
         boolean isLocked = false;
 
@@ -71,7 +56,7 @@ public class SyncTeamService {
             }
 
             // 락을 획득한 후 5초 대기 (테스트용)
-            try {
+            /*try {
                 logger.info(">>> 락 획득 후 5초 대기 시작");
                 Thread.sleep(5000); // 5초 대기
                 logger.info(">>> 5초 대기 완료");
@@ -79,7 +64,7 @@ public class SyncTeamService {
                 Thread.currentThread().interrupt();
                 logger.error(">>> 딜레이 중 예외 발생: {}", e.getMessage());
                 return "딜레이 중 예외 발생";
-            }
+            }*/
 
             // 실제 동기화 작업 실행
             logger.info(">>> LoL Esports API로부터 팀 정보 동기화 시작");
@@ -87,17 +72,17 @@ public class SyncTeamService {
             Mono<String> result = apiClient.fetchAllTeams();
             List<TeamSyncDto> externalTeams = teamService.parseTeamsFromResponse(result.block());
 
-            int successCnt = externalTeams.size();
+            int successCnt = 0;
             Map<String, StringBuilder> errorLogMap = new HashMap<>();
             for (TeamSyncDto dto : externalTeams) {
                 try {
-                    saveOrUpdate(dto);
+                    teamService.saveOrUpdate(dto);
+                    successCnt++;
                 } catch (Exception e) {
                     // 에러 메시지를 키로 사용
                     errorLogMap
                             .computeIfAbsent(e.getMessage(), k -> new StringBuilder())
                             .append(dto.getName()).append(", ");
-                    successCnt--;
                 }
             }
             long syncEndTime = System.currentTimeMillis();
@@ -130,26 +115,6 @@ public class SyncTeamService {
         }
     }
 
-    public void saveOrUpdate(TeamSyncDto dto) {
-        if (dto.getHomeLeague().isEmpty())
-            throw new RuntimeException("League is Empty");
-
-        League league = leagueRepository.findByName(dto.getHomeLeague())
-                .orElseThrow(() -> new RuntimeException("League not found: " + dto.getHomeLeague()));
-
-        Optional<Team> existing = teamRepository.findBySlug(dto.getSlug());
-        Team team = existing.orElseGet(Team::new);
-
-        team.setTeamId(dto.getTeamId());
-        team.setCode(dto.getCode());
-        team.setName(dto.getName());
-        team.setSlug(dto.getSlug());
-        team.setImage(dto.getImage());
-        team.setLeague(league);
-
-        teamRepository.save(team);
-    }
-
     // 애플리케이션이 종료되거나 컨테이너가 닫히기 전에 자원 정리
     @PreDestroy
     private void cleanup() {
@@ -160,7 +125,6 @@ public class SyncTeamService {
             logger.warn(">>> 락 해제 시도 없음 (락 획득 실패 또는 타임아웃에 의한 자동 해제)");
         }
 
-        entityManager.flush();
         entityManager.clear();
     }
 }

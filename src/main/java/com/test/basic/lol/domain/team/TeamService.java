@@ -2,18 +2,24 @@ package com.test.basic.lol.domain.team;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.test.basic.lol.domain.league.League;
 import com.test.basic.lol.domain.league.LeagueRepository;
 import com.test.basic.lol.domain.matchteam.MatchTeamService;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 // TODO 외부 API 데이터 바로 가져오는 로직 분리
 @Service
+@RequiredArgsConstructor
 public class TeamService {
 
     private final TeamRepository teamRepository;
@@ -23,20 +29,6 @@ public class TeamService {
     private final LeagueRepository leagueRepository;
     private final MatchTeamService matchTeamService;
 
-
-    public TeamService(TeamRepository teamRepository,
-//                       LolEsportsApiClient lolEsportsApiClient,
-                       TeamMapper teamMapper,
-                       ObjectMapper objectMapper,
-                       LeagueRepository leagueRepository,
-                       MatchTeamService matchTeamService) {
-        this.teamRepository = teamRepository;
-//        this.lolEsportsApiClient = lolEsportsApiClient;
-        this.teamMapper = teamMapper;
-        this.objectMapper = objectMapper;
-        this.leagueRepository = leagueRepository;
-        this.matchTeamService = matchTeamService;
-    }
 
     @Cacheable("teams")
     public List<Team> getAllTeamsFromDB() {
@@ -118,6 +110,27 @@ public class TeamService {
                 .stream()
                 .map(teamMapper::teamToTeamDto)
                 .toList();
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void saveOrUpdate(TeamSyncDto dto) {
+        if (dto.getHomeLeague().isEmpty())
+            throw new RuntimeException("League is Empty");
+
+        League league = leagueRepository.findByName(dto.getHomeLeague())
+                .orElseThrow(() -> new RuntimeException("League not found: " + dto.getHomeLeague()));
+
+        Optional<Team> existing = teamRepository.findBySlug(dto.getSlug());
+        Team team = existing.orElseGet(Team::new);
+
+        team.setTeamId(dto.getTeamId());
+        team.setCode(dto.getCode());
+        team.setName(dto.getName());
+        team.setSlug(dto.getSlug());
+        team.setImage(dto.getImage());
+        team.setLeague(league);
+
+        teamRepository.save(team);
     }
 
 

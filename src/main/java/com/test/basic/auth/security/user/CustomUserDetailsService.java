@@ -56,6 +56,25 @@ public class CustomUserDetailsService implements UserDetailsService {
         );
     }
 
+    public UserDetails loadUserByUserId(String userId) {
+        // 사용자 정보를 DB에서 조회
+        UserEntity user = userRepository.findById(Long.valueOf(userId))
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        String[] authorities = user.getAuthority().split(",");
+        Collection<GrantedAuthority> grantedAuthorities = Arrays.stream(authorities)
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
+
+        return new CustomUserDetails(
+                user.getId(),
+                user.getEmail(),
+                user.getPassword(),
+                user.getName(),
+                grantedAuthorities
+        );
+    }
+
     /*private Collection<? extends GrantedAuthority> getAuthorities(UserEntity user) {
         // 예: DB에 저장된 역할을 기반으로 Authorities 객체 생성
         return Arrays.stream(user.getAuthority().split(","))

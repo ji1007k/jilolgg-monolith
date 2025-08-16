@@ -85,12 +85,14 @@ public class JwtTokenProvider {
     public Jwt makeRefreshToken(Authentication authentication) {
         Instant now = Instant.now();
 
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
         // 리프레시 토큰 클레임(payload)
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("self")  // JWT를 발급한 주체
                 .issuedAt(now)    // JWT가 발급된 시간
                 .expiresAt(now.plusSeconds(REFRESH_TOKEN_EXPIRY))  // 리프레시 토큰의 만료 시간 (7일)
-                .subject(authentication.getName())   // 주체 (사용자 정보). 여기서는 jwt.getClaim("sub") 값 == userId
+                .subject(userDetails.getId().toString())   // 주체 (사용자 정보). userId
                 .claim("type", "refresh") // 리프레시 토큰 구분을 위한 "type" 클레임
                 .build();
 

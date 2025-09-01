@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
 
@@ -68,6 +69,7 @@ public class MatchService {
         return matchRepository.findMatchesByDate(startOfDay, endOfDay);
     }
 
+    @Cacheable(value = "firstMatchTime", key = "#startOfDay + '_' + #endOfDay")
     public Optional<LocalDateTime> getFirstMatchTimeOfDay(LocalDateTime startOfDay, LocalDateTime endOfDay) {
         return matchRepository.findFirstMatchTimeOfDay(startOfDay, endOfDay);
     }

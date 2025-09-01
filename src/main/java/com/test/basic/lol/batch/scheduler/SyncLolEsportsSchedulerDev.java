@@ -1,5 +1,6 @@
 package com.test.basic.lol.batch.scheduler;
 
+import com.test.basic.lol.batch.service.BatchJobService;
 import com.test.basic.lol.domain.match.Match;
 import com.test.basic.lol.domain.match.MatchCacheService;
 import com.test.basic.lol.domain.match.MatchService;
@@ -13,6 +14,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Year;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,24 +28,33 @@ public class SyncLolEsportsSchedulerDev {
     private final SyncMatchService syncMatchService;
     private final MatchService matchService;
     private final MatchCacheService matchCacheService;
+    private final BatchJobService batchJobService;
 
     public SyncLolEsportsSchedulerDev(SyncTeamService syncTeamService,
-                                      SyncMatchService syncMatchService, MatchService matchService, MatchCacheService matchCacheService) {
+                                      SyncMatchService syncMatchService, MatchService matchService, MatchCacheService matchCacheService, BatchJobService batchJobService) {
         this.syncTeamService = syncTeamService;
         this.syncMatchService = syncMatchService;
         this.matchService = matchService;
         this.matchCacheService = matchCacheService;
+        this.batchJobService = batchJobService;
     }
 
-    @Scheduled(cron = "0 0 * * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 0 3 ? * SUN", zone = "Asia/Seoul")
     private void syncTeamsDev() {
         logger.info("==================== 팀 정보 자동 동기화 작업 시작 ====================");
         syncTeamService.syncTeamsFromLolEsportsApi();
         logger.info("==================== 팀 정보 자동 동기화 작업 완료 ====================");
     }
 
+//    @Scheduled(cron = "0 0 4 * * *", zone = "Asia/Seoul")
+    @Scheduled(fixedDelay = 1000*60*10, initialDelay = 0)     // 즉시 시작 및 10분 간격으로 반복
+    private void syncAllMatchesDev() {
+        logger.info("==================== [전체 경기 일정 자동 동기화 배치 작업 시작] ====================");
+        batchJobService.executeMatchSyncJob(Year.now(ZoneId.of("Asia/Seoul")).toString());
+    }
 
-    @Scheduled(cron = "0 0/10 * * * *", zone = "Asia/Seoul")
+    // 서버 시작 후 5분 뒤 시작 및 10분 간격으로 반복
+    @Scheduled(fixedDelay = 1000*60*10, initialDelay = 1000*60*5) 
     private void syncTodaysMatchesFromApiDev() {
         logger.info("==================== [금일 경기 정보 자동 동기화 작업 시작] ====================");
         LocalDate today = LocalDate.now();

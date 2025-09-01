@@ -66,7 +66,7 @@ public class MatchController {
         return ResponseEntity.ok(matches);
     }
 
-    @GetMapping("/sync")
+    @PostMapping("/sync")
     @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
     @Operation(summary = "리그별 경기일정 수동 동기화", description = "리그별 경기일정 수동 동기화 API")
     public ResponseEntity syncAllMatchesByLeagueIdFromApi(@RequestParam String year) {

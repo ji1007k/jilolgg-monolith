@@ -14,7 +14,7 @@ graph TD
         Redis[Redis<br/>Port 36379<br/>채팅 + 캐싱]
         
         subgraph Docker ["Docker Container"]
-            NextApp[Next.js<br/>/jikimi 컨텍스트<br/>Port 3000]
+            NextApp[Next.js<br/>Port 3000]
             Backend[Spring Boot<br/>REST API + WebSocket<br/>Port 8080]
         end
     end
@@ -25,8 +25,10 @@ graph TD
     
     LoLAPI[LoL Esports API<br/>External]
     
-    Nginx --> NextApp
-    Nginx --> Backend
+    Nginx -- "/api" --> Backend
+    Nginx -- "/ws" --> Backend
+    Nginx -- "/jikimi" --> NextApp
+    
     Backend --> Redis
     Backend --> PostgreSQL
     Backend --> LoLAPI

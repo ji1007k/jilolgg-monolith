@@ -3,7 +3,7 @@
 > **실시간 LoL e스포츠 경기 정보 플랫폼**  
 > JWT 인증, Spring Batch 병렬 처리, 실시간 채팅을 구현한 **백엔드 기술 학습 프로젝트**
 
-📎 [GitHub Repository](https://github.com/ji1007k/JILoL.gg)  
+📎 [GitHub Repository](https://github.com/ji1007k/basic-be-springboot) 
 🌐 [서비스 바로가기](https://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com/jikimi)
 
 ---

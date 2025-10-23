@@ -8,25 +8,27 @@
 ```mermaid
 graph TD
     User[브라우저/사용자] --> Nginx
-    
+
     subgraph EC2 ["AWS EC2 운영환경"]
         Nginx[Nginx Reverse Proxy<br/>Port 80/443]
-        Redis[Redis<br/>Port 36379<br/>채팅 + 캐싱]
-        
+        Redis[Redis<br/>캐싱 + 채팅<br/>Port 36379]
+
         subgraph Docker ["Docker Container"]
-            NextApp[Next.js<br/>/jikimi 컨텍스트<br/>Port 3000]
+            Frontend[Next.js<br/>Port 3000]
             Backend[Spring Boot<br/>REST API + WebSocket<br/>Port 8080]
         end
     end
-    
+
     subgraph RDS ["AWS RDS 서버"]
         PostgreSQL[PostgreSQL<br/>Database]
     end
-    
+
     LoLAPI[LoL Esports API<br/>External]
-    
-    Nginx --> NextApp
-    Nginx --> Backend
+
+    Nginx -- "/api" --> Backend
+    Nginx -- "/ws" --> Backend
+    Nginx -- "/jikimi" --> Frontend
+
     Backend --> Redis
     Backend --> PostgreSQL
     Backend --> LoLAPI

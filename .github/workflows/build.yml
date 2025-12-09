@@ -30,7 +30,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.RAILWYA_GHCR_PAT }}  # GitHub Personal Access Token
+          password: ${{ secrets.RAILWAY_GHCR_PAT }}  # GitHub Personal Access Token
           #password: ${{ secrets.GHCR_PAT }}
 
       # GHCR의 이미지 URL을 환경 변수(REPO_URL)에 저장

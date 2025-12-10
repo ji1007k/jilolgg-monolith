@@ -17,30 +17,29 @@ jobs:
       - name: "[1] Checkout repository"
         uses: actions/checkout@v4
 
-      - name: "[2] Log in to GitHub Container Registry (for Push)"
+      - name: "[2] Log in to GitHub Container Registry (for Pull)"
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.RAILWAY_GHCR_PAT }}
 
-      # 컨테이너 --memory는 최소 -Xmx의 1.5배 이상 잡아야 안정적
-
-      - name: "[3] Trigger Railway Deployment via API"
+      # Railway 배포 트리거 (GraphQL API 사용)
+      - name: "[3] Trigger Railway Deployment via GraphQL"
         run: |
+          echo "Railway GraphQL 배포 트리거 호출 시작..."
+          
+          # 셸 변수를 안전하게 선언 및 사용
           RAILWAY_API_TOKEN="${{ secrets.RAILWAY_API_TOKEN }}"
           RAILWAY_PROJECT_ID="${{ secrets.RAILWAY_PROJECT_ID }}"
           RAILWAY_SERVICE_ID="${{ secrets.RAILWAY_SERVICE_ID }}"
           
-          echo "Railway 배포 API 호출 시작..."
-          
-          # API 호출을 통해 Railway에게 새 배포를 시작하라고 알림
-          # 빈 JSON 본문({})을 data 옵션에 추가하여 요청 전송
+          # GraphQL Mutation 호출 (배포 트리거) - Railway에게 새 배포를 시작하라고 알림
           curl -X POST \
             -H "Authorization: Bearer $RAILWAY_API_TOKEN" \
             -H "Content-Type: application/json" \
-            -d "{}" \
-            "https://api.railway.app/project/$RAILWAY_PROJECT_ID/service/$RAILWAY_SERVICE_ID/deploy"
+            -d '{"query": "mutation { deploymentTrigger(serviceId: \"'$RAILWAY_SERVICE_ID'\") }"}' \
+            "https://api.railway.app/graphql"
           
-          echo "Railway 배포 트리거 완료. 상태는 Railway 대시보드에서 확인하세요."
+          echo "Railway 배포 트리거 요청 완료."
           

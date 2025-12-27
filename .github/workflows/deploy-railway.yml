@@ -14,33 +14,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: "[1] Checkout repository"
-        uses: actions/checkout@v4
+      # [1] 이미지가 이미 GHCR에 있다는 가정하에, 별도의 빌드/체크아웃 생략
+      # [2] Railway CLI 설치 (매번 설치해서 사용. 최신 버전 유지)
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
 
-      - name: "[2] Log in to GitHub Container Registry (for Pull)"
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.RAILWAY_GHCR_PAT }}
-
-      # Railway 배포 트리거 (GraphQL API 사용)
-      - name: "[3] Trigger Railway Deployment via GraphQL"
+      # [3] CLI를 이용한 배포 트리거
+      # --service와 --environment 옵션을 사용하여 명시적으로 타겟 지정
+      - name: Trigger Railway Redeploy
         run: |
-          echo "Railway GraphQL 배포 트리거 호출 시작..."
-          
-          # 셸 변수를 안전하게 선언 및 사용
-          RAILWAY_API_TOKEN="${{ secrets.RAILWAY_API_TOKEN }}"
-          RAILWAY_PROJECT_ID="${{ secrets.RAILWAY_PROJECT_ID }}"
-          RAILWAY_SERVICE_ID="${{ secrets.RAILWAY_SERVICE_ID }}"
-          RAILWAY_ENV_ID="${{ secrets.RAILWAY_ENV_ID }}"
-          
-          # GraphQL Mutation 호출 (배포 트리거) - Railway에게 새 배포를 시작하라고 알림
-          curl -X POST \
-            -H "Authorization: Bearer $RAILWAY_API_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "{ \"query\": \"mutation { serviceInstanceRedeploy(serviceId: \\\"$RAILWAY_SERVICE_ID\\\", environmentId: \\\"$RAILWAY_ENV_ID\\\") }\" }" \
-            "https://backboard.railway.app/graphql"
-          
-          echo -e "\nRailway 배포 트리거 요청 완료."
+          railway redeploy \
+            --service "${{ secrets.RAILWAY_SERVICE_ID }}" \
+            --environment "${{ secrets.RAILWAY_ENV_ID }}" \
+            -y
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
           

@@ -33,7 +33,8 @@ public class WebSocketConfig implements WebSocketConfigurer {
                 .addInterceptors(jwtHandshakeInterceptor)   // 인터셉터 등록 (JWT 인증)
                 .setAllowedOrigins(                         // 특정 도메인 허용
                         "https://localhost:3000",
-                        "https://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com"
+                        "https://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com",
+                        "https://jilolgg.up.railway.app"
                 )
 //                .setAllowedOrigins("*")                     // CORS 설정. 전체 도메인 허용
         ;

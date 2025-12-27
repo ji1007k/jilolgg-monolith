@@ -233,7 +233,15 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000", "https://localhost:3000", "http://localhost:8080", "https://localhost:8080", "http://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com", "https://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com"));  // 도메인 리스트
+        config.setAllowedOrigins(
+                // 도메인 리스트
+                List.of(
+                        "http://localhost:3000", "https://localhost:3000",
+                        "http://localhost:8080", "https://localhost:8080",
+                        "http://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com",
+                        "https://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com",
+                        "https://jilolgg.up.railway.app"
+                ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Content-Type", "Authorization", "X-XSRF-TOKEN", "X-From-Swagger"));
         config.setExposedHeaders(List.of("X-XSRF-TOKEN"));

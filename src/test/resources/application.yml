@@ -13,6 +13,14 @@ spring:
     username: sa
     password:
 
+  data:
+    # Redis 설정
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:hopper.proxy.rlwy.net}
+      port: ${SPRING_DATA_REDIS_PORT:14765}
+      password: ${SPRING_DATA_REDIS_PASSWORD:ghtscjQSRIcJbgwgQMqhFZXqlKDhnpSU}
+      timeout: 2000
+
   # 테스트 데이터 자동 로드 설정
   sql:
     init:

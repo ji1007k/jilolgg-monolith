@@ -24,6 +24,7 @@ jobs:
       - name: Trigger Railway Redeploy
         run: |
           railway redeploy \
+            --project "${{ secrets.RAILWAY_PROJECT_ID }}" \
             --service "${{ secrets.RAILWAY_SERVICE_ID }}" \
             -y
         env:

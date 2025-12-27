@@ -39,6 +39,7 @@ public class SyncLolEsportsApiService {
         this.matchTeamRepository = matchTeamRepository;
     }
 
+    @CacheEvict(value = "leagues", allEntries = true)
     public void syncLeaguesFromLolEsportsApi() {
         Mono<List<LeagueDto>> leagueListMono = lolEsportsApiClient.fetchLeagues();
 

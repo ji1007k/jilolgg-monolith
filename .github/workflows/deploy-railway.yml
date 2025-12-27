@@ -25,7 +25,6 @@ jobs:
         run: |
           railway redeploy \
             --service "${{ secrets.RAILWAY_SERVICE_ID }}" \
-            --environment "${{ secrets.RAILWAY_ENV_ID }}" \
             -y
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}

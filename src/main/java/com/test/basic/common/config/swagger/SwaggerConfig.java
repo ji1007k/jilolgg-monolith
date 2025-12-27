@@ -38,7 +38,7 @@ public class SwaggerConfig {
                 .contact(new Contact()
                         .name("JILoL.gg")
                         .email("ji1007k@gmail.com")
-                        .url("https://jilolgg.up.railway.app")
+                        .url("https://jilolgg.up.railway.app/jikimi")
 //                        .url("https://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com/jikimi")
                 );
 
@@ -78,11 +78,11 @@ public class SwaggerConfig {
                                 .url("https://localhost:8080")
                                 .description("Local Server")
                         , new Server()
-                                .url("http://basic-be-springboot.railway.internal:8080")
-                                .description("Railway Server(prod)")
+                                .url("https://jilolgg.up.railway.app/api")
+                                .description("Railway Server (prod)")
                         /*, new Server()
                                 .url("https://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com/api")
-                                .description("AWS EC2 Server(prod)"),*/
+                                .description("AWS EC2 Server (prod)"),*/
 
                 ));
     }

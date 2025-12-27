@@ -3,19 +3,28 @@ package com.test.basic.common.config;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RedissonConfig {
 
-    @Bean
+    @Value("${spring.data.redis.host}")
+    private String redisHost;
+    @Value("${spring.data.redis.port}")
+    private String redisPort;
+    @Value("${spring.data.redis.password}")
+    private String redisPassword;
+
+    // 분산락을 위한 RedissonClient
+    @Bean(destroyMethod = "shutdown")
     public RedissonClient redissonClient() {
         Config config = new Config();
         // 단일 redis
         config.useSingleServer()
-                .setAddress("redis://54.180.118.74:36379")  // 실제 redis 주소
-                .setPassword("jikim_pwdForRedis_250419")
+                .setAddress("redis://" + redisHost + ":" + redisPort)  // 실제 redis 주소
+                .setPassword(redisPassword)
                 .setConnectionMinimumIdleSize(10)  // 최소 연결 수 설정
                 .setConnectionPoolSize(64);        // 커넥션 풀 크기 설정
         

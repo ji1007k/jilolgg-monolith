@@ -19,10 +19,11 @@ jobs:
       # --service와 --environment 옵션을 사용하여 명시적으로 타겟 지정
       - name: Trigger Railway Redeploy
         run: |
-          railway redeploy -y
+          railway redeploy \
+            --service "${{ secrets.RAILWAY_SERVICE_ID }}" \
+            -y
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
-          RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
           RAILWAY_ENVIRONMENT_ID: ${{ secrets.RAILWAY_ENV_ID }}
           

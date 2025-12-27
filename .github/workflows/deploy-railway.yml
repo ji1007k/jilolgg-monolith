@@ -33,13 +33,14 @@ jobs:
           RAILWAY_API_TOKEN="${{ secrets.RAILWAY_API_TOKEN }}"
           RAILWAY_PROJECT_ID="${{ secrets.RAILWAY_PROJECT_ID }}"
           RAILWAY_SERVICE_ID="${{ secrets.RAILWAY_SERVICE_ID }}"
+          RAILWAY_ENV_ID="${{ secrets.RAILWAY_ENV_ID }}"
           
           # GraphQL Mutation 호출 (배포 트리거) - Railway에게 새 배포를 시작하라고 알림
           curl -X POST \
             -H "Authorization: Bearer $RAILWAY_API_TOKEN" \
             -H "Content-Type: application/json" \
-            -d "{ \"query\": \"mutation { deploymentTrigger(args: { serviceId: \\\"$RAILWAY_SERVICE_ID\\\" }) }\" }" \
+            -d "{ \"query\": \"mutation { serviceInstanceRedeploy(serviceId: \\\"$RAILWAY_SERVICE_ID\\\", environmentId: \\\"$RAILWAY_ENV_ID\\\") }\" }" \
             "https://backboard.railway.app/graphql"
           
-          echo "Railway 배포 트리거 요청 완료."
+          echo -e "\nRailway 배포 트리거 요청 완료."
           

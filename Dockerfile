@@ -36,11 +36,17 @@ RUN adduser \
     --no-create-home \
     --uid "${UID}" \
     appuser \
+ && mkdir -p /app/logs \
  && chown -R ${UID}:${UID} /app/logs
-USER appuser
 
 # JAR 파일을 복사
-COPY --from=build /app/build/libs/*.jar app.jar
+COPY --from=build --chown=appuser:appuser /app/build/libs/*.jar app.jar
+
+# 파일에 실행 권한 추가 (보너스)
+RUN chmod +x app.jar
+
+# 사용자 전환
+USER appuser
 
 # 컨테이너 실행 시 JAR 파일 실행 (LF 형식 필요)
 ENTRYPOINT exec java \

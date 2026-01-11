@@ -30,12 +30,13 @@ public class LeagueService {
 
     public List<LeagueDto> getAllLeagues(Long userId) {
         List<LeagueDto> allLeagues = getAllLeagues();
-        if (userId == null) {
-            return allLeagues;
-        }
+        
+        // 로그인 안 한 경우(null) userId를 0으로 설정하여 기본 정렬 조회
+        Long targetUserId = (userId == null) ? 0L : userId;
 
-        List<UserLeagueOrder> orders = userLeagueOrderRepository.findByUserId(userId);
+        List<UserLeagueOrder> orders = userLeagueOrderRepository.findByUserId(targetUserId);
         if (orders.isEmpty()) {
+            // 0번 유저(기본 설정)도 없으면 그냥 기본 정렬 반환
             return allLeagues;
         }
 

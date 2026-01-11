@@ -177,28 +177,4 @@ public class AuthController {
         // 상태 코드 200과 함께 빈 응답 반환
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
-
-
-    // TODO 
-    //  - Nextjs 프론트엔드 프로젝트 쪽으로 기능 분리
-
-    //	@PreAuthorize("hasAuthority('ADMIN') and #user.username == authentication.name")
-   /* @PreAuthorize("hasAuthority('ADMIN')")
-    @GetMapping("/mypage/admin")
-//	public ResponseEntity<String> getAdminPage(@PathVariable String username, @RequestBody User user) {
-    public ResponseEntity adminPage(Authentication authentication) {
-        return ResponseEntity.ok("Hello, " + authentication.getAuthorities() + ": " + authentication.getName() + "!");
-    }
-
-    // 글로벌 설정을 통해 권한 확인 예
-    @GetMapping("/mypage/manager")
-    public ResponseEntity managerPage(Authentication authentication) {
-        return ResponseEntity.ok("Hello, " + authentication.getAuthorities() + ": " + authentication.getName() + "!");
-    }
-
-    @PreAuthorize("hasAuthority('USER')")
-    @GetMapping("/mypage")
-    public ResponseEntity hello(Authentication authentication) {
-        return ResponseEntity.ok("Hello, " + authentication.getName() + "!");
-    }*/
 }

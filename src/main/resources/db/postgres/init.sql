@@ -8,7 +8,8 @@ END $$;
 
 
 -- 데이터베이스 권한 부여
-GRANT ALL PRIVILEGES ON DATABASE basic TO jikim;
+-- GRANT ALL PRIVILEGES ON DATABASE basic TO jikim;
+GRANT ALL PRIVILEGES ON DATABASE railway TO jikim;
 
 -- 스키마 내 권한 부여
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO jikim;

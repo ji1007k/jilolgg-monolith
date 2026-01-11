@@ -99,8 +99,8 @@ public class SecurityConfig {
                         .requestMatchers( "/css/**", "/js/**", "/images/**", "/html/**").permitAll()
                         // Swagger
                         .requestMatchers("/api/swagger-ui/**", "/api/v3/api-docs/**").permitAll()
-                        // 로그인, 회원가입
-                        .requestMatchers("/auth/login", "/auth/signup").permitAll()
+                        // 로그인, 회원가입, CSRF 토큰 발급
+                        .requestMatchers("/auth/login", "/auth/signup", "/csrf").permitAll()
                         // lol
                         .requestMatchers(
                                 "/lol/teams/sync",
@@ -145,7 +145,9 @@ public class SecurityConfig {
                                 new AntPathRequestMatcher("/auth/signup"),
                                 new AntPathRequestMatcher("/auth/token/refresh"),
                                 // 경기 전적 조회
-                                new AntPathRequestMatcher("/lol/matchhistory")
+                                new AntPathRequestMatcher("/lol/matchhistory"),
+                                // 리그 순서 변경 (CSRF 토큰 문제 발생 시 임시 허용)
+                                new AntPathRequestMatcher("/lol/leagues/orders")
                         )
                         .csrfTokenRepository(customCsrfTokenRepository())
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())	// 토큰 해석기 지정(spring security 6~)

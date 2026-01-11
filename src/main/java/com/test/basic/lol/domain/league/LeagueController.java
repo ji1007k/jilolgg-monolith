@@ -1,10 +1,18 @@
 package com.test.basic.lol.domain.league;
 
 import com.test.basic.lol.api.esports.SyncLolEsportsApiService;
+import com.test.basic.auth.security.user.CustomUserDetails;
+import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,17 +47,50 @@ public class LeagueController {
 
     @GetMapping
     public ResponseEntity<List<LeagueDto>> getAllLeagues() {
-        return ResponseEntity.ok(leagueService.getAllLeagues().stream()
+        Long userId = getUserIdFromAuthentication();
+        return ResponseEntity.ok(leagueService.getAllLeagues(userId).stream()
 //                .filter(league -> MAJOR_LEAGUE_IDS.contains(league.getLeagueId()))
-                .toList()
-        );
+                .toList());
     }
 
-    @GetMapping("/sync")
+    @PutMapping("/orders")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> updateLeagueOrders(@RequestBody List<String> leagueIds) {
+        Long userId = getUserIdFromAuthentication();
+        if (userId != null) {
+            leagueService.updateLeagueOrders(userId, leagueIds);
+        }
+        return ResponseEntity.ok().build();
+    }
+
+
+    @Timed(value = "lol.batch.league", description = "리그 동기화 실행 시간")
+    @PostMapping("/sync")
     @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
     public ResponseEntity<List<LeagueDto>> getAllLeaguesFromApi() {
         syncLolEsportsApiService.syncLeaguesFromLolEsportsApi();
         return ResponseEntity.ok(leagueService.getAllLeagues());
+    }
+
+    private Long getUserIdFromAuthentication() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getPrincipal())) {
+            Object principal = authentication.getPrincipal();
+            
+            if (principal instanceof Jwt) {
+                // JWT 인증인 경우 (Access Token)
+                String subject = ((Jwt) principal).getSubject();
+                try {
+                    return Long.valueOf(subject);
+                } catch (NumberFormatException e) {
+                    return null;
+                }
+            } else if (principal instanceof CustomUserDetails) {
+                // CustomUserDetails 인증인 경우 (Refresh Token 등)
+                return ((CustomUserDetails) principal).getId();
+            }
+        }
+        return null;
     }
 
 }

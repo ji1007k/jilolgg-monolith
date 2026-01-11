@@ -95,6 +95,24 @@ alter table "user_favorite_team"
     owner to jikim;
 
 
+CREATE TABLE IF NOT EXISTS "user_league_orders"
+(
+    id            BIGSERIAL PRIMARY KEY,
+    user_id       BIGINT      NOT NULL,
+    league_id     VARCHAR(64) NOT NULL,
+    display_order INT         NOT NULL,
+    updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id, league_id)
+);
+
+comment on table "user_league_orders" is '사용자별 리그 정렬 순서';
+comment on column "user_league_orders".id is '고유 ID';
+comment on column "user_league_orders".user_id is '사용자 ID (users 테이블 FK)';
+comment on column "user_league_orders".league_id is '리그 ID (leagues 테이블 league_id)';
+comment on column "user_league_orders".display_order is '정렬 순서 (0부터 시작)';
+comment on column "user_league_orders".updated_at is '수정 일시';
+
+
 CREATE TABLE IF NOT EXISTS "posts"
 (
     "id"         bigserial primary key,
@@ -162,4 +180,4 @@ CREATE TABLE IF NOT EXISTS temp_table
     "id"          bigserial primary key,
     "tamp_column" bigint not null,
     UNIQUE ("id", "tamp_column")
-)
+);

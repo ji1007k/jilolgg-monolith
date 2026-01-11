@@ -1,6 +1,8 @@
 package com.test.basic.lol.domain.league;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,12 +14,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class LeagueService {
 
+    private static final Logger logger = LoggerFactory.getLogger(LeagueService.class);
+
     private final LeagueRepository leagueRepository;
     private final UserLeagueOrderRepository userLeagueOrderRepository;
     private final LeagueMapper leagueMapper;
 
 
-    @Cacheable("leagues")
+//    @Cacheable("leagues")
     public List<LeagueDto> getAllLeagues() {
         return leagueRepository.findAll().stream()
                 .map(leagueMapper::entityToLeagueDto)
@@ -45,7 +49,10 @@ public class LeagueService {
 
     @Transactional
     public void updateLeagueOrders(Long userId, List<String> leagueIds) {
+        logger.info("Updating league orders for userId: {}, leagueIds: {}", userId, leagueIds);
+        
         userLeagueOrderRepository.deleteByUserId(userId);
+        logger.info("Deleted existing orders for userId: {}", userId);
         
         List<UserLeagueOrder> newOrders = new ArrayList<>();
         for (int i = 0; i < leagueIds.size(); i++) {
@@ -56,6 +63,7 @@ public class LeagueService {
                     .build());
         }
         userLeagueOrderRepository.saveAll(newOrders);
+        logger.info("Saved {} new orders for userId: {}", newOrders.size(), userId);
     }
 
     public Optional<League> getLeagueByLeagueId(String leagueId) {

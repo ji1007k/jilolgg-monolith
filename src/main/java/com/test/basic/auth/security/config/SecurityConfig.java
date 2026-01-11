@@ -107,7 +107,8 @@ public class SecurityConfig {
                                 "/lol/teams/sync-with-csrf",
                                 "/lol/favorites/**",
                                 "/lol/matches/sync",
-                                "/lol/batch/**"
+                                "/lol/batch/**",
+                                "/lol/leagues/orders"   // 리그 순서 변경
                         ).authenticated()
                         .requestMatchers(
                                 "/lol/leagues",

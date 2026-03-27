@@ -1,21 +1,16 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { login as apiLogin } from "@/utils/api.js"; // 로그인 API 호출 분리
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext.js";  // useAuth 훅을 사용
+import { useAuth } from "@/context/AuthContext.js"; // useAuth 훅을 사용
 
 export default function LoginForm() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState(null);
     const router = useRouter();
-    const { login, devLogin } = useAuth();  // AuthContext에서 login 함수 가져오기
-
-    const clickCount = useRef(0);
-    const lastClickTime = useRef(0);
-    const clickTimer = useRef(null);
-    const CLICK_INTERVAL = 450;
+    const { login } = useAuth(); // AuthContext에서 login 함수 가져오기
 
     const handleLogin = async () => {
         setError(null);
@@ -52,44 +47,6 @@ export default function LoginForm() {
         }
     }
 
-    const handleDoubleClickLogin = async () => {
-        await devLogin(); // 기본 admin/admin
-    };
-
-    const handleTripleClickLogin = async () => {
-        const restPwd = prompt("pwd 입력:", "");
-        if (!restPwd) return;
-        await devLogin("jikim", "jikim" + restPwd); // 개발용 계정
-    };
-
-    const handleLoginButtonClick = () => {
-        const now = Date.now();
-
-        if (now - lastClickTime.current < CLICK_INTERVAL) {
-            clickCount.current += 1;
-        } else {
-            clickCount.current = 1;
-        }
-
-        lastClickTime.current = now;
-
-        if (clickTimer.current) {
-            clearTimeout(clickTimer.current);
-        }
-
-        clickTimer.current = setTimeout(async () => {
-            if (clickCount.current === 1) {
-                await handleLogin();
-            } else if (clickCount.current === 2) {
-                await handleDoubleClickLogin();
-            } else if (clickCount.current >= 3) {
-                await handleTripleClickLogin();
-            }
-            clickCount.current = 0;
-            clickTimer.current = null;
-        }, CLICK_INTERVAL);
-    };
-
     return (
         <div>
             {error && <p className="error-message">{error}</p>}
@@ -117,7 +74,7 @@ export default function LoginForm() {
                     placeholder="Enter your password"
                 />
             </div>
-            <button className="login-btn" onClick={handleLoginButtonClick}>
+            <button className="login-btn" onClick={handleLogin}>
                 로그인
             </button>
         </div>

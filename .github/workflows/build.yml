@@ -1,48 +1,44 @@
-name: "[CI] Build Basic BE SpringBoot"
+name: "[CI] Build & Push Monolith App (Next.js + Spring Boot)"
 
 on:
+  push:
+    branches:
+      - main  # main 브랜치에 직접 커밋/푸시될 때 실행
   pull_request:
     branches:
-      - main  # main 브랜치 대상
-    # PR 처음 열렸을 때, PR에 커밋 추가될 떄, PR 다시 열렸을 떄
+      - main  # PR 요청 시 실행
     types: [opened, synchronize, reopened]
 
 jobs:
   build:
-    name: "[CI] Build Basic BE SpringBoot"
+    name: "[CI] Monolith Image Build & Push to GHCR"
     runs-on: ubuntu-22.04
 
     steps:
-      # 원격 서버에서 사용할 수 있도록 레포지토리 코드 다운로드
-      - name: "[1] Checkout repository"
-        uses: actions/checkout@v4  # 레포지토리 체크아웃 (git clone)
+      - name: "[1] 저장소 코드 다운로드 (Checkout)"
+        uses: actions/checkout@v4
 
-      # 기본 Docker 빌드보다 더 유연한 빌드를 지원하는
-      # Docker Buildx(멀티 플랫폼 빌드 도구)를 최신 버전으로 설정
-      - name: "[2] Set up Docker Buildx"
+      - name: "[2] Docker Buildx 설정"
         uses: docker/setup-buildx-action@v2
         with:
-          version: latest  # 최신 버전으로 설정
+          version: latest
 
-      # Github Actions에서 GHCR 로그인
-      - name: "[3] Log in to GitHub Container Registry"
+      - name: "[3] GitHub Container Registry(GHCR) 로그인"
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}  # GitHub Personal Access Token
+          password: ${{ secrets.GHCR_PAT }}
 
-      # GHCR의 이미지 URL을 환경 변수(REPO_URL)에 저장
-      # 이후 docker build, docker push에서 활용
-      - name: "[4] Set repository variable"
-        run: echo "REPO_URL=ghcr.io/${{ github.repository }}" >> $GITHUB_ENV  # GHCR URL을 환경 변수로 설정
+      - name: "[4] 도커 이미지 URL 환경 변수 등록"
+        run: echo "REPO_URL=ghcr.io/${{ github.repository }}" >> $GITHUB_ENV
         
-      # 도커 이미지 빌드 및 GHCR에 푸시
-      - name: "[5] Build and push Docker image"
+      - name: "[5] 모놀리식 앱 통합 빌드 및 GHCR 푸시"
         run: |
-          # Docker 이미지를 빌드하고 GHCR로 푸시
-          docker build -t $REPO_URL:latest .  # GHCR에 태그 붙여서 빌드
-          docker push $REPO_URL:latest        # 이미지를 GHCR로 푸시
+          # 프론트엔드(Next.js)와 백엔드(Spring Boot)가 통합된 서버 이미지를 빌드합니다.
+          # Dockerfile 내부에서 Node.js 설치 및 Gradle 빌드가 함께 이뤄집니다.
+          docker build -t $REPO_URL:latest .
+          docker push $REPO_URL:latest
 
 
 

@@ -2,6 +2,7 @@ package com.test.basic.notification;
 
 import com.test.basic.lol.domain.match.Match;
 import com.test.basic.lol.domain.match.MatchRepository;
+import com.google.firebase.FirebaseApp;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -109,6 +110,11 @@ public class NotificationService {
 
     public void sendFcmPush(String targetToken, String title, String body) {
         try {
+            if (FirebaseApp.getApps().isEmpty()) {
+                log.error("FCM Push skipped: FirebaseApp [DEFAULT] is not initialized.");
+                return;
+            }
+
             com.google.firebase.messaging.Message message = com.google.firebase.messaging.Message.builder()
                  .setToken(targetToken)
                  .setNotification(com.google.firebase.messaging.Notification.builder()

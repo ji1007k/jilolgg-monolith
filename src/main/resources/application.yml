@@ -6,7 +6,7 @@ spring:
   profiles:
     # 환경변수로 오버라이드 가능
     default: ${SPRING_PROFILES_ACTIVE:prod}
-    active: prod
+    active: dev
 
   # 캐시 설정
   cache:
@@ -80,6 +80,14 @@ lol:
 cookie:
   secure: true
   same-site: None
+
+firebase:
+  credentials:
+    # Railway/서버에서는 환경변수로 주입 권장
+    # - firebase.credentials.json (서비스계정 JSON 문자열)
+    # - firebase.credentials.path (서비스계정 파일 경로)
+    json: ${FIREBASE_CREDENTIALS_JSON:}
+    path: ${FIREBASE_CREDENTIALS_PATH:}
 
 # Swagger OpenAPI
 springdoc:

@@ -53,11 +53,13 @@
 
 .star-icon.favorited,
 .star-icon.hovered {
-    color: #fbbf24; /* yellow-400 */
+    color: #fbbf24;
+    /* yellow-400 */
 }
 
 .star-icon.not-favorited {
-    color: #9ca3af; /* gray-400 */
+    color: #9ca3af;
+    /* gray-400 */
 }
 
 /* Hovered 상태일 때 아이콘 확대 */
@@ -67,19 +69,22 @@
 
 
 /* 팀별 아이콘 버튼 스타일  */
-.team-btn-container{
+.team-btn-container {
     @apply flex gap-3 overflow-x-auto px-2 py-3;
     scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch; /* 부드러운 스크롤 (iOS) */
+    -webkit-overflow-scrolling: touch;
+    /* 부드러운 스크롤 (iOS) */
 }
 
 .team-btn-container::-webkit-scrollbar {
-    display: none; /* 스크롤바 숨김 */
+    display: none;
+    /* 스크롤바 숨김 */
 }
 
 .team-button {
     @apply w-10 h-10 flex items-center justify-center rounded-full border-2 transition-all duration-300 overflow-hidden;
-    flex: 0 0 auto; /* 크기 고정, 줄어들지 않도록 */
+    flex: 0 0 auto;
+    /* 크기 고정, 줄어들지 않도록 */
     background-color: #333333;
 }
 
@@ -111,16 +116,19 @@
     @apply absolute -top-2 -left-2 z-10 p-1 bg-white rounded-full;
     cursor: pointer;
 }
+
 .star-icon {
     @apply text-lg transition-transform duration-150;
 }
+
 .star-icon.active {
     @apply text-yellow-400;
 }
+
 .star-icon.inactive {
     @apply text-gray-400;
 }
+
 .star-icon.hover {
     @apply scale-110;
 }
-

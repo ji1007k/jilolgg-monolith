@@ -3,7 +3,7 @@
 > **운영 안정성과 성능 최적화에 집중한 실시간 LoL e스포츠 서비스 플랫폼**  
 > JWT 무상태 인증, Spring Batch 병렬 처리 및 FCM 비동기 푸시 알림을 도입해 백엔드 인프라 아키텍처를 점진적으로 진화시킨 프로젝트입니다.
 
-📎 [GitHub Repository](https://github.com/ji1007k/basic-be-springboot)  
+📎 [GitHub Repository](https://github.com/ji1007k/jilolgg-monolith)  
 🌐 [서비스 바로가기](https://jilolgg.up.railway.app/jikimi)
 
 ---

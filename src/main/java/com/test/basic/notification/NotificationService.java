@@ -10,8 +10,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,13 +28,20 @@ public class NotificationService {
 
     @Transactional
     public void registerToken(Long userId, String tokenStr, String deviceInfo) {
-        FcmToken token = FcmToken.builder()
+        Optional<FcmToken> existingToken = tokenRepository.findByUserIdAndToken(userId, tokenStr);
+        if (existingToken.isPresent()) {
+            FcmToken token = existingToken.get();
+            token.setDeviceInfo(deviceInfo);
+            token.setUpdatedAt(LocalDateTime.now());
+            return;
+        }
+
+        tokenRepository.save(FcmToken.builder()
                 .userId(userId)
                 .token(tokenStr)
                 .deviceInfo(deviceInfo)
                 .updatedAt(LocalDateTime.now())
-                .build();
-        tokenRepository.save(token);
+                .build());
     }
 
     @Transactional
@@ -48,33 +58,50 @@ public class NotificationService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public Set<String> getEnabledMatchIds(Long userId, List<String> matchIds) {
+        if (matchIds == null || matchIds.isEmpty()) {
+            return Set.of();
+        }
+
+        return alarmRepository.findByUserIdAndMatchIdIn(userId, matchIds)
+                .stream()
+                .map(MatchAlarm::getMatchId)
+                .collect(Collectors.toSet());
+    }
+
     /**
-     * 매 분마다 실행되어 10분 뒤 시작할 경기를 찾고 FCM 푸시를 발송합니다.
+     * 매 분마다 실행되어 "지금 시작하는 경기"를 찾아 FCM 푸시를 발송합니다.
      */
     @Scheduled(cron = "0 * * * * *")
     @Transactional(readOnly = true)
     public void scheduleMatchAlarms() {
         LocalDateTime now = LocalDateTime.now();
-        // 10분 뒤에 시작하는 경기를 탐색 (전후 1분 여유를 둡니다)
-        LocalDateTime targetTimeStart = now.plusMinutes(9).withSecond(0).withNano(0);
-        LocalDateTime targetTimeEnd = now.plusMinutes(11).withSecond(0).withNano(0);
+        // 현재 분(초 0)부터 다음 분 직전까지를 "경기 시작 시각"으로 간주
+        LocalDateTime targetTimeStart = now.withSecond(0).withNano(0);
+        LocalDateTime targetTimeEnd = targetTimeStart.plusMinutes(1);
         
         List<Match> upcomingMatches = matchRepository.findMatchesStartingBetween(targetTimeStart, targetTimeEnd);
         if (upcomingMatches.isEmpty()) {
             return;
         }
 
-        log.info("{} 시간에 시작하는 경기가 {}개 있습니다. 알림 발송을 시작합니다.", targetTimeStart, upcomingMatches.size());
+        log.info("{} 시각에 시작하는 경기가 {}개 있습니다. 알림 발송을 시작합니다.", targetTimeStart, upcomingMatches.size());
         
         for (Match match : upcomingMatches) {
             List<MatchAlarm> alarms = alarmRepository.findByMatchId(match.getMatchId());
             for (MatchAlarm alarm : alarms) {
                 List<FcmToken> tokens = tokenRepository.findByUserId(alarm.getUserId());
-                for (FcmToken t : tokens) {
+                // 같은 유저에서 동일 토큰이 중복 저장되었을 수 있어 중복 발송을 방지합니다.
+                List<String> distinctTokens = new ArrayList<>(tokens.stream()
+                        .map(FcmToken::getToken)
+                        .collect(Collectors.toSet()));
+
+                for (String token : distinctTokens) {
                     // 팀 이름 등을 조합해서 알림 메시지 생성
-                    String title = "경기 시작 10분 전!";
-                    String body = String.format("[%s] 경기가 곧 시작됩니다. 놓치지 마세요!", match.getBlockName());
-                    sendFcmPush(t.getToken(), title, body);
+                    String title = "경기 시작 알림";
+                    String body = String.format("[%s] 경기가 시작되었습니다. 지금 확인해보세요!", match.getBlockName());
+                    sendFcmPush(token, title, body);
                 }
             }
         }
@@ -93,5 +120,23 @@ public class NotificationService {
         } catch (Exception e) {
             log.error("FCM Push Error", e);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public int sendTestPushToUser(Long userId, String title, String body) {
+        List<FcmToken> tokens = tokenRepository.findByUserId(userId);
+        if (tokens.isEmpty()) {
+            return 0;
+        }
+
+        List<String> distinctTokens = new ArrayList<>(tokens.stream()
+                .map(FcmToken::getToken)
+                .collect(Collectors.toSet()));
+
+        for (String token : distinctTokens) {
+            sendFcmPush(token, title, body);
+        }
+
+        return distinctTokens.size();
     }
 }

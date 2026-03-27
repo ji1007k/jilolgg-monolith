@@ -6,6 +6,8 @@ import { useAuth } from "@/context/AuthContext";
 export default function AdminPage() {
     const { username } = useAuth();
     const [msg, setMsg] = useState("");
+    const [pushCountdown, setPushCountdown] = useState(0);
+    const [isPushSending, setIsPushSending] = useState(false);
 
     const syncApi = async (url, method) => {
         setMsg(`요청 중... (${url}) 데이터 양이 많아 수십 초 대기할 수 있습니다.`);
@@ -29,6 +31,43 @@ export default function AdminPage() {
             }
         } catch (err) {
             setMsg(`❌ 네트워크 에러: ${err.message}`);
+        }
+    };
+
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    const sendDelayedTestPush = async () => {
+        if (isPushSending) {
+            return;
+        }
+
+        setIsPushSending(true);
+        setMsg("테스트 푸시 예약됨: 5초 뒤 발송합니다.");
+
+        try {
+            for (let sec = 5; sec >= 1; sec--) {
+                setPushCountdown(sec);
+                await sleep(1000);
+            }
+            setPushCountdown(0);
+
+            const response = await fetch("/api/notification/test?title=관리자%20테스트%20알림&body=5초%20지연%20푸시%20테스트", {
+                method: "GET",
+                credentials: "include",
+            });
+
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || data.success === false) {
+                setMsg(`❌ 푸시 발송 실패: ${data.message || `${response.status} ${response.statusText}`}`);
+                return;
+            }
+
+            setMsg(`✅ 테스트 푸시 발송 완료 (토큰 ${data.sentCount}건)`);
+        } catch (err) {
+            setMsg(`❌ 푸시 요청 오류: ${err.message}`);
+        } finally {
+            setPushCountdown(0);
+            setIsPushSending(false);
         }
     };
 
@@ -61,6 +100,12 @@ export default function AdminPage() {
                 </button>
                 <button onClick={() => syncApi(`/api/lol/matches/sync?year=${new Date().getFullYear()}`, 'POST')} style={btnStyle}>
                     4. 금년도 경기일정 동기화 (Match {new Date().getFullYear()}년 기준)
+                </button>
+
+                <button onClick={sendDelayedTestPush} style={btnStyle} disabled={isPushSending}>
+                    {isPushSending
+                        ? `5. 테스트 푸시 발송 대기 중... (${pushCountdown || 0}초)`
+                        : "5. 5초 뒤 테스트 푸시 발송"}
                 </button>
             </div>
 

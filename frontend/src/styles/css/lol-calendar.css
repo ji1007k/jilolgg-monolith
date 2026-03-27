@@ -407,6 +407,67 @@
     margin-bottom: 8px;
 }
 
+.match-list-popup .alarm-bell-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 16px;
+}
+
+.match-list-popup .alarm-bell-btn.active {
+    color: #f59e0b;
+    background-color: #fff7ed;
+    border-color: #f59e0b;
+}
+
+.match-list-popup .alarm-bell-btn.inactive {
+    color: #9ca3af;
+    background-color: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+.match-list-popup .alarm-bell-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.match-list-popup .alarm-bell-loading {
+    font-size: 10px;
+    letter-spacing: 1px;
+}
+
+.match-list-popup .alarm-toast {
+    margin: 10px 12px 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+.match-list-popup .alarm-toast.success {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #6ee7b7;
+}
+
+.match-list-popup .alarm-toast.info {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #93c5fd;
+}
+
+.match-list-popup .alarm-toast.error {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
+}
+
 .match-list-popup .status-labels {
     display: flex;
     align-items: center;
@@ -580,6 +641,18 @@
 
     .match-list-popup .status-labels {
         font-size: 0.6875rem;
+    }
+
+    .match-list-popup .alarm-bell-btn {
+        width: 26px;
+        height: 26px;
+        font-size: 14px;
+    }
+
+    .match-list-popup .alarm-toast {
+        margin: 8px 10px 0;
+        padding: 8px 10px;
+        font-size: 0.75rem;
     }
 
     .match-list-popup .label {

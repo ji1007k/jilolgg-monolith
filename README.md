@@ -3,7 +3,7 @@
 > **운영 안정성과 성능 최적화에 집중한 실시간 LoL e스포츠 서비스 플랫폼**  
 > JWT 무상태 인증, Spring Batch 병렬 처리 및 FCM 비동기 푸시 알림을 도입해 백엔드 인프라 아키텍처를 점진적으로 진화시킨 프로젝트입니다.
 
-📎 [GitHub Repository](https://github.com/ji1007k/basic-be-springboot)  
+📎 [GitHub Repository](https://github.com/ji1007k/jilolgg-monolith)  
 🌐 [서비스 바로가기](https://jilolgg.up.railway.app/jikimi)
 
 ---
@@ -61,6 +61,7 @@ SI 실무 체계에서의 개발 경험을 바탕으로, 단순한 기능 구현
 - **[장애 극복]** Next.js의 App Router 정적 렌더링 방식과 Spring Boot 정적 자원 핸들링(`forward:/`) 사이의 라우팅 충돌 현상 원인 규명 및 리다이렉트 필터 구축기
 - **[안정성 처리]** 대규모 외부 API 병렬 폴링(Polling) 시 발생하는 `429 Too Many Requests` 예외에 대비한 Spring Batch 의 Chunk 재시도(Retry) 최적화 전략
 - **[CI/CD 전략]** Gradle 빌드 정책 튜닝: `processResources` 단계 의존성 주입을 활용해 로컬과 클라우드 운영 환경 간의 권한(Execution Policy) 이슈를 우회하는 통합 무중단 빌드 파이프라인
+- **[CORS 및 보안 인증]** 로컬 프론트엔드(Next.js, 3000)와 백엔드(Spring Boot, 8080) 물리적 분리 환경에서 무상태(Stateless) JWT 기반의 HTTP-Only 쿠키 인증 시 발생한 Preflight CORS 에러 극복 과정 (Spring Security내 `allowCredentials` 및 `allowedOriginPatterns` 통제)
 
 ---
 

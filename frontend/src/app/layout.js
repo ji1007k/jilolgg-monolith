@@ -2,9 +2,9 @@
  * 전체 레이아웃
  */
 import { Geist, Geist_Mono } from "next/font/google";
-import "@/styles/css/style.css";
 import Header from "@/components/common/Header.js";
 import { AuthProvider } from "@/context/AuthContext.js";
+import "@/styles/css/style.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,15 +23,15 @@ export const metadata = {
 
 // 헤더를 모든 페이지에서 공통으로 사용
 export default function RootLayout({ children }) {
-    return (
-        <html lang="en">
-        <body className={`${geistSans.variable} ${geistMono.variable}`}>
-            {/* AuthProvider로 앱 전체를 감싸기 */}
-            <AuthProvider>
-                <Header />
-                {children}
-            </AuthProvider>
-        </body>
-        </html>
-    );
+  return (
+    <html lang="en">
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        {/* AuthProvider로 앱 전체를 감싸기 */}
+        <AuthProvider>
+          <Header />
+          {children}
+        </AuthProvider>
+      </body>
+    </html>
+  );
 }

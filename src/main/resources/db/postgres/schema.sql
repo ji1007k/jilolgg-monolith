@@ -112,6 +112,31 @@ comment on column "user_league_orders".league_id is '리그 ID (leagues 테이�
 comment on column "user_league_orders".display_order is '정렬 순서 (0부터 시작)';
 comment on column "user_league_orders".updated_at is '수정 일시';
 
+CREATE TABLE IF NOT EXISTS "fcm_tokens"
+(
+    id          BIGSERIAL PRIMARY KEY,
+    user_id     BIGINT       NOT NULL,
+    token       VARCHAR(512) NOT NULL,
+    device_info TEXT,
+    updated_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_fcm_tokens_user_token
+    ON "fcm_tokens" (user_id, token);
+
+CREATE TABLE IF NOT EXISTS "match_alarms"
+(
+    id       BIGSERIAL PRIMARY KEY,
+    user_id  BIGINT      NOT NULL,
+    match_id VARCHAR(64) NOT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_match_alarms_user_match
+    ON "match_alarms" (user_id, match_id);
+
+CREATE INDEX IF NOT EXISTS idx_match_alarms_match_id
+    ON "match_alarms" (match_id);
+
 
 CREATE TABLE IF NOT EXISTS "posts"
 (

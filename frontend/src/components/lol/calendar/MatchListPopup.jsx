@@ -1,13 +1,69 @@
+import { useEffect, useMemo, useState } from 'react';
 import Popup from 'reactjs-popup';
 import format from 'date-fns/format';
 import 'reactjs-popup/dist/index.css';
-import { FiX } from 'react-icons/fi';
+import { FiBell, FiBellOff, FiX } from 'react-icons/fi';
 import ko from "date-fns/locale/ko";
 import Loading from "@components/common/Loading.js";
 import {useSwipeable} from "react-swipeable";
+import { useAuth } from "@/context/AuthContext.js";
+import { apiGetAlarmStatus, apiToggleMatchAlarm } from "@/utils/api-notification.js";
+import { requestForToken } from "@/utils/firebase.js";
 
 function MatchListPopup ({ open, onClose, matches, date, isLoading, onPrevDate, onNextDate }) {
     const matchDate = format(new Date(date), "yyyy년 M월 d일 (EEE)", { locale: ko });
+    const { userId } = useAuth();
+    const [alarmMap, setAlarmMap] = useState({});
+    const [togglingMatchId, setTogglingMatchId] = useState(null);
+    const [toast, setToast] = useState(null);
+
+    const unstartedMatchIds = useMemo(() => {
+        return (matches || [])
+            .filter(match => match.state === "unstarted")
+            .map(match => match.matchId);
+    }, [matches]);
+
+    useEffect(() => {
+        if (!open || !userId || unstartedMatchIds.length === 0) {
+            setAlarmMap({});
+            return;
+        }
+
+        let cancelled = false;
+
+        async function fetchAlarmStatus() {
+            try {
+                const enabledMatchIds = await apiGetAlarmStatus(unstartedMatchIds);
+                if (cancelled) return;
+
+                const nextAlarmMap = {};
+                enabledMatchIds.forEach((matchId) => {
+                    nextAlarmMap[matchId] = true;
+                });
+                setAlarmMap(nextAlarmMap);
+            } catch (error) {
+                if (!cancelled) {
+                    console.error("알림 상태 조회 실패:", error);
+                }
+            }
+        }
+
+        fetchAlarmStatus();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [open, userId, unstartedMatchIds]);
+
+    useEffect(() => {
+        if (!toast) return;
+
+        const timer = setTimeout(() => {
+            setToast(null);
+        }, 2500);
+
+        return () => clearTimeout(timer);
+    }, [toast]);
 
     const handlers = useSwipeable({
         onSwipedLeft: () => onNextDate(),  // 오른쪽에서 왼쪽으로 스와이프 → 다음 날짜
@@ -15,6 +71,48 @@ function MatchListPopup ({ open, onClose, matches, date, isLoading, onPrevDate, 
         preventScrollOnSwipe: true, // 스와이프가 인식되었을 때만 preventDefault()를 호출해서 브라우저 스크롤을 막음
         trackMouse: true, // 데스크탑에서도 마우스로 테스트 가능
     });
+
+    const handleToggleAlarm = async (match) => {
+        const matchId = match.matchId;
+
+        if (!userId) {
+            setToast({ type: "error", message: "알림 설정은 로그인 후 사용할 수 있습니다." });
+            return;
+        }
+
+        setTogglingMatchId(matchId);
+        try {
+            const tokenResult = await requestForToken();
+            if (!tokenResult?.ok) {
+                if (tokenResult?.reason === "permission_denied") {
+                    setToast({ type: "error", message: "브라우저 알림 권한이 필요합니다. 사이트 알림을 허용해주세요." });
+                } else {
+                    setToast({ type: "error", message: "알림 토큰 발급에 실패했습니다. 페이지를 새로고침 후 다시 시도해주세요." });
+                }
+                return;
+            }
+
+            const result = await apiToggleMatchAlarm(matchId);
+            const isEnabled = Boolean(result.enabled);
+
+            setAlarmMap(prev => ({
+                ...prev,
+                [matchId]: isEnabled,
+            }));
+
+            if (isEnabled) {
+                const matchStartTimeText = format(new Date(match.startTime), "yyyy년 MM월 dd일 HH시 mm분", { locale: ko });
+                setToast({ type: "success", message: `${matchStartTimeText}에 알림이 설정되었습니다.` });
+            } else {
+                setToast({ type: "info", message: "알림 설정이 해제되었습니다." });
+            }
+        } catch (error) {
+            console.error("알림 설정 변경 실패:", error);
+            setToast({ type: "error", message: "알림 설정 변경에 실패했습니다." });
+        } finally {
+            setTogglingMatchId(null);
+        }
+    };
 
     return (
         <Popup
@@ -39,6 +137,12 @@ function MatchListPopup ({ open, onClose, matches, date, isLoading, onPrevDate, 
                             <FiX />
                         </button>
                     </div>
+
+                    {toast && (
+                        <div className={`alarm-toast ${toast.type}`}>
+                            {toast.message}
+                        </div>
+                    )}
 
                     {isLoading ? (
                         <div className="popup-body">
@@ -70,6 +174,25 @@ function MatchListPopup ({ open, onClose, matches, date, isLoading, onPrevDate, 
                                                     {isCompleted && <span className="label completed">종료</span>}
                                                     <span>{format(new Date(match.startTime), 'HH:mm')}</span>
                                                 </div>
+
+                                                {isUnstarted && (
+                                                    <button
+                                                        type="button"
+                                                        className={`alarm-bell-btn ${alarmMap[match.matchId] ? "active" : "inactive"}`}
+                                                        onClick={() => handleToggleAlarm(match)}
+                                                        disabled={togglingMatchId === match.matchId}
+                                                        aria-label={alarmMap[match.matchId] ? "알림 해제" : "알림 설정"}
+                                                        title={alarmMap[match.matchId] ? "알림 해제" : "알림 설정"}
+                                                    >
+                                                        {togglingMatchId === match.matchId ? (
+                                                            <span className="alarm-bell-loading">...</span>
+                                                        ) : alarmMap[match.matchId] ? (
+                                                            <FiBell />
+                                                        ) : (
+                                                            <FiBellOff />
+                                                        )}
+                                                    </button>
+                                                )}
                                             </div>
 
                                             {(isLive || isCompleted)  && (
@@ -116,6 +239,7 @@ function MatchListPopup ({ open, onClose, matches, date, isLoading, onPrevDate, 
                                                 </div>
                                             )
                                             }
+
                                         </div>
                                     )
                                 })

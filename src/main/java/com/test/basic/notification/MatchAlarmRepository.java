@@ -7,4 +7,5 @@ import java.util.Optional;
 public interface MatchAlarmRepository extends JpaRepository<MatchAlarm, Long> {
     Optional<MatchAlarm> findByUserIdAndMatchId(Long userId, String matchId);
     List<MatchAlarm> findByMatchId(String matchId);
+    List<MatchAlarm> findByUserIdAndMatchIdIn(Long userId, List<String> matchIds);
 }

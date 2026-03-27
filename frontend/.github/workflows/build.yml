@@ -1,0 +1,71 @@
+name: "[CI] Build Basic FE Next.js"
+
+on:
+  # PR 처음 열렸을 때, PR에 커밋 추가될 떄, PR 다시 열렸을 떄
+  pull_request:
+    branches:
+      - main  # main 브랜치 대상
+    types: [opened, synchronize, reopened]
+
+jobs:
+  buildBasicFeNextjs:
+    name: "[CI] Build Basic FE Next.js"
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: "[1] basic-fe-nextjs 프로젝트 다운로드"
+        uses: actions/checkout@v4
+
+      # docker buildx를 사용해서 여러 플랫폼용 이미지를 빌드할 때,
+      # QEMU가 있으면 현재 머신이 지원하지 않는 아키텍처도 빌드 가능
+#      - name: Set up QEMU
+#        uses: docker/setup-qemu-action@v3
+
+      - name: "[2] Docker Buildx 사용 설정"
+        uses: docker/setup-buildx-action@v2
+        with:
+          version: latest
+
+      #- name: [3] Log in to GHCR
+      #  run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u USERNAME --password-stdin
+
+      - name: "[3] Github 컨테이너 레지스트리 로그인"
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          # ${{ github.<property> }} : GitHub에서 제공하는 기본 컨텍스트 값을 참조
+          username: ${{ github.actor }}
+          # ${{ secrets.<SECRET_NAME> }} : GitHub에서 제공하는 보안 환경 변수 (암호화된 저장)
+          # Github Repository Settings > Security > Secrets and variables > Actions
+          password: ${{ secrets.GHCR_PAT }}
+
+      # bash 에서 접근
+      #run: echo "$REPO_URL"
+      # GitHub Actions 표현식에서 접근
+      #run: echo "${{ env.REPO_URL }}"
+      - name: "[4] repository URL을 GitHub Actions의 환경 변수(GITHUB_ENV)에 등록"
+        run: |
+          echo "REPO_URL=ghcr.io/${{ github.repository }}" >> $GITHUB_ENV
+
+      # >-(폴딩 블록) : 자동으로 줄 바꿈을 무시하면서 하나의 명령어로 해석
+      - name: "[4.1] REPO_URL 확인"
+        run: >-
+          echo "REPO_URL is set to: $REPO_URL"
+        
+      # --progress=plain : 더 자세한 빌드 로그 출력
+      - name: "[5] 도커 이미지 빌드 및 GHCR로 푸시"
+        run: |
+          docker build --progress=plain -t $REPO_URL:latest .
+          docker push $REPO_URL:latest
+
+      # GitHub Actions에서 Docker 이미지를 빌드하고 푸시하는 공식 액션 사용
+#      - name: "[5-1] 도커 이미지 빌드 및 GHCR로 푸시"
+#        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
+#        context: .  # 빌드 컨텍스트 (현재 디렉토리로 설정)
+#        file: ./Dockerfile # context 기준으로 도커 파일 위치 설정
+#        platforms: ${{ matrix.platforms }} # 여러 플랫폼(ex. linux/amd64, linux/arm64)용 이미지 한 번에 빌드
+#        platforms: [linux/amd64, linux/arm64]
+#        push: true  # 빌드 후 이미지 push ON
+        # 빌드 결과 타입(도커 이미지), 이미지 이름, 이미지 설명
+#        outputs: type=image,name=target,annotation-index.org.opencontainers.image.description=My multi-arch image
+

@@ -6,6 +6,7 @@ spring:
   profiles:
     # 환경변수로 오버라이드 가능
     default: ${SPRING_PROFILES_ACTIVE:prod}
+    active: dev
 
   # 캐시 설정
   cache:

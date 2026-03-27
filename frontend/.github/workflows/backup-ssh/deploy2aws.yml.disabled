@@ -1,0 +1,39 @@
+name: "[CD] Deploy Basic FE Next.js TO AWS EC2"
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deployBasicFeNextjs:
+    name: "[CD] Deploy Basic FE Next.js to AWS EC2"
+    runs-on: ubuntu-22.04
+    steps:
+
+      - name: "[1] SSH로 AWS EC2 접속 & GHCR에 프론트엔드 앱 도커 이미지 다운로드 & 컨테이너 배포"
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          # ${{ secrets.<SECRET_NAME> }} : GitHub에서 제공하는 보안 환경 변수 (암호화된 저장)
+          # Github Repository Settings > Security > Secrets and variables > Actions
+          # SSH_HOST: HOST IP
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}  # SSH 포트 지정
+          username: ${{ secrets.SSH_USER }}
+          # RSA 키페어 중 pem 파일 내용
+          key: ${{ secrets.SSH_PRIV_KEY }}
+          script: |
+            REPO_URL="ghcr.io/${{ github.repository }}"
+            CONTAINER_NAME="container_basic-fe-nextjs"
+            
+            # echo 명령어 실행을 통한 결과를 | docker login 명령어의 password 값으로 사용
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            docker pull $REPO_URL:latest
+            
+            docker stop $CONTAINER_NAME
+            docker rm $CONTAINER_NAME
+            
+            docker run -d --name $CONTAINER_NAME -p 3000:3000 $REPO_URL:latest
+            
+            docker ps

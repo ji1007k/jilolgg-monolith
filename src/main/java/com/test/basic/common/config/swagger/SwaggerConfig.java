@@ -29,62 +29,62 @@ import java.util.List;
 */
 @Configuration
 public class SwaggerConfig {
-    @Bean
-    public OpenAPI customOpenAPI() {
-        Info info = new Info()
-                .title("JILoL.gg API")
-                .version("1.0.0")
-                .description("Spring Boot를 이용한 Demo 웹 애플리케이션 API 문서")
-                .contact(new Contact()
-                        .name("JILoL.gg")
-                        .email("ji1007k@gmail.com")
-                        .url("https://jilolgg.up.railway.app/jikimi")
-//                        .url("https://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com/jikimi")
-                );
+        @Bean
+        public OpenAPI customOpenAPI() {
+                Info info = new Info()
+                                .title("JILoL.gg API")
+                                .version("1.0.0")
+                                .description("Spring Boot를 이용한 Demo 웹 애플리케이션 API 문서")
+                                .contact(new Contact()
+                                                .name("JILoL.gg")
+                                                .email("ji1007k@gmail.com")
+                                                .url("https://jilolgg.up.railway.app/jikimi")
+                                // .url("https://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com/jikimi")
+                                );
 
-        //  Swagger UI에서 보여줄 서버 목록 설정
-        return new OpenAPI()
-                .components(new Components()
-                        .addSecuritySchemes(
-                                "01_BasicAuth",
-                                new SecurityScheme()
-                                        .type(SecurityScheme.Type.HTTP)
-                                        .scheme("basic")
-                        )
-                        .addSecuritySchemes(
-                                "02_BearerAuth",
-                                new SecurityScheme()
-                                        .type(SecurityScheme.Type.HTTP)
-                                        .scheme("bearer").bearerFormat("JWT")
-                        )
-                        .addSecuritySchemes(
-                                "03_CSRF",
-                                new SecurityScheme()
-                                        .type(SecurityScheme.Type.APIKEY)
-                                        .in(SecurityScheme.In.HEADER)
-                                        .name("X-XSRF-TOKEN")
-                        )
-                        .addSecuritySchemes(
-                                "04_IgnoreCSRF",
-                                new SecurityScheme()
-                                        .type(SecurityScheme.Type.APIKEY)
-                                        .in(SecurityScheme.In.HEADER)
-                                        .name("X-From-Swagger")
-                        )
-                )
-                .info(info)
-                .servers(List.of(
-                        new Server()
-                                .url("https://localhost:8080")
-                                .description("Local Server")
-                        , new Server()
-                                .url("https://jilolgg.up.railway.app/api")
-                                .description("Railway Server (prod)")
-                        /*, new Server()
-                                .url("https://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com/api")
-                                .description("AWS EC2 Server (prod)"),*/
+                // Swagger UI에서 보여줄 서버 목록 설정
+                return new OpenAPI()
+                                .components(new Components()
+                                                .addSecuritySchemes(
+                                                                "01_BasicAuth",
+                                                                new SecurityScheme()
+                                                                                .type(SecurityScheme.Type.HTTP)
+                                                                                .scheme("basic"))
+                                                .addSecuritySchemes(
+                                                                "02_BearerAuth",
+                                                                new SecurityScheme()
+                                                                                .type(SecurityScheme.Type.HTTP)
+                                                                                .scheme("bearer").bearerFormat("JWT"))
+                                                .addSecuritySchemes(
+                                                                "03_CSRF",
+                                                                new SecurityScheme()
+                                                                                .type(SecurityScheme.Type.APIKEY)
+                                                                                .in(SecurityScheme.In.HEADER)
+                                                                                .name("X-XSRF-TOKEN"))
+                                                .addSecuritySchemes(
+                                                                "04_IgnoreCSRF",
+                                                                new SecurityScheme()
+                                                                                .type(SecurityScheme.Type.APIKEY)
+                                                                                .in(SecurityScheme.In.HEADER)
+                                                                                .name("X-From-Swagger")))
+                                .info(info)
+                                .servers(List.of(
+                                                new Server()
+                                                                .url("https://localhost:8080")
+                                                                .description("Local Server"),
+                                                new Server()
+                                                                .url("https://jilolgg.up.railway.app/api")
+                                                                .description("Railway Server (prod)"),
+                                                new Server()
+                                                                .url("http://localhost:8080")
+                                                                .description("Local Server")
+                                /*
+                                 * , new Server()
+                                 * .url("https://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com/api")
+                                 * .description("AWS EC2 Server (prod)"),
+                                 */
 
-                ));
-    }
+                                ));
+        }
 
 }

@@ -2,6 +2,13 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.3.1'
     id 'io.spring.dependency-management' version '1.1.7'
+    id "com.github.node-gradle.node" version "7.1.0"
+}
+
+node {
+    download = false
+    version = "22.12.0"
+    nodeProjectDir = file("${projectDir}/frontend")
 }
 
 group = 'com.test'
@@ -32,8 +39,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springframework.boot:spring-boot-starter-batch'
 
-    // 채팅 기능 구현 (WebSocket + Redis Pub/Sub)
-    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    // 푸시 기능 (Firebase Admin SDK)
+    implementation 'com.google.firebase:firebase-admin:9.2.0'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
     // 분산 락 (Redis Redisson).
@@ -93,3 +100,25 @@ tasks.withType(JavaCompile) {
 processResources {
     filteringCharset = 'UTF-8'
 }
+
+task buildFrontend(type: NpmTask) {
+    args = ['run', 'build']
+}
+
+task copyFrontend(type: Copy) {
+    from "${projectDir}/frontend/out"
+    into "${projectDir}/src/main/resources/static/jikimi"
+}
+
+// npmInstall이 너무 느릴 경우 node_modules가 있으면 건너뛰도록 설정
+npmInstall.onlyIf {
+    !file("${projectDir}/frontend/node_modules").exists()
+}
+
+buildFrontend.dependsOn npmInstall
+copyFrontend.dependsOn buildFrontend
+
+// 일반적인 빌드/실행 시에는 프론트엔드 빌드를 건너뛸 수 있도록 설정
+// 오직 명시적으로 빌드하거나 특정 속성이 있을 때만 실행되게 변경 가능
+// 여기서는 기본 의존성을 제거하고 필요할 때만 `./gradlew copyFrontend`를 실행하도록 유도
+processResources.dependsOn copyFrontend // 이 줄을 주석 처리하여 매번 FE 빌드되는 것을 방지

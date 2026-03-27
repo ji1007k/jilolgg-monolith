@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-// OncePerRequestFilter를 상속 시 요청 하나당 한 번만 필터 실행
 @Component
 public class CustomJwtFilter extends OncePerRequestFilter {
     private static final Logger logger = LoggerFactory.getLogger(CustomJwtFilter.class);
@@ -41,8 +40,8 @@ public class CustomJwtFilter extends OncePerRequestFilter {
         this.customUserDetailsService = customUserDetailsService;
 
         this.authoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        this.authoritiesConverter.setAuthorityPrefix("");    // "SCOPE_" 자동 추가 방지
-        this.authoritiesConverter.setAuthoritiesClaimName("authorities");  // authorities 클레임 사용
+        this.authoritiesConverter.setAuthorityPrefix(""); // "SCOPE_" 자동 추가 방지
+        this.authoritiesConverter.setAuthoritiesClaimName("authorities"); // authorities 클레임 사용
     }
 
     @Override
@@ -50,19 +49,8 @@ public class CustomJwtFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String path = request.getRequestURI();
-        logger.info("Request path: {}", path);
 
-        // 정적 리소스가 요청된 경우, 인증 건너뜀
-        if (path.startsWith("/css/") || path.startsWith("/js/") || path.startsWith("/images/")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-        
-//        String method = request.getMethod(); // 요청 메서드 가져오기
-//        if (path.startsWith("/auth/login") && "GET".equalsIgnoreCase(method)) {
-        List<String> whitelist = List.of("/auth/login", "/auth/signup", "/token/generate");
-
-        if (whitelist.contains(path)) {
+        if (isStaticResource(path)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -72,8 +60,7 @@ public class CustomJwtFilter extends OncePerRequestFilter {
         response.setHeader("Cache-Control", "no-cache");
 
         try {
-            // 토큰 재발급 요청이면 refresh 토큰 유효성 검증
-            if (path.equals("/auth/token/refresh")) {
+            if (path.endsWith("/auth/token/refresh")) {
                 String refreshToken = jwtTokenProvider.getJwtStrFromCookie(request.getCookies(), "refresh_token");
 
                 if (refreshToken == null || !jwtTokenProvider.validateToken(refreshToken)) {
@@ -83,8 +70,8 @@ public class CustomJwtFilter extends OncePerRequestFilter {
                 // refresh 토큰에서 userId 추출 → DB에서 사용자 정보 조회
                 Jwt refreshJwt = jwtTokenProvider.getJwtFromStr(refreshToken);
                 UserDetails userDetails = customUserDetailsService.loadUserByUserId(refreshJwt.getSubject());
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
 
                 if (SecurityContextHolder.getContext().getAuthentication() == null) {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -115,13 +102,27 @@ public class CustomJwtFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    private boolean isStaticResource(String path) {
+        // 프론트엔드 정적 파일은 인증 필터를 태울 필요 없음 (속도 및 불필요한 로그 방지)
+        return path.startsWith("/jikimi/") ||
+                path.startsWith("/css/") ||
+                path.startsWith("/js/") ||
+                path.startsWith("/images/") ||
+                path.endsWith(".ico") ||
+                path.endsWith(".svg") ||
+                path.endsWith(".png");
+    }
+
     private Collection<GrantedAuthority> extractAuthorities(Jwt jwt) {
         // JwtGrantedAuthoritiesConverter를 사용하여 권한 변환
-        // JwtGrantedAuthoritiesConverter: 기본적으로 OAuth2의 scope 클레임을 권한(GrantedAuthority)으로 변환
-        //  -> 이때 모든 권한 앞에 SCOPE_가 자동으로 붙는다.
-        /*List<GrantedAuthority> authorities = authoritiesConverter.convert(jwt)
-                .stream()
-                .collect(Collectors.toList());*/
+        // JwtGrantedAuthoritiesConverter: 기본적으로 OAuth2의 scope 클레임을
+        // 권한(GrantedAuthority)으로 변환
+        // -> 이때 모든 권한 앞에 SCOPE_가 자동으로 붙는다.
+        /*
+         * List<GrantedAuthority> authorities = authoritiesConverter.convert(jwt)
+         * .stream()
+         * .collect(Collectors.toList());
+         */
 
         List<GrantedAuthority> authorities = new ArrayList<>(authoritiesConverter.convert(jwt));
         logger.info("Converted Authorities: {}", authorities);

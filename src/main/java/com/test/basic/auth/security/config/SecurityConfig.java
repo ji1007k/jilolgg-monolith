@@ -67,7 +67,7 @@ import java.util.regex.Pattern;
  * @author Josh Cummings
  */
 @Configuration
-@EnableMethodSecurity    // @PreAuthorize로 메서드 실행 전후에 권한 체크 활성화
+@EnableMethodSecurity // @PreAuthorize로 메서드 실행 전후에 권한 체크 활성화
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -101,6 +101,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/swagger-ui/**", "/api/v3/api-docs/**").permitAll()
                         // 로그인, 회원가입, CSRF 토큰 발급
                         .requestMatchers("/auth/login", "/auth/signup", "/csrf").permitAll()
+                        // frontend
+                        .requestMatchers("/jikimi/**").permitAll()
                         // lol
                         .requestMatchers(
                                 "/lol/teams/sync",
@@ -196,7 +198,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CustomJwtFilter customJwtFilter(JwtTokenProvider jwtTokenProvider, CustomUserDetailsService customUserDetailsService) {
+    public CustomJwtFilter customJwtFilter(JwtTokenProvider jwtTokenProvider,
+            CustomUserDetailsService customUserDetailsService) {
         return new CustomJwtFilter(jwtTokenProvider, customUserDetailsService);
     }
 
@@ -219,7 +222,6 @@ public class SecurityConfig {
         return new NimbusJwtEncoder(jwks);
     }
 
-
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
@@ -230,7 +232,6 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(); // 비밀번호 암호화
     }
-
 
     // Spring Security 필터에서 CORS 처리 (필터체인 레벨에서 동작)
     @Bean
@@ -243,8 +244,7 @@ public class SecurityConfig {
                         "http://localhost:8080", "https://localhost:8080",
                         "http://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com",
                         "https://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com",
-                        "https://jilolgg.up.railway.app"
-                ));
+                        "https://jilolgg.up.railway.app"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Content-Type", "Authorization", "X-XSRF-TOKEN", "X-From-Swagger"));
         config.setExposedHeaders(List.of("X-XSRF-TOKEN"));
@@ -261,7 +261,7 @@ public class SecurityConfig {
         repo.setCookieName("XSRF-TOKEN");
 
         repo.setCookieCustomizer(builder -> builder.path("/").httpOnly(false).secure(isSecure).sameSite(sameSite)
-//				.maxAge(Duration.ofHours(1))
+        // .maxAge(Duration.ofHours(1))
         );
 
         return repo;
@@ -279,19 +279,19 @@ public class SecurityConfig {
                 }
 
                 // swagger 전용 헤더가 포함되어있다면 CORS 처리 X
-                if (request.getHeader("X-From-Swagger") != null && request.getHeader("X-From-Swagger").equalsIgnoreCase("skip")) {
-                    return false;    // CSRF 보호를 건너뜀
+                if (request.getHeader("X-From-Swagger") != null
+                        && request.getHeader("X-From-Swagger").equalsIgnoreCase("skip")) {
+                    return false; // CSRF 보호를 건너뜀
                 }
-                return true;    // 나머지 요청은 CSRF 보호 유지
+                return true; // 나머지 요청은 CSRF 보호 유지
             }
         };
     }
 
-
-//	TODO 삭제	===================================================================
+    // TODO 삭제 ===================================================================
 
     // 애플리케이션 종료 시 사라짐. 테스트용 사용자 정보
-	/*@Bean
+    /*@Bean
 	UserDetailsService users() {
 		// @formatter:off
 		UserDetails admin = User.withUsername("admin")
@@ -309,31 +309,36 @@ public class SecurityConfig {
 		return new InMemoryUserDetailsManager(admin, user);
 	}*/
 
-
     // Spring MVC 레벨 CORS 처리 (필터체인 이후 동작)
-    //	-> Spring Security 환경에서는 불충분한 설정 (이미 필터체인에서 cors 거부가 끝날 수 있기 때문)
-    // Spring Boot에서 CORS를 사용하고 있다면, 쿠키를 보내기 위해 Access-Control-Allow-Credentials: true를 설정해야 해.
+    // -> Spring Security 환경에서는 불충분한 설정 (이미 필터체인에서 cors 거부가 끝날 수 있기 때문)
+    // Spring Boot에서 CORS를 사용하고 있다면, 쿠키를 보내기 위해 Access-Control-Allow-Credentials:
+    // true를 설정해야 해.
     // React 등 프론트엔드에서 백엔드 API를 호출할 때 CORS 오류를 방지
-	/*@Configuration
-	public static class CorsConfig implements WebMvcConfigurer {
-		public static final String ALLOWED_METHOD_NAMES = "GET,POST,PATCH,PUT,DELETE,OPTIONS";
-
-		@Override
-		public void addCorsMappings(CorsRegistry registry) {
-			registry.addMapping("/**")	// 모든 경로에 대해 CORS 허용
-					// 크로스 도메인 요청에서 쿠키를 허용하려면 특정 도메인(allowedOrigins)을 지정해야 함
-					.allowedOrigins(
-							"http://localhost:3000",
-							"https://localhost:3000",
-							"http://localhost:8080",
-							"https://localhost:8080",
-							"http://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com",
-							"https://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com"
-					) // 허용할 프론트엔드 도메인
-					.allowedMethods(ALLOWED_METHOD_NAMES.split(","))	// 허용할 HTTP 메서드
-					.allowedHeaders("Content-Type", "Authorization", "X-XSRF-TOKEN", "X-From-Swagger") 	// 클라이언트가 보낼 수 있는 헤더
-					.exposedHeaders("X-XSRF-TOKEN")	// 클라이언트가 응답에서 읽을 수 있는 헤더
-					.allowCredentials(true);	// JWT, CSRF 등 인증 정보(쿠키) 포함 허용 (credentials: 'include'가 포함된 요청 허용)
-		}
-	}*/
+    /*
+     * @Configuration
+     * public static class CorsConfig implements WebMvcConfigurer {
+     * public static final String ALLOWED_METHOD_NAMES =
+     * "GET,POST,PATCH,PUT,DELETE,OPTIONS";
+     * 
+     * @Override
+     * public void addCorsMappings(CorsRegistry registry) {
+     * registry.addMapping("/**") // 모든 경로에 대해 CORS 허용
+     * // 크로스 도메인 요청에서 쿠키를 허용하려면 특정 도메인(allowedOrigins)을 지정해야 함
+     * .allowedOrigins(
+     * "http://localhost:3000",
+     * "https://localhost:3000",
+     * "http://localhost:8080",
+     * "https://localhost:8080",
+     * "http://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com",
+     * "https://ec2-54-180-118-74.ap-northeast-2.compute.amazonaws.com"
+     * ) // 허용할 프론트엔드 도메인
+     * .allowedMethods(ALLOWED_METHOD_NAMES.split(",")) // 허용할 HTTP 메서드
+     * .allowedHeaders("Content-Type", "Authorization", "X-XSRF-TOKEN",
+     * "X-From-Swagger") // 클라이언트가 보낼 수 있는 헤더
+     * .exposedHeaders("X-XSRF-TOKEN") // 클라이언트가 응답에서 읽을 수 있는 헤더
+     * .allowCredentials(true); // JWT, CSRF 등 인증 정보(쿠키) 포함 허용 (credentials:
+     * 'include'가 포함된 요청 허용)
+     * }
+     * }
+     */
 }

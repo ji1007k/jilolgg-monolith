@@ -22,17 +22,20 @@ public class RedissonConfig {
     public RedissonClient redissonClient() {
         Config config = new Config();
         // 단일 redis
-        config.useSingleServer()
-                .setAddress("redis://" + redisHost + ":" + redisPort)  // 실제 redis 주소
-                .setPassword(redisPassword)
-                .setConnectionMinimumIdleSize(10)  // 최소 연결 수 설정
-                .setConnectionPoolSize(64);        // 커넥션 풀 크기 설정
-        
+        var serverConfig = config.useSingleServer()
+                .setAddress("redis://" + redisHost + ":" + redisPort) // 실제 redis 주소
+                .setConnectionMinimumIdleSize(10) // 최소 연결 수 설정
+                .setConnectionPoolSize(64); // 커넥션 풀 크기 설정
+
+        if (redisPassword != null && !redisPassword.isEmpty()) {
+            serverConfig.setPassword(redisPassword);
+        }
+
         // redis 클러스터
-//        config.useClusterServers()
-//                .addNodeAddress("redis://127.0.0.1:7000")
-//                .addNodeAddress("redis://127.0.0.1:7001")
-//                .addNodeAddress("redis://127.0.0.1:7002");
+        // config.useClusterServers()
+        // .addNodeAddress("redis://127.0.0.1:7000")
+        // .addNodeAddress("redis://127.0.0.1:7001")
+        // .addNodeAddress("redis://127.0.0.1:7002");
         return Redisson.create(config);
     }
 }

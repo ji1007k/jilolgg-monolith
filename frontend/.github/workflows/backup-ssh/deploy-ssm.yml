@@ -1,0 +1,72 @@
+name: "[CD] Deploy Basic FE Next.js via SSM"
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deployBasicFeNextjs:
+    name: "[CD] Deploy Basic FE Next.js to AWS EC2"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "[1] Checkout repository"
+        uses: actions/checkout@v4
+
+      - name: "[2] Set repository variable"
+        run: echo "REPO_URL=ghcr.io/${{ github.repository }}" >> $GITHUB_ENV
+
+      - name: "[3] Deploy via SSM"
+        run: |
+          # 도커 이미지 전체 경로 문자열로 정의
+          REPO_URL="ghcr.io/${{ github.repository }}"
+          
+          # 명령어 배열 문자열 작성 (SSM에서 실행될 명령들)
+          COMMANDS="[\
+            \"echo '${{ secrets.GHCR_PAT }}' | docker login ghcr.io -u '${{ github.actor }}' --password-stdin\", \
+            \"docker pull $REPO_URL:latest\", \
+            \"docker stop basic-fe || true\", \
+            \"docker rm basic-fe || true\", \
+            \"docker run -d --name basic-fe -p 3000:3000 $REPO_URL:latest\", \
+            \"docker ps\"\
+          ]"
+
+          # SSM 명령 전송
+          CMD_ID=$(aws ssm send-command \
+            --region ${{ secrets.AWS_REGION }} \
+            --document-name "AWS-RunShellScript" \
+            --instance-ids ${{ secrets.AWS_SSM_INSTANCE_ID }} \
+            --comment "Deploy Next.js frontend via SSM" \
+            --parameters commands="$COMMANDS" \
+            --query "Command.CommandId" \
+            --output text)
+
+          echo "SSM command sent. CommandId: $CMD_ID"
+
+          # 명령 상태 확인 (최대 60초, 5초 간격)
+          for i in {1..12}; do
+            STATUS=$(aws ssm list-command-invocations \
+              --region ${{ secrets.AWS_REGION }} \
+              --command-id $CMD_ID \
+              --details \
+              --query "CommandInvocations[0].Status" \
+              --output text)
+
+            echo "Current SSM command status: $STATUS"
+            if [ "$STATUS" == "Success" ] || [ "$STATUS" == "Failed" ]; then
+              break
+            fi
+            sleep 5
+          done
+
+          # 명령 결과 출력
+          aws ssm list-command-invocations \
+            --region ${{ secrets.AWS_REGION }} \
+            --command-id $CMD_ID \
+            --details \
+            --query "CommandInvocations[0].CommandPlugins[0].Output" \
+            --output text
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

@@ -1,0 +1,707 @@
+/* ================================
+   공통 스타일
+=============================== */
+
+/* 전체 페이지 스타일 */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f7fc;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+/* ================================
+   헤더 스타일 (세련된 디자인)
+=============================== */
+header {
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+.header-container {
+    box-sizing: border-box;
+    background-color: #333; /* 다크한 색상으로 고급스러운 느낌 */
+    color: white;
+    padding: 15px 25px;
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* 더 부드러운 그림자 */
+    border-bottom: 2px solid #444; /* 헤더 하단 경계선 */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /*max-width: 1200px;*/
+    margin: 0 auto;
+    /*padding: 0 20px;*/
+    font-family: 'Roboto', sans-serif;
+}
+
+
+@media (max-width: 500px) {
+    .header-container > div {
+        display: inline-grid;
+    }
+
+    .header-container > div .api-docs-link {
+        padding-left: 0;
+        width: fit-content;
+    }
+}
+
+/* Main Link 스타일 */
+.header-container .main-link {
+    color: white;
+    text-decoration: none;
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    transition: color 0.3s ease;
+}
+
+/* Main Link Hover 효과 */
+.header-container .main-link:hover {
+    color: #ff5722; /* 오렌지 색상으로 강조 */
+    text-decoration: underline;
+}
+
+.header-container .api-docs-link {
+    color: white;
+    text-decoration: none;
+    padding-left: 20px;
+    transition: color 0.3s ease;
+}
+
+.header-container .api-docs-link:hover {
+    color: #ff5722; /* 오렌지 색상으로 강조 */
+    text-decoration: underline;
+}
+
+@media (max-width: 500px) {
+    .header-container {
+        padding: 10px 20px;
+    }
+
+    .header-container .main-link {
+        font-size: 20px;
+    }
+
+    .header-container .api-docs-link {
+        font-size: 14px;
+    }
+
+    .header-container .user-info {
+        font-size: 14px;
+    }
+
+    .nav-container nav ul li {
+        padding: 8px;
+    }
+
+    .nav-container nav ul li.active {
+        padding: 8px 15px 5px 15px;
+    }
+}
+
+
+/* ================================
+   사용자 정보 영역 스타일
+=============================== */
+.user-info {
+    display: flex;
+    align-items: center;  /* 수직 중앙 정렬 */
+    justify-content: flex-end;  /* 오른쪽 정렬 */
+    white-space: nowrap; /* 요소들이 한 줄로 나오도록 설정 */
+    gap: 10px; /* 요소들 사이의 간격을 10px로 설정 */
+}
+
+/* 로그인 버튼 */
+.user-info .login-btn {
+    width: 100%;
+    padding: 5px 8px;
+    /*margin-top: 20px;*/
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    box-sizing: border-box;
+    text-decoration: none;
+}
+
+.user-info .login-btn {
+    background-color: #ff5722;
+    border: 1px solid #ff5722;
+    color: #fff;
+}
+
+.user-info .login-btn:hover {
+    background-color: #fff;
+    border: 1px solid #ff5722;
+    color: #ff5722;
+    font-weight: 500;
+}
+
+#username-area {
+    display: flex;
+    align-items: center;  /* 수직 중앙 정렬 */
+    justify-content: flex-start;  /* 왼쪽 정렬 */
+    gap: 10px; /* 요소들 사이의 간격을 10px로 설정 */
+}
+
+.username-clickable {
+    cursor: pointer;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.username-clickable:hover {
+    cursor: pointer;
+    color: #ff5722;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+#tokenExpirationTimeArea {
+    display: flex;
+    align-items: center;  /* 수직 중앙 정렬 */
+    gap: 10px; /* 토큰 만료 시간과 갱신 버튼 간 간격 설정 */
+}
+
+.refresh-token-btn {
+    background-color: #ff5722;
+    color: white;
+    padding: 6px 12px;
+    font-size: 14px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.refresh-token-btn:hover {
+    background-color: #e64a19;
+}
+
+/* 드롭다운 메뉴 스타일 */
+#dropdown {
+    position: absolute;
+    background-color: #fff;
+    min-width: 160px;
+    z-index: 1;
+    border-radius: 5px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    top: 60px; /* 사용자 이름 바로 아래에 나타나도록 */
+}
+
+/* 드롭다운 메뉴 항목 스타일 */
+#dropdown a {
+    cursor: pointer;
+    color: #333;
+    padding: 12px 18px;
+    text-decoration: none;
+    display: block;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+/* 드롭다운 메뉴 Hover 효과 */
+#dropdown a:hover {
+    cursor: pointer;
+    background-color: #f1f1f1;
+}
+
+/* 드롭다운 메뉴 보이기 */
+#dropdown.active {
+    display: block;
+}
+
+
+/* ================================
+   로그인 페이지 전용 스타일
+=============================== */
+.login-container {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 380px; /* 최대 너비 설정 */
+    text-align: center;
+    position: relative;
+    margin: auto;
+    font-family: 'Roboto', sans-serif;
+    box-sizing: border-box; /* padding과 border를 포함한 전체 너비 설정 */
+}
+
+.login-container h2 {
+    font-size: 28px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* 입력 필드 그룹 */
+.login-form-group {
+    margin-bottom: 20px; /* 입력 필드 간격 */
+    text-align: left;
+}
+
+.login-form-group label {
+    font-size: 16px;
+    color: #333;
+    font-weight: 500;
+}
+
+.login-container input {
+    width: 100%;
+    padding: 12px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+    background-color: #f9f9f9;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box; /* padding과 border 포함한 너비 설정 */
+}
+
+.login-container input:focus {
+    outline: none;
+    border-color: #ff5722; /* 입력창 강조: 주황색 */
+}
+
+/* 로그인 버튼 */
+.login-container button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    box-sizing: border-box;
+}
+
+.login-container .login-btn {
+    background-color: #ff5722;
+    color: white;
+    font-weight: 500;
+}
+
+.login-container .login-btn:hover {
+    background-color: #e64a19;
+}
+
+/* 회원가입 링크 스타일 */
+.login-container .register-link {
+    color: #007bff;
+    font-size: 14px;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.login-container .register-link:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+/* ================================
+   토큰 관련 스타일
+=============================== */
+.token-expiration-time-area {
+    font-size: 14px;
+    color: #666;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px; /* 토큰 관련 요소 간 간격 */
+    flex-wrap: wrap; /* 버튼들이 작은 화면에서 겹치지 않도록 */
+}
+
+.token-expiration-time {
+    font-weight: bold;
+    margin-left: 8px;
+    color: #ffcc00; /* 노란색으로 강조 */
+}
+
+/* ================================
+   반응형 디자인 - 로그인 페이지
+=============================== */
+@media (max-width: 768px) {
+    .login-container {
+        padding: 30px;
+        width: 100%;
+        max-width: 90%;
+        margin: auto;
+    }
+
+    .login-container h2 {
+        font-size: 24px;
+    }
+
+    .login-form-group {
+        margin-bottom: 20px;
+    }
+
+    .login-container input {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .login-container button {
+        padding: 12px;
+        font-size: 16px;
+    }
+
+    /* 로그인 버튼 크기 조정 */
+    .login-container .login-btn {
+        font-size: 16px;
+    }
+
+    /* 토큰 관련 스타일을 한 줄에 표시하도록 변경 */
+    /*.token-expiration-time-area {*/
+    /*    flex-direction: column;*/
+    /*    align-items: flex-start;*/
+    /*}*/
+
+    /*.token-expiration-time {*/
+    /*    margin-top: 5px;*/
+    /*}*/
+
+    /*.refresh-token-btn {*/
+    /*    margin-left: 0;*/
+    /*    margin-top: 10px;*/
+    /*}*/
+}
+
+
+/* ================================
+   마이페이지 전용 스타일
+=============================== */
+.mypage-container {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px; /* 로그인 페이지보다 약간 넓게 */
+    text-align: center;
+    margin: 100px auto;
+    font-family: 'Roboto', sans-serif;
+    box-sizing: border-box;
+}
+
+/* ================================
+   마이페이지 제목 스타일 (🔥업데이트)
+=============================== */
+/* 프로필 이미지 */
+.profile-image-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.profile-image {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.mypage-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 50px;
+    color: #ccc; /* 기본 아이콘 색상 */
+    pointer-events: none; /* 클릭 이벤트가 아이콘에 걸리지 않도록 */
+}
+
+.profile-upload-label {
+    display: block;
+    width: 100px; /* 원하는 크기 설정 */
+    height: 100px; /* 원하는 크기 설정 */
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: #f0f0f0; /* 기본 배경색 */
+    position: relative;
+    cursor: pointer; /* 마우스 커서 스타일 */
+}
+
+
+/* 입력 필드 */
+.mypage-form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.mypage-form-group label {
+    font-size: 16px;
+    color: #333;
+    font-weight: 500;
+}
+
+.mypage-container input,
+.mypage-container select {
+    width: 100%;
+    padding: 12px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+    background-color: #f9f9f9;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+}
+
+.mypage-container input:focus,
+.mypage-container select:focus {
+    outline: none;
+    border-color: #ff5722;
+}
+
+/* 저장 버튼 */
+.save-btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    background-color: #ff5722;
+    color: white;
+    font-weight: 500;
+}
+
+.save-btn:hover {
+    background-color: #e64a19;
+}
+
+
+/* ================================
+   셀렉트 박스 커스텀 스타일
+=============================== */
+.mypage-form-group select {
+    appearance: none; /* 기본 스타일 제거 */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    /*background-image: url("/dropdown-icon.svg"); !* 드롭다운 아이콘 *!*/
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+}
+
+/* 포커스 효과 */
+.mypage-form-group select:focus {
+    outline: none;
+    border-color: #ff5722;
+    box-shadow: 0 0 5px rgba(255, 87, 34, 0.3);
+}
+
+/* 옵션 스타일 */
+.mypage-form-group select option {
+    font-size: 16px;
+    padding: 10px;
+}
+
+/* 셀렉트 박스를 감싸는 div */
+.select-wrapper {
+    position: relative;
+}
+
+/* 커스텀 아이콘 */
+.select-wrapper::after {
+    content: "▼";
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: #888;
+    pointer-events: none; /* 클릭 불가능하게 설정 */
+}
+
+/* 셀렉트 박스 크기 조정 */
+.mypage-container .mypage-form-group select {
+    width: 100%;
+    padding-right: 40px; /* 아이콘과 간격 */
+}
+
+
+/* ================================
+   탈퇴하기 버튼 스타일
+=============================== */
+.delete-btn {
+    background-color: #ff3b3b;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 18px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.delete-btn:hover {
+    background-color: #d32f2f;
+}
+
+/* ================================
+   탈퇴 확인 모달 스타일
+=============================== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    width: 300px;
+}
+
+.modal p {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 15px;
+}
+
+.confirm-btn, .cancel-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.confirm-btn {
+    background-color: #ff3b3b;
+    color: white;
+}
+
+.confirm-btn:hover {
+    background-color: #d32f2f;
+}
+
+.cancel-btn {
+    background-color: #ccc;
+    color: #333;
+}
+
+.cancel-btn:hover {
+    background-color: #bbb;
+}
+
+
+
+/**
+    모바일) 헤더 > 로그인 사용자 정보
+ */
+#tokenExpirationTime::before {
+    content: " | ";
+}
+
+@media (max-width: 500px) {
+    #username-area {
+        justify-items: end;
+    }
+
+    #tokenExpirationTime::before {
+        content: none;
+    }
+}
+
+
+/**
+    nav, section
+ */
+.nav-container nav ul {
+    list-style-type: none;
+    display: flex;
+    background-color: #333;
+    padding: 0;
+    margin: 0;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.nav-container nav ul li {
+    padding: 10px;
+    margin-right: 10px;
+}
+
+.nav-container nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.nav-container nav ul li.active {
+    padding: 10px 15px 5px 15px;
+    border-bottom: 2px solid #ff5722;
+}
+
+
+.nav-container nav ul li.active a {
+    color: #ff5722;
+    font-weight: bold;
+}
+
+/* 각 섹션 스타일 */
+div.section {
+    /*background-color: lightgray;*/
+    /*border:1px solid gray;*/
+    display: flow-root;
+    scroll-margin-top: 170px; /* 헤더 크기만큼 스크롤 위치 아래로 */
+}
+div.section:not(:first-child) {
+    margin-top: 30px;
+}
+
+
+/* 전체 요소에 적용 */
+.scroll-hidden {
+    scrollbar-width: none;        /* Firefox */
+    -ms-overflow-style: none;     /* IE, Edge */
+}
+
+.scroll-hidden::-webkit-scrollbar {
+    display: none;                /* Chrome, Safari */
+}
+
+
+/* popup */
+#popup-root .popup-content {
+   width: fit-content !important;
+}

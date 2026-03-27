@@ -39,3 +39,10 @@ out/
 
 ### Docker ###
 compose.override.yaml
+
+### Security / Firebase Secrets ###
+src/main/resources/*firebase-adminsdk*.json
+
+### Build Outputs & Logs ###
+logs/
+src/main/resources/static/jikimi/

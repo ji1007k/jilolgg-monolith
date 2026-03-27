@@ -53,4 +53,11 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
 
     List<Match> findByMatchIdIn(List<String> matchIds);
     List<Match> findByMatchIdIn(Set<String> matchIds);
+
+    @Query("""
+        SELECT m FROM Match m 
+        WHERE m.startTime >= :start AND m.startTime < :end
+        AND m.state NOT IN ('completed', 'unneeded')
+    """)
+    List<Match> findMatchesStartingBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }

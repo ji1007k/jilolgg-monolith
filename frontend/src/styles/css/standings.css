@@ -1,0 +1,551 @@
+
+
+/**
+스탠딩 영역
+ */
+.ranking-container {
+    padding: 15px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.ranking-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2열 */
+    gap: 10px;
+    margin-top: 10px;
+    grid-auto-flow: column;
+}
+
+@media (min-width: 700px) {
+    .ranking-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 700px) {
+    .ranking-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+.team-card {
+    border: 1px solid #eee;
+    padding: 0.75rem;
+    border-radius: 8px;
+    text-align: center;
+    background: #fafafa;
+}
+
+.team-card img {
+    height: 45px;
+}
+
+.team-rank {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.team-name {
+    font-size: 14px;
+    margin: 0.5rem 0;
+}
+
+.team-record {
+    font-size: 12px;
+    color: #666;
+}
+
+.no-ranking {
+    padding: 1rem;
+    text-align: center;
+    color: #999;
+}
+
+/* 전체 컨테이너 스타일 */
+.tournament-container {
+    max-width: 1200px; /* 최대 너비 제한 */
+    margin: 0 auto;
+    padding: 10px;
+    background-color: #f9f9f9; /* 배경색 */
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* 부드러운 그림자 */
+}
+
+/* 토너먼트 셀렉트박스 스타일 */
+.tournament-select-wrapper {
+    margin-bottom: 10px;
+    text-align: end;
+    justify-content: space-between;
+    display: flex;
+    align-items: center;
+}
+.tournament-select-wrapper span {
+    font-weight: bold;
+    font-size: 15px;
+    padding: 0 15px;
+}
+
+.tournament-select-wrapper .tournament-select {
+    width: 100%;
+    max-width: fit-content;
+    padding: 7px 39px 7px 15px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fff;
+    color: #333;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg width='12' height='8' viewBox='0 0 12 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 8L0.803848 0.5H11.1962L6 8Z' fill='%23999'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px;
+    transition: border-color 0.3s ease;
+}
+
+.tournament-select-wrapper .tournament-select:hover {
+    cursor: pointer;
+}
+
+.tournament-select-wrapper .tournament-select:focus {
+    border-color: #ff5722;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 87, 34, 0.2);
+}
+
+/**
+ 순위표 - 스테이지 버튼
+ */
+.stage-buttons {
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.stage-buttons button {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ccc;
+    background: white;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.stage-buttons .active {
+    background: #333;
+    color: white;
+    border-color: #333;
+}
+
+/**
+ 순위표 - 섹션 버튼
+ */
+.section-buttons {
+    margin-bottom: 1rem;
+    margin-left: 10px;
+    display: flex;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+}
+
+.section-buttons button {
+    cursor: pointer;
+    font-size: 12px;
+    color: #333;
+}
+
+.section-buttons button:hover {
+    font-weight: bolder;
+}
+
+.section-buttons .active {
+    font-weight: bolder;
+    border-bottom: 2px solid #ff5722;
+}
+
+/* 순위표 스타일 */
+
+.team-card {
+    padding: 10px 15px;
+    background-color: #f9fafb;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+
+    display: inline-flex;
+    justify-content: space-between;
+}
+
+.team-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.team-rank {
+    display: inline-flex;
+    align-items: center;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 6px 12px;
+    background-color: #e0e7ff;
+    color: #1f2937;
+    border-radius: 20px;
+}
+
+.team-rank-badge {
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    border-radius: 50%;
+    font-weight: bold;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    font-size: 16px;
+    margin: auto 0;
+    background-color: white;
+    color: #333;
+    border-bottom: 2px solid #333;
+}
+
+.team-rank-badge span {
+    flex-direction: column;
+}
+
+.team-rank-badge span:not(:first-child) {
+    font-size: 11px;
+    color: #444;
+    margin-top: -5px;
+}
+
+.team-icon {
+    border: 1px solid gray;
+    border-radius: 20%;
+    width: 60px;
+    height: 60px;
+    margin: auto 0;
+    background-color: #333333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.team-info {
+    width: 125px;
+    margin: 0;
+}
+
+.team-info .team-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin: 8px 0;
+}
+
+.team-info .team-record {
+    font-size: 14px;
+    color: #444;
+}
+
+.team-info .team-record span {
+    font-size: 12px;
+}
+
+
+.team-info .team-record .win {
+    color: #2e8b57; /* 승리 - 녹색 */
+    font-weight: 500;
+}
+
+.team-info .team-record .loss {
+    color: #c0392b; /* 패배 - 빨간색 */
+    font-weight: 500;
+}
+
+.team-info .team-record span:not(:last-child)::after {
+    content: ' | ';
+    color: #333;
+}
+
+.no-ranking {
+    text-align: center;
+    font-size: 18px;
+    color: #b0b0b0;
+    margin-top: 40px;
+}
+
+
+/**
+    순위표 - 전적
+ */
+.match-history-popup {
+    width: 90vw;
+    max-width: 460px;
+    max-height: calc(100% - 150px);
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    margin-top: 50px;
+    transform: translate(-50%, -50%);
+    border-radius: 12px;
+    background-color: #fff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.match-history-popup .popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #ddd;
+    font-size: 1.125rem;
+    font-weight: bold;
+    background: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.match-history-popup .close-btn {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 1.25rem;
+    cursor: pointer;
+}
+
+.match-history-popup .popup-body {
+    overflow-y: auto;
+    flex: 1;
+    padding: 8px 16px;
+    background: #f9fafb;
+}
+
+.match-history-popup .match-card {
+    position: relative;
+    border: 2px solid #ccc;
+    background: #fff;
+    padding: 16px;
+    margin: 12px 0;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.match-history-popup .num-badge {
+    width: 20px;
+    height: 20px;
+    background-color: #fff;
+    border: none;
+    color: #111827;
+    font-size: 0.75rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 2px #444;
+    margin-right: 3px;
+}
+
+.match-history-popup .status-time-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.match-history-popup .status-labels {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: #4b5563;
+}
+
+.match-history-popup .label {
+    padding: 2px 6px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.match-history-popup .label.live {
+    background-color: #ef4444;
+    color: white;
+    font-weight: bold;
+    animation: fadeBlink 1.5s ease-in-out infinite;
+    font-size: smaller;
+    margin-right: 2px;
+}
+
+.match-history-popup .label.completed {
+    background-color: #e5e7eb;
+    color: #111827;
+}
+
+.match-history-popup .vod-btn-wrapper {
+    text-align: right;
+}
+
+.match-history-popup .vod-btn {
+    font-size: 0.875rem;
+    color: #2563eb;
+    text-decoration: underline;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.match-history-popup .teams-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #1f2937;
+}
+
+.match-history-popup .team {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 120px;
+    justify-content: center;
+}
+
+.match-history-popup .team-code {
+    font-size: 1rem;
+    font-weight: 600;
+    width: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.match-history-popup .result {
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.match-history-popup .result.win {
+    background-color: #22c55e;
+    color: white;
+}
+
+.match-history-popup .result.lose {
+    background-color: #e5e7eb;
+    color: black;
+}
+
+.match-history-popup .score {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.match-history-popup .popup-footer {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 12px 16px;
+    border-top: 1px solid #ddd;
+}
+
+.match-history-popup .footer-btn {
+    width: 100%;
+    background: #e5e7eb;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background 0.2s ease;
+    cursor: pointer;
+    border: none;
+}
+
+.match-history-popup .footer-btn:hover {
+    background: #d1d5db;
+}
+
+/* 500px 미만 반응형 대응 */
+@media (max-width: 500px) {
+    .match-history-popup {
+        width: 95vw;
+        max-height: calc(100% - 130px);
+        height: fit-content;
+        border-radius: 10px;
+        margin-top: 60px;
+    }
+
+    .match-history-popup .match-card {
+        padding: 10px;
+    }
+
+    .match-history-popup .team {
+        width: 100px;
+        gap: 4px;
+        justify-content: center;
+    }
+
+    .match-history-popup .team-code {
+        width: 50px;
+        font-size: 0.875rem;
+    }
+
+    .match-history-popup .result {
+        font-size: 0.625rem;
+        padding: 2px 6px;
+    }
+
+    .match-history-popup .score {
+        font-size: 0.875rem;
+    }
+
+    .match-history-popup .vod-btn {
+        font-size: 0.75rem;
+    }
+
+    .match-history-popup .popup-header {
+        font-size: 1rem;
+        padding: 10px 12px;
+    }
+
+    .match-history-popup .popup-body {
+        padding: 6px 12px;
+    }
+
+    .match-history-popup .popup-footer {
+        padding: 10px 12px;
+    }
+
+    .match-history-popup .footer-btn {
+        font-size: 0.875rem;
+        padding: 8px;
+    }
+
+    .match-history-popup .num-badge {
+        width: 20px;
+        height: 20px;
+        font-size: 0.625rem;
+    }
+
+    .match-history-popup .status-labels {
+        font-size: 0.6875rem;
+    }
+
+    .match-history-popup .label {
+        font-size: 0.625rem;
+        padding: 1px 5px;
+    }
+}

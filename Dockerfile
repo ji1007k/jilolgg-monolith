@@ -1,6 +1,14 @@
 # Stage 1: Build dependencies
 FROM gradle:7.3-jdk17 AS build
 
+USER root
+
+# Node.js 22.x 설치 (Next.js 프론트엔드 모놀리식 통합 빌드용)
+RUN apt-get update && apt-get install -y curl \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Gradle Wrapper 파일과 Gradle 디렉토리를 복사

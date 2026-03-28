@@ -18,9 +18,11 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -33,10 +35,48 @@ public class MatchSyncWorker {
     private final TeamRepository teamRepository;
     private final MatchTeamRepository matchTeamRepository;
 
+    private Team resolveTeamForSync(String code, String name) {
+        List<Team> candidates = "TBD".equalsIgnoreCase(name)
+                ? teamRepository.findAllByNameOrderByIdAsc(name)
+                : teamRepository.findAllByCodeAndNameOrderByIdAsc(code, name);
+
+        if (candidates.isEmpty()) {
+            return null;
+        }
+
+        if (candidates.size() > 1) {
+            log.warn("중복 Team 데이터 감지(code={}, name={}) -> id={} 사용", code, name, candidates.get(0).getId());
+        }
+
+        return candidates.get(0);
+    }
+
+    private Match resolveMatchForSync(String matchId) {
+        List<Match> candidates = matchRepository.findAllByMatchIdOrderByIdAsc(matchId);
+
+        if (candidates.isEmpty()) {
+            return new Match();
+        }
+
+        if (candidates.size() > 1) {
+            log.warn("중복 Match 데이터 감지(matchId={}) -> id={} 사용", matchId, candidates.get(0).getId());
+        }
+
+        return candidates.get(0);
+    }
+
+    private String toMissingTeamLabel(String code, String name) {
+        if (code == null || code.isBlank()) {
+            return name;
+        }
+        return name + "(" + code + ")";
+    }
+
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void syncTodaysMatchFromLolEsportsApi(Match match) {
         String matchId = match.getMatchId();
+        Set<String> missingTeams = new LinkedHashSet<>();
 
         // matchid로 경기 상세 api 요청&응답 수신
         Mono<MatchDetailResponse> monoResponse = matchApiService.fetchMatchDetailFromApi(matchId);
@@ -98,19 +138,11 @@ public class MatchSyncWorker {
         }
 
         for (MatchDetailResponse.TeamDto teamDto : matchDetail.getTeams()) {
-            Optional<Team> teamOpt;
-            if (teamDto.getName().equalsIgnoreCase("TBD")) {
-                teamOpt = teamRepository.findByName(teamDto.getName());
-            } else {
-                teamOpt = teamRepository.findByCodeAndName(teamDto.getCode(), teamDto.getName());
-            }
-
-            if (teamOpt.isEmpty()) {
-                log.warn("Team not found with code and name: {}({})", teamDto.getCode(), teamDto.getName());
+            Team team = resolveTeamForSync(teamDto.getCode(), teamDto.getName());
+            if (team == null) {
+                missingTeams.add(toMissingTeamLabel(teamDto.getCode(), teamDto.getName()));
                 continue;
             }
-
-            Team team = teamOpt.get();
 
             // 매칭 팀 정보가 TBD이거나 TFT인 경우 중복으로 조회될 수 있어 분기 태움
             MatchTeam matchTeam;
@@ -168,6 +200,10 @@ public class MatchSyncWorker {
                 matchTeamRepository.save(matchTeam);
             }
         }
+
+        if (!missingTeams.isEmpty()) {
+            log.warn("Team not found with code and name: {}", String.join(", ", missingTeams));
+        }
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -179,6 +215,7 @@ public class MatchSyncWorker {
 
         int targetYear = Integer.parseInt(year);
         String nextPageToken = null;
+        Set<String> missingTeams = new LinkedHashSet<>();
 
         int count = 0;
         do {
@@ -223,7 +260,7 @@ public class MatchSyncWorker {
                 MatchScheduleResponse.MatchDto matchDto = event.getMatch();
 
                 // [1] Match 저장
-                Match match = matchRepository.findByMatchId(matchDto.getId()).orElseGet(Match::new);
+                Match match = resolveMatchForSync(matchDto.getId());
                 match.setMatchId(matchDto.getId());
                 match.setLeague(leagueOpt.get());
                 match.setStartTime(eventDateTime);
@@ -257,20 +294,11 @@ public class MatchSyncWorker {
 
                 // [2] MatchTeam 저장.
                 for (MatchScheduleResponse.TeamDto teamDto : matchDto.getTeams()) {
-                    Optional<Team> teamOpt;
-                    if (teamDto.getName().equalsIgnoreCase("TBD")) {    // TBD (To Be Determined)
-                        teamOpt = teamRepository.findByName(teamDto.getName());
-                    } else {
-                        teamOpt = teamRepository.findByCodeAndName(teamDto.getCode(), teamDto.getName());
-                    }
-
-                    if (teamOpt.isEmpty()) {
-//                        throw new RuntimeException("Team not found with name: " + teamDto.getName());
-                        log.warn("Team not found with code and name: {}({})", teamDto.getCode(), teamDto.getName());
+                    Team team = resolveTeamForSync(teamDto.getCode(), teamDto.getName());
+                    if (team == null) {
+                        missingTeams.add(toMissingTeamLabel(teamDto.getCode(), teamDto.getName()));
                         continue;
                     }
-
-                    Team team = teamOpt.get();
 
                     // 매칭 팀 정보가 TBD이거나 TFT인 경우 중복으로 조회될 수 있어 분기 태움
                     MatchTeam matchTeam;
@@ -307,6 +335,9 @@ public class MatchSyncWorker {
 
         } while (nextPageToken != null);
 
+        if (!missingTeams.isEmpty()) {
+            log.warn("Team not found with code and name: {}", String.join(", ", missingTeams));
+        }
         log.info("리그ID {} 데이터 갱신 완료 - {}건", leagueId, count);
     }
 

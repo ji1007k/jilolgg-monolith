@@ -15,6 +15,7 @@ import java.util.Set;
 public interface MatchRepository extends JpaRepository<Match, Long> {
 
     Optional<Match> findByMatchId(String id);
+    List<Match> findAllByMatchIdOrderByIdAsc(String matchId);
 
     @Query("""
         SELECT DISTINCT m FROM Match m

@@ -85,6 +85,7 @@ powershell -ExecutionPolicy Bypass -File .\bin\benchmark-sync.ps1 -BaseUrl "http
 ---
 
 ## 문서 맵
+- 문서 인덱스: `docs/README.md`
 - 개선 이력: `docs/development.md`
 - 성능 리포트(히스토리): `docs/report/optimization/performance-report.md`
 - 캐싱 리포트: `docs/report/optimization/caching-report.md`

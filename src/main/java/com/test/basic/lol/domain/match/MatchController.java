@@ -1,16 +1,15 @@
 package com.test.basic.lol.domain.match;
 
-import com.test.basic.lol.domain.league.LeagueService;
+import com.test.basic.lol.sync.MatchSyncOrchestratorService;
+import com.test.basic.lol.sync.SyncExecutionResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.util.StopWatch;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -21,12 +20,9 @@ import java.util.List;
 @RequestMapping("/lol/matches")
 @RequiredArgsConstructor
 @Tag(name = "[LOL(Esports)] 5. Match API", description = "경기 일정 API")
-@Slf4j
 public class MatchController {
     private final MatchService matchService;
-    private final SyncMatchService syncMatchService;
-    private final MatchCacheService matchCacheService;
-    private final LeagueService leagueService;
+    private final MatchSyncOrchestratorService matchSyncOrchestratorService;
     /*private static final List<String> MAJOR_LEAGUE_IDS = List.of(
             // LCK, LCK CL
             "98767991310872058",
@@ -70,31 +66,14 @@ public class MatchController {
     @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
     @Operation(summary = "리그별 경기일정 수동 동기화", description = "리그별 경기일정 수동 동기화 API")
     public ResponseEntity syncAllMatchesByLeagueIdFromApi(@RequestParam String year) {
-
-        try {
-            // 소요 시간 측정
-            StopWatch sw = new StopWatch();
-            sw.start();
-
-            List<String> leagueIds = leagueService.getAllLeagues()
-                    .stream()
-                    .map(leagueDto -> leagueDto.getLeagueId())
-                    .toList();
-
-//        syncMatchService.syncMatchesByLeagueIdsAndYear(MAJOR_LEAGUE_IDS, year);
-            syncMatchService.syncMatchesByLeagueIdsAndYear(leagueIds, year);
-
-            // 경기 일정 수동동기화 후 캐시 무효화
-            matchCacheService.invalidateAllCaches();
-
-            sw.stop();
-            log.info(">>> 소요 시간: {}ms", sw.getTotalTimeMillis());
-
-            return ResponseEntity.ok("리그별 경기 일정 동기화 완료. 소요시간: " + sw.getTotalTimeMillis() + "ms");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("리그별 경기 일정 동기화 실패: " + e.getMessage());
+        SyncExecutionResult result = matchSyncOrchestratorService.runManualLeagueSync(year);
+        if (!result.lockAcquired()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(result.message());
         }
+        if (!result.success()) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(result.message());
+        }
+        return ResponseEntity.ok("리그별 경기 일정 동기화 완료. 소요시간: " + result.elapsedMs() + "ms");
     }
 
 

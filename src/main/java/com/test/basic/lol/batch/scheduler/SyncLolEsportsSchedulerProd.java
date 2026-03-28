@@ -1,10 +1,8 @@
 package com.test.basic.lol.batch.scheduler;
 
-import com.test.basic.lol.batch.service.BatchJobService;
-import com.test.basic.lol.domain.match.Match;
-import com.test.basic.lol.domain.match.MatchCacheService;
 import com.test.basic.lol.domain.match.MatchService;
-import com.test.basic.lol.domain.match.SyncMatchService;
+import com.test.basic.lol.sync.MatchSyncOrchestratorService;
+import com.test.basic.lol.sync.SyncExecutionResult;
 import com.test.basic.lol.domain.team.SyncTeamService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -17,7 +15,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Year;
 import java.time.ZoneId;
-import java.util.List;
 import java.util.Optional;
 
 @Configuration
@@ -28,9 +25,7 @@ public class SyncLolEsportsSchedulerProd {
 
     private final SyncTeamService syncTeamService;
     private final MatchService matchService;
-    private final SyncMatchService syncMatchService;
-    private final MatchCacheService matchCacheService;
-    private final BatchJobService batchJobService;
+    private final MatchSyncOrchestratorService matchSyncOrchestratorService;
 
     @Scheduled(cron = "0 0 3 ? * SUN", zone = "Asia/Seoul")
     public void syncTeamsProd() {
@@ -42,7 +37,10 @@ public class SyncLolEsportsSchedulerProd {
     @Scheduled(cron = "0 0 4 * * *", zone = "Asia/Seoul")
     private void syncAllMatchesDev() {
         logger.info("==================== [전체 경기 일정 자동 동기화 배치 작업 시작] ====================");
-        batchJobService.executeMatchSyncJob(Year.now(ZoneId.of("Asia/Seoul")).toString());
+        SyncExecutionResult result = matchSyncOrchestratorService.runBatchYearSync(Year.now(ZoneId.of("Asia/Seoul")).toString());
+        if (!result.lockAcquired()) {
+            logger.warn(">>> 전체 경기 일정 배치 실행 건너뜀: {}", result.message());
+        }
     }
 
 
@@ -59,22 +57,12 @@ public class SyncLolEsportsSchedulerProd {
             return;
         }
 
-        // [2] 경기 조회 및 처리
-        logger.info(">>> 금일 전체 경기 목록 조회 중...");
-        LocalDateTime startOfDay = today.atStartOfDay();
-        LocalDateTime startOfNextDay = today.plusDays(1).atStartOfDay();
-        List<Match> todayMatches = matchService.getMatchesByDate(startOfDay, startOfNextDay);
-
-        if (todayMatches.isEmpty()) {
-            logger.info(">>> 금일 예정된 경기가 없습니다. 동기화 작업을 종료합니다.");
-            logger.info("==================== [금일 경기 정보 자동 동기화 작업 종료] ====================");
+        // [2] 동기화 실행
+        SyncExecutionResult result = matchSyncOrchestratorService.runTodaySync(today);
+        if (!result.lockAcquired()) {
+            logger.warn(">>> 금일 경기 동기화 건너뜀: {}", result.message());
             return;
         }
-
-        logger.info(">>> 동기화 대상 경기 수: {}", todayMatches.size());
-        syncMatchService.syncTodaysMatchesFromLolEsportsApi(todayMatches);
-        // 경기 일정 동기화 후 캐시 무효화
-        matchCacheService.invalidateAllCaches();
         logger.info("==================== [금일 경기 정보 자동 동기화 작업 완료] ====================");
     }
 

@@ -5,9 +5,9 @@ USER root
 
 # Node.js 22.x 설치 (Next.js 프론트엔드 모놀리식 통합 빌드용)
 RUN apt-get update && apt-get install -y curl \
-    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y nodejs \
-    && rm -rf /var/lib/apt/lists/*
+  && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+  && apt-get install -y nodejs \
+  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -37,15 +37,15 @@ RUN mkdir logs
 # Create a non-privileged user & 로그 디렉토리 소유자 변경
 ARG UID=10001
 RUN adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "/nonexistent" \
-    --shell "/sbin/nologin" \
-    --no-create-home \
-    --uid "${UID}" \
-    appuser \
- && mkdir -p /app/logs \
- && chown -R ${UID}:${UID} /app/logs
+  --disabled-password \
+  --gecos "" \
+  --home "/nonexistent" \
+  --shell "/sbin/nologin" \
+  --no-create-home \
+  --uid "${UID}" \
+  appuser \
+  && mkdir -p /app/logs \
+  && chown -R ${UID}:${UID} /app/logs
 
 # JAR 파일을 복사
 COPY --from=build --chown=appuser:appuser /app/build/libs/*.jar app.jar
@@ -58,10 +58,9 @@ USER appuser
 
 # 컨테이너 실행 시 JAR 파일 실행 (LF 형식 필요)
 ENTRYPOINT exec java \
-  -Xms64m \
-  -Xmx128m \
-  -XX:MaxMetaspaceSize=256m \
-  -XX:+UseSerialGC \
+  -Xms128m \
+  -Xmx256m \
+  -XX:MaxMetaspaceSize=512m \
   -Dfile.encoding=UTF-8 \
   -Duser.timezone=Asia/Seoul \
   -jar app.jar

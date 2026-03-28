@@ -25,9 +25,10 @@
 
 ---
 
-4. **WebSocket + Redis Pub/Sub 기반 실시간 채팅 기능**
-- Redis Pub/Sub 구조 적용 → 다중 인스턴스 간 메시지 처리 안정화
-- 연결 유지를 위해 30초 주기 Ping 메시지 전송 
+4. **(이력) WebSocket + Redis Pub/Sub 기능 운영 후 FCM 푸시로 전환**
+- 과거에는 WebSocket + Redis Pub/Sub 기반 실시간 채팅 기능을 운영
+- 현재는 운영 복잡도/리소스 절감을 위해 WebSocket을 제거하고 FCM 푸시 중심으로 전환
+- 현재 상태는 README의 `개선된 통합 시스템 아키텍처 (Current)` 기준으로 관리
 
 ---
 

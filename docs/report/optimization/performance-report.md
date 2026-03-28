@@ -1,5 +1,12 @@
 # Spring Boot 부하테스트 최종 종합 보고서
 
+> 본 문서는 2025-07-31 ~ 2025-08-01 시점의 환경 기준 실험 이력입니다. 현재 Railway 운영 수치와 동일하다고 가정하지 않습니다.
+
+## 재현 실행 방법 (로컬)
+- 앱 실행: `./gradlew bootRun`
+- 벤치마크 실행(별도 PowerShell): `powershell -ExecutionPolicy Bypass -File .\bin\benchmark-sync.ps1 -BaseUrl "http://localhost:8080" -Year 2026 -Runs 3`
+- 결과 JSON 저장: `docs/report/optimization/results/sync-benchmark-*.json`
+
 ## 📊 테스트 환경
 - **서버**: AWS EC2 프리티어 t2.micro (1 vCPU, 1GB RAM)
 - **애플리케이션**: Spring Boot + Redis Cache + PostgreSQL(RDS)

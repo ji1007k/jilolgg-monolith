@@ -1,10 +1,10 @@
 package com.test.basic.lol.batch.controller;
 
-import com.test.basic.lol.batch.service.BatchJobService;
+import com.test.basic.lol.sync.MatchSyncOrchestratorService;
+import com.test.basic.lol.sync.SyncExecutionResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,19 +18,23 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/lol/batch")
 @RequiredArgsConstructor
-@Slf4j
 @Tag(name = "[TEST] Batch Job Trigger API", description = "Batch Job Trigger API")
 public class JobTriggerController {
 
-    private final BatchJobService batchJobService;
-//    private final Job exampleJob;
+    private final MatchSyncOrchestratorService matchSyncOrchestratorService;
 
     @GetMapping("/run-match-job")
-    @Operation(summary = "경기 일정 갱신 배치", description = "경기 일정 갱신 배치 비동기 API (리그 파티셔닝 적용)")
+    @Operation(summary = "경기 일정 갱신 배치", description = "경기 일정 갱신 배치 API (리그 파티셔닝 적용)")
     @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
     public String runMatchJob(@RequestParam String year) {
-        batchJobService.executeMatchSyncJob(year);
-        return "경기 일정 갱신 배치 Job 시작. " + year + "년";
+        SyncExecutionResult result = matchSyncOrchestratorService.runBatchYearSync(year);
+        if (!result.lockAcquired()) {
+            return "실행 거부: " + result.message();
+        }
+        if (!result.success()) {
+            return "실행 실패: " + result.message();
+        }
+        return "경기 일정 갱신 배치 완료. year=" + year + ", elapsed=" + result.elapsedMs() + "ms";
     }
 
 

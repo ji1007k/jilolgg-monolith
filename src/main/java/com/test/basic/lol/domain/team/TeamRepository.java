@@ -15,6 +15,7 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     Optional<Team> findBySlug(String slug);
 
     Optional<Team> findByCodeAndName(String code, String name);
+    List<Team> findAllByCodeAndNameOrderByIdAsc(String code, String name);
 
     @Query("SELECT t FROM Team t WHERE t.teamId = :teamId")
     Optional<Team> findByTeam_TeamId(String teamId);
@@ -29,6 +30,7 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
                                            @Param("slugs") List<String> slugs);
 
     Optional<Team> findByName(String name);
+    List<Team> findAllByNameOrderByIdAsc(String name);
 
     List<Team> findByTeamIdIn(List<String> teamIds);
     List<Team> findByCodeIn(Set<String> teamCodes);

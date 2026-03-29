@@ -85,9 +85,9 @@ public class MatchService {
         return matchRepository.findMatchesByDate(startOfDay, endOfDay);
     }
 
-    @Cacheable(value = "firstMatchTime", key = "#startOfDay + '_' + #endOfDay", unless = "#result == null")
-    public LocalDateTime getFirstMatchTimeOfDay(LocalDateTime startOfDay, LocalDateTime endOfDay) {
-        return matchRepository.findFirstMatchTimeOfDay(startOfDay, endOfDay).orElse(null);
+    @Cacheable(value = "firstMatchTime", key = "#startOfDay + '_' + #endOfDay")
+    public Optional<LocalDateTime> getFirstMatchTimeOfDay(LocalDateTime startOfDay, LocalDateTime endOfDay) {
+        return matchRepository.findFirstMatchTimeOfDay(startOfDay, endOfDay);
     }
 
     public List<MatchDto> getMatchesByLeagueIdAndDate(String leagueId, LocalDate startDate, LocalDate endDate) {

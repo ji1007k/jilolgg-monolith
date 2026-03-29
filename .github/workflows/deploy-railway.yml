@@ -1,16 +1,12 @@
 name: "[CD] Deploy JILoL.gg SpringBoot to Railway"
 
 on:
-  # main 이미지 빌드/푸시 성공 후에만 Railway 배포 트리거
-  workflow_run:
-    workflows:
-      - "[CI] Main Image Build & Push"
-    types:
-      - completed
+  push:
+    branches:
+      - main    # main 브랜치에 푸시될 때마다 실행됨
 
 jobs:
   deployBasicBeSpringBoot:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -29,3 +25,4 @@ jobs:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_PROJECT_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
           RAILWAY_ENVIRONMENT_ID: ${{ secrets.RAILWAY_ENV_ID }}
+          

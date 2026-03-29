@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Year;
 import java.time.ZoneId;
+import java.util.Optional;
 
 @Configuration
 @Profile("prod")
@@ -70,11 +71,12 @@ public class SyncLolEsportsSchedulerProd {
         LocalDateTime startOfDay = date.atStartOfDay();
         LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
 
-        LocalDateTime firstMatchTime = matchService.getFirstMatchTimeOfDay(startOfDay, endOfDay);
-        if (firstMatchTime == null) return false;
+        Optional<LocalDateTime> firstMatchTime = matchService.getFirstMatchTimeOfDay(startOfDay, endOfDay);
+
+        if (firstMatchTime.isEmpty()) return false;
 
         // 2. 첫 경기 시작시간 -1시간 전부터 갱신 시작
-        LocalDateTime updateStartTime = firstMatchTime.minusHours(1);
+        LocalDateTime updateStartTime = firstMatchTime.get().minusHours(1);
 
         // 3. 현재 시각이 그 시간 이후면 true
         return LocalDateTime.now().isAfter(updateStartTime);

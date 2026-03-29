@@ -1,14 +1,22 @@
 package com.test.basic.lol.domain.match;
 
+import com.test.basic.lol.domain.match.mapping.MatchExternalMapping;
+import com.test.basic.lol.domain.match.mapping.MatchExternalMappingRepository;
+import com.test.basic.lol.domain.match.mapping.MatchExternalMappingService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.util.StopWatch;
 
 import java.time.LocalDate;
@@ -26,15 +34,23 @@ public class MatchService {
     private final MatchCacheService matchCacheService;
     private final MatchMapper matchMapper;
     private final MatchRepository matchRepository;
+    private final MatchExternalMappingRepository matchExternalMappingRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
 
-    public MatchService(MatchMapper matchMapper, MatchRepository matchRepository, MatchCacheService matchCacheService, MatchApiService matchApiService) {
+    public MatchService(
+            MatchMapper matchMapper,
+            MatchRepository matchRepository,
+            MatchCacheService matchCacheService,
+            MatchApiService matchApiService,
+            MatchExternalMappingRepository matchExternalMappingRepository
+    ) {
         this.matchMapper = matchMapper;
         this.matchRepository = matchRepository;
         this.matchCacheService = matchCacheService;
         this.matchApiService = matchApiService;
+        this.matchExternalMappingRepository = matchExternalMappingRepository;
     }
 
     public List<MatchDto> getAllMatches() {
@@ -102,16 +118,17 @@ public class MatchService {
 
         if (cached != null) {
             logger.info(">>> Redis 캐시 Hit: {}", redisKey);
-            return cached;
+            return dedupeForDisplay(cached);
         }
 
         logger.info(">>> Redis 캐시 Miss. DB 조회 시작: {}", redisKey);
 
         List<Match> matches = dbFallback.get();
         List<MatchDto> dtos = matches.stream().map(matchMapper::entityToDto).toList();
-        matchCacheService.cacheMatchList(redisKey, dtos);
+        List<MatchDto> deduped = dedupeForDisplay(dtos);
+        matchCacheService.cacheMatchList(redisKey, deduped);
 
-        return dtos;
+        return deduped;
     }
 
     public List<MatchDto> getMatchesByMatchIds(List<String> matchIds) {
@@ -127,6 +144,96 @@ public class MatchService {
 
     public List<Match> saveMatches(List<Match> matchesToSave) {
         return matchRepository.saveAll(matchesToSave);
+    }
+
+    private List<MatchDto> dedupeForDisplay(List<MatchDto> source) {
+        if (source == null || source.isEmpty()) {
+            return source;
+        }
+
+        List<String> ids = source.stream()
+                .map(MatchDto::getMatchId)
+                .filter(StringUtils::hasText)
+                .toList();
+
+        if (ids.isEmpty()) {
+            return source;
+        }
+
+        Map<String, MatchExternalMapping> mappingByExternalId = matchExternalMappingRepository
+                .findAllByProviderAndExternalMatchIdIn(MatchExternalMappingService.PROVIDER_LOL_ESPORTS, ids)
+                .stream()
+                .collect(Collectors.toMap(
+                        MatchExternalMapping::getExternalMatchId,
+                        mapping -> mapping,
+                        (a, b) -> a
+                ));
+
+        if (mappingByExternalId.isEmpty()) {
+            return source;
+        }
+
+        Map<String, MatchDto> grouped = new LinkedHashMap<>();
+        Map<String, Boolean> canonicalPresent = new LinkedHashMap<>();
+
+        for (MatchDto dto : source) {
+            if (dto == null || !StringUtils.hasText(dto.getMatchId())) {
+                continue;
+            }
+
+            String originalId = dto.getMatchId();
+            MatchExternalMapping mapping = mappingByExternalId.get(originalId);
+            String targetId = mapping == null ? originalId : mapping.getMatchId();
+
+            MatchDto normalized = cloneDto(dto);
+            normalized.setMatchId(targetId);
+
+            boolean sourceIsCanonical = Objects.equals(originalId, targetId);
+            MatchDto existing = grouped.get(targetId);
+
+            if (existing == null) {
+                grouped.put(targetId, normalized);
+                canonicalPresent.put(targetId, sourceIsCanonical);
+                continue;
+            }
+
+            boolean hasCanonical = Boolean.TRUE.equals(canonicalPresent.get(targetId));
+            if (sourceIsCanonical && !hasCanonical) {
+                grouped.put(targetId, mergePreferLeft(normalized, existing));
+                canonicalPresent.put(targetId, true);
+            } else {
+                grouped.put(targetId, mergePreferLeft(existing, normalized));
+                canonicalPresent.put(targetId, hasCanonical || sourceIsCanonical);
+            }
+        }
+
+        return new ArrayList<>(grouped.values());
+    }
+
+    private MatchDto cloneDto(MatchDto src) {
+        MatchDto copy = new MatchDto();
+        copy.setMatchId(src.getMatchId());
+        copy.setStartTime(src.getStartTime());
+        copy.setState(src.getState());
+        copy.setStrategy(src.getStrategy());
+        copy.setBlockName(src.getBlockName());
+        copy.setWinningTeamCode(src.getWinningTeamCode());
+        copy.setParticipants(src.getParticipants());
+        return copy;
+    }
+
+    private MatchDto mergePreferLeft(MatchDto left, MatchDto right) {
+        MatchDto merged = new MatchDto();
+        merged.setMatchId(StringUtils.hasText(left.getMatchId()) ? left.getMatchId() : right.getMatchId());
+        merged.setStartTime(StringUtils.hasText(left.getStartTime()) ? left.getStartTime() : right.getStartTime());
+        merged.setState(StringUtils.hasText(left.getState()) ? left.getState() : right.getState());
+        merged.setStrategy(StringUtils.hasText(left.getStrategy()) ? left.getStrategy() : right.getStrategy());
+        merged.setBlockName(StringUtils.hasText(left.getBlockName()) ? left.getBlockName() : right.getBlockName());
+        merged.setWinningTeamCode(StringUtils.hasText(left.getWinningTeamCode()) ? left.getWinningTeamCode() : right.getWinningTeamCode());
+        merged.setParticipants(left.getParticipants() != null && !left.getParticipants().isEmpty()
+                ? left.getParticipants()
+                : right.getParticipants());
+        return merged;
     }
 
 

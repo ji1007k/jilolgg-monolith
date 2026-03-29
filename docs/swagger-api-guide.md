@@ -79,3 +79,16 @@
   - Read current override.
 - `DELETE /admin/match-overrides/{matchId}`
   - Delete override.
+- `PUT /admin/manual-matches/{matchId}/external-link`
+  - 내부 기준 경기(matchId)에 외부 API 경기 ID(`externalMatchId`)를 연결.
+  - 연결 정보만 저장하며, 원본 경기 ID는 치환/삭제하지 않음.
+- `DELETE /admin/manual-matches/{matchId}/external-link?externalMatchId=...`
+  - 내부 경기와 외부 API 경기 ID 연결 해제.
+- `GET /admin/manual-matches/{matchId}/external-link`
+  - 현재 연결된 외부 경기 ID 조회.
+- `GET /admin/manual-matches/{matchId}/external-link/candidates`
+  - 같은 리그/시간대/팀 유사도 기반 외부 경기 후보 목록 조회.
+
+## 6) 수동/외부 매핑 정책
+- 외부 API 동기화 시 `matches.match_id`(외부 ID)는 변경하지 않습니다.
+- `match_external_mapping`은 연결 정보만 관리하며, 조회 응답에서 dedupe(표시 계층 병합)를 적용합니다.

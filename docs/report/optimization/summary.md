@@ -1,25 +1,25 @@
-# Optimization Summary
+# 성능 최적화 요약
 
-## Scope
-- External API sync pipeline optimization
-- Cache effectiveness validation
-- Throughput/latency measurements under constrained environments
+## 범위
+- 외부 API 동기화 파이프라인 최적화
+- 캐시 적용 효과 검증
+- 제한된 환경에서의 처리량/지연 시간 측정
 
-## Key Results (historical benchmark snapshot)
-- Sync processing time improvement: `92.5s -> 4.7s` (approx. 95% reduction)
-- GET-heavy scenarios remained stable with low error rates
-- Caching reduced repeated DB reads and improved response consistency for repeated queries
+## 주요 결과 (과거 벤치마크 스냅샷)
+- 동기화 처리 시간 개선: `92.5s -> 4.7s` (약 95% 단축)
+- GET 요청 비중이 높은 시나리오에서 낮은 오류율로 안정적으로 동작
+- 캐시 적용으로 반복 DB 조회를 줄이고, 반복 조회 시 응답 일관성 개선
 
-## Main Techniques
-- Spring Batch partition-based parallel processing
-- Redisson distributed lock for duplicate sync prevention
-- Post-sync cache invalidation strategy
-- Query/cache tuning for date-range match retrieval
+## 핵심 적용 기법
+- Spring Batch 파티션 기반 병렬 처리
+- 중복 동기화 방지를 위한 Redisson 분산 락
+- 동기화 완료 후 캐시 무효화 전략
+- 날짜 범위 기반 경기 조회 쿼리/캐시 튜닝
 
-## Interpretation Notes
-- These numbers are historical and environment-dependent.
-- Current production is Railway; values should be treated as reference, not guaranteed.
+## 해석 시 유의사항
+- 수치는 과거 측정값이며 실행 환경에 따라 달라질 수 있음
+- 현재 운영 환경은 Railway이므로, 본 수치는 보장값이 아닌 참고값으로 해석 필요
 
-## Raw Reports (Archived)
+## 원본 리포트 (아카이브)
 - `docs/archive/reports/optimization/performance-report.md`
 - `docs/archive/reports/optimization/caching-report.md`

@@ -64,9 +64,9 @@ graph TD
 
 ## 기술 스택 (Tech Stack)
 
-  * **Backend**: Java 17, Spring Boot 3.4, Spring Batch 5.1, Spring Security, Spring Data JPA, Querydsl
+  * **Backend**: Java 17, Spring Boot 3.3.1, Spring Batch, Spring Security, Spring Data JPA
   * **Frontend**: Next.js 15, React 19
-  * **Storage**: PostgreSQL 16, Redis 7 (Redisson)
+  * **Storage**: PostgreSQL, Redis (Redisson)
   * **Infra**: Railway, Docker, GitHub Actions, Firebase Admin SDK
 
 ## 문서 (Documentation)

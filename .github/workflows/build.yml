@@ -1,14 +1,13 @@
 name: "[CI] Build & Push Monolith App (Next.js + Spring Boot)"
 
 on:
-  push:
-    branches:
-      - main  # main 브랜치에 직접 커밋/푸시될 때 실행
+  # push:
+  #   branches:
+  #     - main  # main 브랜치에 직접 커밋/푸시될 때 실행
   pull_request:
     branches:
       - main  # PR 요청 시 실행
     types: [opened, synchronize, reopened]
-  workflow_dispatch:
 
 jobs:
   build:

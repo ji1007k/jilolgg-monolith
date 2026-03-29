@@ -21,6 +21,7 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +60,8 @@ public class RedisCacheConfig {
         configs.put("tournaments", createListCacheConfig(Duration.ofDays(3), TournamentDto.class));
         // 팀 캐시 7일
         configs.put("teams", createListCacheConfig(Duration.ofDays(7), TeamDto.class));
+        // 스케줄러 동기화 타이밍 계산용 캐시
+        configs.put("firstMatchTime", createCacheConfig(Duration.ofMinutes(10), LocalDateTime.class));
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(createCacheConfig(Duration.ofMinutes(30), Object.class)) // 기본 30분 TTL

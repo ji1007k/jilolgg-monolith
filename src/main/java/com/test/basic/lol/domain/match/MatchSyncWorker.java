@@ -4,6 +4,7 @@ import com.test.basic.lol.api.esports.dto.MatchDetailResponse;
 import com.test.basic.lol.api.esports.dto.MatchScheduleResponse;
 import com.test.basic.lol.domain.league.League;
 import com.test.basic.lol.domain.league.LeagueRepository;
+import com.test.basic.lol.domain.match.mapping.MatchExternalMappingService;
 import com.test.basic.lol.domain.match.manual.ManualMatchOverrideService;
 import com.test.basic.lol.domain.matchteam.MatchTeam;
 import com.test.basic.lol.domain.matchteam.MatchTeamRepository;
@@ -36,6 +37,7 @@ public class MatchSyncWorker {
     private final TeamRepository teamRepository;
     private final MatchTeamRepository matchTeamRepository;
     private final ManualMatchOverrideService manualMatchOverrideService;
+    private final MatchExternalMappingService matchExternalMappingService;
 
     private Team resolveTeamForSync(String code, String name) {
         List<Team> candidates = "TBD".equalsIgnoreCase(name)
@@ -77,7 +79,8 @@ public class MatchSyncWorker {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void syncTodaysMatchFromLolEsportsApi(Match match) {
-        String matchId = match.getMatchId();
+        String canonicalMatchId = match.getMatchId();
+        String matchId = matchExternalMappingService.resolveExternalMatchId(canonicalMatchId);
         Set<String> missingTeams = new LinkedHashSet<>();
 
         // matchid로 경기 상세 api 요청&응답 수신
@@ -426,5 +429,4 @@ public class MatchSyncWorker {
 
         return result;
     }*/
-
 }

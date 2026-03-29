@@ -55,6 +55,7 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
 
     List<Match> findByMatchIdIn(List<String> matchIds);
     List<Match> findByMatchIdIn(Set<String> matchIds);
+    List<Match> findAllByLeague_LeagueIdAndStartTimeBetween(String leagueId, LocalDateTime start, LocalDateTime end);
 
     @Query("""
         SELECT m FROM Match m 

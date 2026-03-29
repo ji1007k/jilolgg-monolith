@@ -150,6 +150,22 @@ CREATE TABLE IF NOT EXISTS "manual_match_overrides"
     updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS "match_external_mapping"
+(
+    id                BIGSERIAL PRIMARY KEY,
+    provider          VARCHAR(50)  NOT NULL,
+    external_match_id VARCHAR(64)  NOT NULL,
+    match_id          VARCHAR(64)  NOT NULL,
+    updated_by        VARCHAR(100),
+    updated_at        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_match_external_mapping_provider_external
+    ON "match_external_mapping" (provider, external_match_id);
+
+CREATE INDEX IF NOT EXISTS idx_match_external_mapping_match_id
+    ON "match_external_mapping" (match_id);
+
 
 CREATE TABLE IF NOT EXISTS "posts"
 (

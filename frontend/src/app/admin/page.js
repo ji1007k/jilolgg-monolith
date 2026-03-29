@@ -36,6 +36,9 @@ export default function AdminPage() {
     const [manualTeamB, setManualTeamB] = useState("");
     const [manualLockStartTime, setManualLockStartTime] = useState(false);
     const [manualLockBlockName, setManualLockBlockName] = useState(false);
+    const [externalMatchId, setExternalMatchId] = useState("");
+    const [externalLinkStatus, setExternalLinkStatus] = useState(null);
+    const [externalCandidates, setExternalCandidates] = useState([]);
 
     const [leagues, setLeagues] = useState([]);
     const [tournaments, setTournaments] = useState([]);
@@ -309,6 +312,135 @@ export default function AdminPage() {
         }
     };
 
+    const handleLinkExternalMatch = async () => {
+        if (!matchId.trim()) {
+            setMsg("기준 matchId를 입력하세요.");
+            return;
+        }
+        if (!externalMatchId.trim()) {
+            setMsg("externalMatchId를 입력하세요.");
+            return;
+        }
+
+        try {
+            const csrf = await ensureCsrfToken();
+            const res = await fetch(`/api/admin/manual-matches/${encodeURIComponent(matchId.trim())}/external-link`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(csrf ? { "X-XSRF-TOKEN": csrf } : {}),
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    externalMatchId: externalMatchId.trim(),
+                }),
+            });
+
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                setMsg(`외부 경기 연결 실패 (${res.status}): ${data.message || res.statusText}`);
+                return;
+            }
+            setExternalLinkStatus(data);
+            await handleGetExternalLinkCandidates(false);
+            setMsg(`외부 경기 연결 완료: ${JSON.stringify(data)}`);
+        } catch (error) {
+            setMsg(`외부 경기 연결 오류: ${error.message}`);
+        }
+    };
+
+    const handleUnlinkExternalMatch = async () => {
+        if (!matchId.trim()) {
+            setMsg("기준 matchId를 입력하세요.");
+            return;
+        }
+        if (!externalMatchId.trim()) {
+            setMsg("externalMatchId를 입력하세요.");
+            return;
+        }
+
+        try {
+            const csrf = await ensureCsrfToken();
+            const res = await fetch(
+                `/api/admin/manual-matches/${encodeURIComponent(matchId.trim())}/external-link?externalMatchId=${encodeURIComponent(externalMatchId.trim())}`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        ...(csrf ? { "X-XSRF-TOKEN": csrf } : {}),
+                    },
+                    credentials: "include",
+                }
+            );
+
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                setMsg(`외부 경기 연결 해제 실패 (${res.status}): ${data.message || res.statusText}`);
+                return;
+            }
+
+            setExternalLinkStatus(null);
+            setMsg(`외부 경기 연결 해제 완료: ${externalMatchId.trim()}`);
+        } catch (error) {
+            setMsg(`외부 경기 연결 해제 오류: ${error.message}`);
+        }
+    };
+
+    const handleGetExternalLinkStatus = async () => {
+        if (!matchId.trim()) {
+            setMsg("기준 matchId를 입력하세요.");
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/admin/manual-matches/${encodeURIComponent(matchId.trim())}/external-link`, {
+                method: "GET",
+                credentials: "include",
+            });
+
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                setExternalLinkStatus(null);
+                setMsg(`외부 경기 연결 상태 조회 실패 (${res.status}): ${data.message || res.statusText}`);
+                return;
+            }
+
+            setExternalLinkStatus(data);
+            setExternalMatchId(data.externalMatchId || "");
+            setMsg(`외부 경기 연결 상태 조회 완료: ${JSON.stringify(data)}`);
+        } catch (error) {
+            setMsg(`외부 경기 연결 상태 조회 오류: ${error.message}`);
+        }
+    };
+
+    const handleGetExternalLinkCandidates = async (showMessage = true) => {
+        if (!matchId.trim()) {
+            setMsg("기준 matchId를 입력하세요.");
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/admin/manual-matches/${encodeURIComponent(matchId.trim())}/external-link/candidates`, {
+                method: "GET",
+                credentials: "include",
+            });
+
+            const data = await res.json().catch(() => []);
+            if (!res.ok) {
+                setExternalCandidates([]);
+                setMsg(`외부 경기 후보 조회 실패 (${res.status}): ${data.message || res.statusText}`);
+                return;
+            }
+
+            const candidates = Array.isArray(data) ? data : [];
+            setExternalCandidates(candidates);
+            if (showMessage) {
+                setMsg(`외부 경기 후보 조회 완료: ${candidates.length}건`);
+            }
+        } catch (error) {
+            setMsg(`외부 경기 후보 조회 오류: ${error.message}`);
+        }
+    };
+
     const handleGetOverride = async () => {
         if (!matchId.trim()) {
             setMsg("matchId를 입력하세요.");
@@ -534,6 +666,77 @@ export default function AdminPage() {
                     <button onClick={handleUpsertManualMatch} style={btnStyle}>수동 일정 저장/수정</button>
                     <button onClick={handleDeleteManualMatch} style={dangerBtnStyle}>원본 경기 삭제</button>
                 </div>
+
+                <div style={{ marginTop: "20px", paddingTop: "14px", borderTop: "1px solid #3a3a55" }}>
+                    <h3 style={{ margin: "0 0 10px 0", fontSize: "16px" }}>외부 경기 연결/해제</h3>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                        <input
+                            value={matchId}
+                            onChange={(e) => setMatchId(e.target.value)}
+                            placeholder="기준 matchId (내부 경기)"
+                            style={inputStyle}
+                        />
+                        <input
+                            value={externalMatchId}
+                            onChange={(e) => setExternalMatchId(e.target.value)}
+                            placeholder="externalMatchId (외부 API 경기 ID)"
+                            style={inputStyle}
+                        />
+                    </div>
+                    <div style={{ marginTop: "12px", display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                        <button onClick={handleLinkExternalMatch} style={btnStyle}>외부 경기 연결</button>
+                        <button onClick={handleUnlinkExternalMatch} style={dangerBtnStyle}>외부 경기 연결 해제</button>
+                        <button onClick={handleGetExternalLinkStatus} style={btnStyle}>연결 상태 조회</button>
+                        <button onClick={() => handleGetExternalLinkCandidates(true)} style={btnStyle}>후보 목록 조회</button>
+                    </div>
+
+                    {externalLinkStatus && (
+                        <div style={{ marginTop: "10px", color: "#b8e1ff", fontSize: "13px" }}>
+                            현재 연결: {externalLinkStatus.externalMatchId} ({externalLinkStatus.provider})
+                        </div>
+                    )}
+
+                    {externalCandidates.length > 0 && (
+                        <div style={{ marginTop: "14px", overflowX: "auto" }}>
+                            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                                <thead>
+                                    <tr>
+                                        <th style={tableThStyle}>externalMatchId</th>
+                                        <th style={tableThStyle}>startTime</th>
+                                        <th style={tableThStyle}>teams</th>
+                                        <th style={tableThStyle}>block/strategy</th>
+                                        <th style={tableThStyle}>score</th>
+                                        <th style={tableThStyle}>액션</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {externalCandidates.map((candidate) => (
+                                        <tr key={candidate.externalMatchId}>
+                                            <td style={tableTdStyle}>{candidate.externalMatchId}</td>
+                                            <td style={tableTdStyle}>{candidate.startTime || "-"}</td>
+                                            <td style={tableTdStyle}>
+                                                {(candidate.teamNames || []).join(" vs ") || "-"}
+                                            </td>
+                                            <td style={tableTdStyle}>
+                                                {(candidate.blockName || "-")} / {(candidate.strategy || "-")}
+                                            </td>
+                                            <td style={tableTdStyle}>{candidate.score}</td>
+                                            <td style={tableTdStyle}>
+                                                <button
+                                                    type="button"
+                                                    style={smallBtnStyle}
+                                                    onClick={() => setExternalMatchId(candidate.externalMatchId)}
+                                                >
+                                                    선택
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
             </section>}
 
             {activeAdminTab === "override" && <section id="admin-override" style={sectionStyle}>
@@ -611,4 +814,24 @@ const btnStyle = {
 const dangerBtnStyle = {
     ...btnStyle,
     background: "linear-gradient(90deg, #d62828, #f77f00)",
+};
+
+const smallBtnStyle = {
+    padding: "6px 10px",
+    background: "#1f88ff",
+    color: "#fff",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+};
+
+const tableThStyle = {
+    textAlign: "left",
+    borderBottom: "1px solid #4e4e6c",
+    padding: "8px",
+};
+
+const tableTdStyle = {
+    borderBottom: "1px solid #383855",
+    padding: "8px",
 };

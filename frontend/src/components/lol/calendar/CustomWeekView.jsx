@@ -1,30 +1,31 @@
-// TODO 커스텀 주간 뷰
-const days = ['월', '화', '수', '목', '금', '토', '일'];
+import { addDays, endOfWeek, format, startOfWeek } from "date-fns";
+import ko from "date-fns/locale/ko";
+import { ScheduleWeekListView } from "@/components/lol/calendar/ScheduleListView";
 
-const CustomVerticalWeekView = ({ events, date }) => {
-    const weekStart = startOfWeek(date, { weekStartsOn: 1 }); // 월요일 시작
+function CustomWeekView(props) {
+    return <ScheduleWeekListView {...props} />;
+}
 
-    return (
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {days.map((day, index) => {
-                const currentDate = addDays(weekStart, index);
-                const dayEvents = events.filter(event =>
-                    isSameDay(new Date(event.start), currentDate)
-                );
-
-                return (
-                    <div key={index} style={{ borderBottom: '1px solid #ccc', padding: '10px' }}>
-                        <strong>{day} ({format(currentDate, 'MM/dd', { locale: ko })})</strong>
-                        <ul>
-                            {dayEvents.map(event => (
-                                <li key={event.matchId}>{event.title}</li>
-                            ))}
-                        </ul>
-                    </div>
-                );
-            })}
-        </div>
-    );
+CustomWeekView.range = (date) => {
+    const start = startOfWeek(date, { weekStartsOn: 1 });
+    return Array.from({ length: 7 }, (_, i) => addDays(start, i));
 };
 
-CustomVerticalWeekView.title = () => '주간 (세로)';
+CustomWeekView.navigate = (date, action) => {
+    switch (action) {
+        case "PREV":
+            return addDays(date, -7);
+        case "NEXT":
+            return addDays(date, 7);
+        default:
+            return date;
+    }
+};
+
+CustomWeekView.title = (date) => {
+    const start = startOfWeek(date, { weekStartsOn: 1 });
+    const end = endOfWeek(date, { weekStartsOn: 1 });
+    return `${format(start, "yyyy.MM.dd", { locale: ko })} - ${format(end, "yyyy.MM.dd", { locale: ko })}`;
+};
+
+export default CustomWeekView;

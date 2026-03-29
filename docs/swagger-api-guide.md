@@ -67,3 +67,15 @@
 - `SecurityConfig`와 Controller `@PreAuthorize`가 이중으로 권한을 제어함
 - 일부 API는 `authenticated()` + `@PreAuthorize('SCOPE_ADMIN')` 조합이므로 Swagger 테스트 시 권한 클레임 확인 필요
 - CSRF 우회 헤더 `X-From-Swagger: skip`는 운영용 문서에서 주의 문구 필요
+
+## 5) Admin Manual Match APIs (2026-03-29)
+- `PUT /admin/manual-matches/{matchId}`
+  - Create or update a match with `leagueId`, `tournamentId`, `startTime`, `state`, `blockName`, `strategyType`, `gameCount`, `teamIds`.
+  - Rewrites `match_teams` for the match using provided `teamIds`.
+  - Optional lock fields: `lockStartTime`, `lockBlockName` (also updates manual override).
+- `PUT /admin/match-overrides/{matchId}`
+  - Upsert manual override for `startTime` and `blockName`.
+- `GET /admin/match-overrides/{matchId}`
+  - Read current override.
+- `DELETE /admin/match-overrides/{matchId}`
+  - Delete override.

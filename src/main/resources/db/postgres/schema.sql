@@ -138,6 +138,19 @@ CREATE INDEX IF NOT EXISTS idx_match_alarms_match_id
     ON "match_alarms" (match_id);
 
 
+CREATE TABLE IF NOT EXISTS "manual_match_overrides"
+(
+    id                  BIGSERIAL PRIMARY KEY,
+    match_id            VARCHAR(64)  NOT NULL UNIQUE,
+    override_start_time TIMESTAMP,
+    override_block_name VARCHAR(100),
+    lock_start_time     BOOLEAN      NOT NULL DEFAULT FALSE,
+    lock_block_name     BOOLEAN      NOT NULL DEFAULT FALSE,
+    updated_by          VARCHAR(100),
+    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+
 CREATE TABLE IF NOT EXISTS "posts"
 (
     "id"         bigserial primary key,

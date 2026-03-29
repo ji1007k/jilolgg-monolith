@@ -198,7 +198,7 @@ function MatchListPopup ({ open, onClose, matches, date, isLoading, onPrevDate, 
                                             {(isLive || isCompleted)  && (
                                                 <div className="flex justify-center">
                                                     <div className="label strategy">
-                                                        {`${match.blockName}(${match.strategy})`}
+                                                        {`${match.blockName ?? ""}(${match.strategy})`}
                                                     </div>
                                                 </div>
                                             )}
@@ -209,7 +209,7 @@ function MatchListPopup ({ open, onClose, matches, date, isLoading, onPrevDate, 
                                                         <span className="team-code">{teamA.team.code}</span>
                                                     </div>
                                                     <div className="label strategy">
-                                                        {`${match.blockName}(${match.strategy})`}
+                                                        {`${match.blockName ?? ""}(${match.strategy})`}
                                                     </div>
                                                     <div className="team team-right">
                                                         <span className="team-code">{teamB.team.code}</span>

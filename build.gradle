@@ -31,7 +31,7 @@ repositories {
 }
 
 dependencies {
-    // Spring Boot Web & WebSocket
+    // Spring Boot Web / Data / Security
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -39,39 +39,38 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springframework.boot:spring-boot-starter-batch'
 
-    // 푸시 기능 (Firebase Admin SDK)
+    // Push notifications (Firebase)
     implementation 'com.google.firebase:firebase-admin:9.2.0'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-    // 분산 락 (Redis Redisson).
-    // Spring 공식 BOM에 포함되어 있지 않기 때문에 버전 명시해줘야 함
+    // Distributed lock (Redisson)
+    // Not included in Spring BOM, so pin version explicitly.
     implementation 'org.redisson:redisson-spring-boot-starter:3.27.2'
 
-    // TODO 삭제
+    // TODO: remove if no longer needed
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
     // PostgreSQL
     runtimeOnly 'org.postgresql:postgresql'
 
-    // Lombok for reduced boilerplate code
+    // Lombok
     implementation 'org.projectlombok:lombok:1.18.22'
     annotationProcessor 'org.projectlombok:lombok:1.18.22'
 
-    // Entity <-> DTO 매핑 프레임워크
+    // Entity <-> DTO mapping
     implementation 'org.mapstruct:mapstruct:1.5.5.Final'
-    // MapStruct의 코드 생성기. 컴파일 시점에 @Mapper 인터페이스를 분석해서 자동으로 구현체 (Impl 클래스)를 생성
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
 
-    // WAR는 외부 Tomcat
-//    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
-    // JAR 는 내부 Tomcat
+    // Embedded Tomcat for JAR deployment
     implementation 'org.springframework.boot:spring-boot-starter-tomcat'
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    // SpringDoc OpenAPI + Swagger UI
-    // spring boot 3.4 버전과 쓰면 에러 발생
+
+    // OpenAPI / Swagger UI
+    // Note: version compatibility issue reported around Spring Boot 3.4.
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
-    // Spring Boot 애플리케이션 모니터링 및 관리
+
+    // Monitoring / actuator
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
     // Testing
@@ -84,19 +83,20 @@ dependencies {
     testImplementation 'org.springframework.batch:spring-batch-test'
 }
 
-// Spring Boot 3.x 버전부터 기본적으로 JUnit 5(Jupiter) 해서 설정 불필요
-// Gradle이 JUnit5 테스트 엔진을 인식하고 실행하도록 지정
-//tasks.named('test') {
+// Use JUnit Platform (JUnit5)
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
+    
+    // CPU 코어 수의 절반을 사용하여 테스트를 병렬로 실행 (속도 향상)
+    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
 }
 
-// java 소스 컴파일 시 문자 인코딩 명시
+// Force Java compile encoding
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
 
-// resources 하위 파일 복사/처리 시 사용할 인코딩 지정
+// Force resource filtering encoding
 processResources {
     filteringCharset = 'UTF-8'
 }
@@ -110,7 +110,7 @@ task copyFrontend(type: Copy) {
     into "${projectDir}/src/main/resources/static/jikimi"
 }
 
-// npmInstall이 너무 느릴 경우 node_modules가 있으면 건너뛰도록 설정
+// Skip npm install if node_modules already exists
 npmInstall.onlyIf {
     !file("${projectDir}/frontend/node_modules").exists()
 }
@@ -118,7 +118,8 @@ npmInstall.onlyIf {
 buildFrontend.dependsOn npmInstall
 copyFrontend.dependsOn buildFrontend
 
-// 일반적인 빌드/실행 시에는 프론트엔드 빌드를 건너뛸 수 있도록 설정
-// 오직 명시적으로 빌드하거나 특정 속성이 있을 때만 실행되게 변경 가능
-// 여기서는 기본 의존성을 제거하고 필요할 때만 `./gradlew copyFrontend`를 실행하도록 유도
-processResources.dependsOn copyFrontend // 이 줄을 주석 처리하여 매번 FE 빌드되는 것을 방지
+// Keep Java build/run separate from frontend build by default.
+// Include frontend artifacts only when explicitly requested.
+if (project.hasProperty("withFrontend")) {
+    processResources.dependsOn copyFrontend
+}

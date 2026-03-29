@@ -4,7 +4,26 @@ export function getDateRange(view, date) {
         year = date.getFullYear();
         // month = date.getMonth() + 1;
     } else if (view === 'week') {
-        // TODO
+        const base = new Date(date);
+        const dayOfWeek = base.getDay(); // 0=Sun
+        const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const monday = new Date(base);
+        monday.setDate(base.getDate() + diffToMonday);
+
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+
+        const formatDate = (d) => {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${dd}`;
+        };
+
+        return {
+            startDate: formatDate(monday),
+            endDate: formatDate(sunday),
+        };
     } else {
         year = date.getFullYear();
         month = date.getMonth() + 1;

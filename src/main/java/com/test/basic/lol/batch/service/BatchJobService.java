@@ -20,8 +20,7 @@ import org.springframework.util.StopWatch;
 public class BatchJobService {
 
     private final MatchCacheService matchCacheService;
-
-    private final JobLauncher jobLauncher;  // Job을 실행하는 컴포넌트 (Job 실행 트리거)
+    private final JobLauncher jobLauncher;
     private final Job syncMatchJob;
 
     public long executeMatchSyncJob(String year) {
@@ -32,18 +31,17 @@ public class BatchJobService {
             JobParameters params = new JobParametersBuilder()
                     .addString("targetYear", year)
                     .addLong("time", System.currentTimeMillis())
-                    .addString("uuid", java.util.UUID.randomUUID().toString()) // 고유성 보장
+                    .addString("uuid", java.util.UUID.randomUUID().toString())
                     .toJobParameters();
 
             jobLauncher.run(syncMatchJob, params);
 
-            // 배치 종료 후 경기 일정 캐시 무효화
+            // IMPORTANT: ensure stale schedule cache is cleared after batch sync.
             matchCacheService.invalidateAllCaches();
 
             sw.stop();
             log.info(">>> 소요 시간: {}ms", sw.getTotalTimeMillis());
             return sw.getTotalTimeMillis();
-
         } catch (JobExecutionAlreadyRunningException | JobRestartException
                  | JobInstanceAlreadyCompleteException | JobParametersInvalidException e) {
             log.error("Job 실행 실패", e);

@@ -28,5 +28,7 @@ public interface MatchTeamRepository extends JpaRepository<MatchTeam, Long> {
 
     List<MatchTeam> findByMatch_MatchIdIn(Set<String> matchIds);
 
+    void deleteByMatch_MatchId(String matchId);
+
     void deleteByMatch_MatchIdIn(Set<String> matchIds);
 }

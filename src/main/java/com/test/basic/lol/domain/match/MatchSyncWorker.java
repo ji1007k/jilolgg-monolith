@@ -4,6 +4,7 @@ import com.test.basic.lol.api.esports.dto.MatchDetailResponse;
 import com.test.basic.lol.api.esports.dto.MatchScheduleResponse;
 import com.test.basic.lol.domain.league.League;
 import com.test.basic.lol.domain.league.LeagueRepository;
+import com.test.basic.lol.domain.match.manual.ManualMatchOverrideService;
 import com.test.basic.lol.domain.matchteam.MatchTeam;
 import com.test.basic.lol.domain.matchteam.MatchTeamRepository;
 import com.test.basic.lol.domain.team.Team;
@@ -34,6 +35,7 @@ public class MatchSyncWorker {
     private final MatchRepository matchRepository;
     private final TeamRepository teamRepository;
     private final MatchTeamRepository matchTeamRepository;
+    private final ManualMatchOverrideService manualMatchOverrideService;
 
     private Team resolveTeamForSync(String code, String name) {
         List<Team> candidates = "TBD".equalsIgnoreCase(name)
@@ -268,6 +270,7 @@ public class MatchSyncWorker {
                 match.setBlockName(event.getBlockName());
                 match.setGameCount(matchDto.getStrategy().getCount());
                 match.setStrategy(matchDto.getStrategy().getType() + matchDto.getStrategy().getCount());
+                manualMatchOverrideService.applyLockedFields(match);
 
                 Match savedMatch = matchRepository.save(match);
                 count++;

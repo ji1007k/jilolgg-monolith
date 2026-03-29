@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext.js";
 import TokenExpiration from "@/components/auth/TokenExpiration";
 import { logout as apiLogout } from "@/utils/api.js";
-import Link from "next/link";
 
 export default function UserInfo({ username }) {
     const [dropdownActive, setDropdownActive] = useState(false);
-    const { logout } = useAuth();  // AuthContext에서 logout 함수 가져오기
+    const { logout } = useAuth();
+    const router = useRouter();
 
     const toggleDropdown = () => {
         setDropdownActive((prev) => !prev);
@@ -20,7 +21,6 @@ export default function UserInfo({ username }) {
         }
     };
 
-    // 페이지 클릭 시 드롭다운 숨기기
     useEffect(() => {
         window.addEventListener("click", hideDropdown);
         return () => {
@@ -29,11 +29,16 @@ export default function UserInfo({ username }) {
     }, []);
 
     const handleLogout = async (e) => {
-        e.preventDefault(); // a 태그 기본 동작을 방지 (페이지 이동 방지)
-
+        e.preventDefault();
         await apiLogout();
+        logout();
+    };
 
-        logout();  // 로그아웃 처리
+    const handleMenuClick = (e, targetPath) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDropdownActive(false);
+        router.push(targetPath);
     };
 
     return (
@@ -45,10 +50,10 @@ export default function UserInfo({ username }) {
 
             {dropdownActive && (
                 <div id="dropdown" className="dropdown-content">
-                    {username === 'admin' ? (
-                        <Link href="/admin">관리자 메뉴</Link>
+                    {username === "admin" ? (
+                        <a href="/admin" onClick={(e) => handleMenuClick(e, "/admin")}>관리자 메뉴</a>
                     ) : (
-                        <Link href="/users/mypage">마이페이지</Link>
+                        <a href="/users/mypage" onClick={(e) => handleMenuClick(e, "/users/mypage")}>마이페이지</a>
                     )}
                     <a onClick={handleLogout} className="logout-btn">
                         로그아웃

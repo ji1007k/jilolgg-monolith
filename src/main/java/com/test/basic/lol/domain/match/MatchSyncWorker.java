@@ -8,6 +8,7 @@ import com.test.basic.lol.domain.match.mapping.MatchExternalMappingService;
 import com.test.basic.lol.domain.match.manual.ManualMatchOverrideService;
 import com.test.basic.lol.domain.matchteam.MatchTeam;
 import com.test.basic.lol.domain.matchteam.MatchTeamRepository;
+import com.test.basic.lol.domain.matchteam.MatchTeamService;
 import com.test.basic.lol.domain.team.Team;
 import com.test.basic.lol.domain.team.TeamRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class MatchSyncWorker {
     private final MatchRepository matchRepository;
     private final TeamRepository teamRepository;
     private final MatchTeamRepository matchTeamRepository;
+    private final MatchTeamService matchTeamService;
     private final ManualMatchOverrideService manualMatchOverrideService;
     private final MatchExternalMappingService matchExternalMappingService;
 
@@ -202,7 +204,12 @@ public class MatchSyncWorker {
             }
 
             if (teamUpdated) {
-                matchTeamRepository.save(matchTeam);
+                matchTeamService.upsertMatchTeam(
+                        match.getMatchId(),
+                        team.getTeamId(),
+                        matchTeam.getOutcome(),
+                        matchTeam.getGameWins()
+                );
             }
         }
 
@@ -333,7 +340,12 @@ public class MatchSyncWorker {
                         matchTeam.setGameWins(teamDto.getResult().getGameWins());
                     }
 
-                    matchTeamRepository.save(matchTeam);
+                    matchTeamService.upsertMatchTeam(
+                            savedMatch.getMatchId(),
+                            team.getTeamId(),
+                            matchTeam.getOutcome(),
+                            matchTeam.getGameWins()
+                    );
                 }
             }
 

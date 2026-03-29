@@ -3,6 +3,7 @@ package com.test.basic.lol.domain.matchteam;
 import com.test.basic.lol.domain.match.MatchRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
@@ -18,10 +19,24 @@ public class MatchTeamService {
         return matchTeamRepository.findDistinctTeamIdByMatchIdIn(matchIds);
     }
 
+    @Transactional
     public void saveMatchTeams(List<MatchTeam> matchTeamsToSave) {
-        matchTeamRepository.saveAll(matchTeamsToSave);
+        for (MatchTeam matchTeam : matchTeamsToSave) {
+            upsertMatchTeam(
+                    matchTeam.getMatch().getMatchId(),
+                    matchTeam.getTeam().getTeamId(),
+                    matchTeam.getOutcome(),
+                    matchTeam.getGameWins()
+            );
+        }
     }
 
+    @Transactional
+    public void upsertMatchTeam(String matchId, String teamId, String outcome, Integer gameWins) {
+        matchTeamRepository.upsertByMatchIdAndTeamId(matchId, teamId, outcome, gameWins);
+    }
+
+    @Transactional
     public void deleteByMatchIds(Set<String> matchIds) {
         matchTeamRepository.deleteByMatch_MatchIdIn(matchIds);
     }

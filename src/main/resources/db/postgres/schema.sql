@@ -65,6 +65,8 @@ CREATE TABLE IF NOT EXISTS "match_teams"
     game_wins INT
     -- 외래키 추가 가능: REFERENCES matches(match_id), teams(team_code)
 );
+CREATE UNIQUE INDEX IF NOT EXISTS uq_match_teams_match_team
+    ON "match_teams" (match_id, team_id);
 
 CREATE TABLE IF NOT EXISTS "teams"
 (

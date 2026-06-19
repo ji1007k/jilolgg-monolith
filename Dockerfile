@@ -25,8 +25,8 @@ RUN chmod +x gradlew
 COPY . ./
 
 # [수정] 이전 질문의 연장선으로, 테스트를 제외하고 빌드하려면 아래 줄의 주석을 해제하세요.
-# RUN --mount=type=cache,target=/root/.gradle ./gradlew build -PwithFrontend --no-daemon -x test
-RUN --mount=type=cache,target=/root/.gradle ./gradlew build -PwithFrontend --no-daemon
+RUN --mount=type=cache,target=/root/.gradle ./gradlew build -PwithFrontend --no-daemon -x test
+# RUN --mount=type=cache,target=/root/.gradle ./gradlew build -PwithFrontend --no-daemon
 
 
 # Stage 2: Final runtime image (OS 호환성을 위해 Ubuntu 기반 JRE 사용)

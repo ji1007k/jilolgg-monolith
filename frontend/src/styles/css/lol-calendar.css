@@ -5,7 +5,7 @@
  */
 .home-container {
     width: 700px;
-    height: 75%;
+    height: calc(100vh - 145px);
     margin: auto;
     margin-top: 145px;
 }
@@ -17,7 +17,6 @@
 @media (max-width: 768px) {
     .home-container {
         width: 95%;
-        height: 80%;
         margin-top: 130px;
     }
 
@@ -72,14 +71,6 @@
 }
 
 @media (max-width: 500px) {
-    .calendar-wrapper {
-        height: calc(100% - 60px) !important;
-    }
-
-    .rbc-calendar {
-        height: 100% !important;
-    }
-
     .custom-toolbar {
     }
 }
@@ -106,7 +97,7 @@
 }
 
 .calendar-wrapper {
-    height: calc(100% - 70px);
+    height: calc(100% - 60px);
 }
 
 .rbc-calendar {
@@ -1082,7 +1073,7 @@
     Day/Week schedule list view
  */
 .schedule-list-view {
-    height: 100%;
+    height: calc(100% - 60px);
     background: #f9fafb;
     border: 1px solid #e5e7eb;
     border-radius: 10px;
@@ -1196,4 +1187,9 @@
     font-size: 13px;
     color: #6b7280;
     padding: 8px 0;
+}
+
+.toolbar-controls {
+    display: flex;
+    gap: 5px;
 }

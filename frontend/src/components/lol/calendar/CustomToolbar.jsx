@@ -62,7 +62,8 @@ const CustomToolbar = (toolbar) => {
                 <button title="오늘 날짜로 이동" onClick={goToToday}>Today</button>
                 <button title="월별" onClick={() => goToView("month")}><FaCalendarAlt /></button>
                 <button title="주별" onClick={() => goToView("week")}><FaCalendarWeek /></button>
-                <button title="일별" onClick={() => goToView("day")}><FaCalendarDay /></button>
+                {/* 일별 뷰 버튼 숨김 */}
+                {/* <button title="일별" onClick={() => goToView("day")}><FaCalendarDay /></button> */}
             </div>
         </div>
     );

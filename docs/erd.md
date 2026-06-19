@@ -62,7 +62,7 @@ erDiagram
     match_teams {
         BIGINT id PK
         VARCHAR match_id
-        VARCHAR team_id
+        VARCHAR team_id UK "(match_id, team_id)"
         VARCHAR outcome
         INT game_wins
     }
@@ -81,7 +81,7 @@ erDiagram
     match_external_mapping {
         BIGINT id PK
         VARCHAR provider
-        VARCHAR external_match_id UK
+        VARCHAR external_match_id UK "(provider, external_match_id)"
         VARCHAR match_id
         VARCHAR updated_by
         TIMESTAMP updated_at
@@ -164,5 +164,7 @@ erDiagram
 ## Notes
 - 일부 관계는 JPA 매핑 기준으로는 연관되어 있지만, DB 레벨 `FOREIGN KEY` 제약은 스키마에 명시되지 않은 구간이 있습니다.
 - 운영에서 무결성을 강하게 보장하려면 FK 제약 추가를 별도 마이그레이션으로 관리하는 것을 권장합니다.
+- `match_teams`는 `(match_id, team_id)` 복합 유니크 인덱스로 중복 삽입을 방지합니다.
+- `match_external_mapping`은 `(provider, external_match_id)` 복합 유니크 인덱스로 외부 소스별 매핑 충돌을 방지합니다.
 - `match_external_mapping`은 조회 계층 dedupe를 위한 연결 정보 테이블입니다.
 - 외부 동기화 시 `matches.match_id`(외부 API ID)는 유지되며, 중복 제거는 조회 응답에서 논리적으로 처리합니다.

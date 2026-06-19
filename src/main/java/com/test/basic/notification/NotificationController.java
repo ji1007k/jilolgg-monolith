@@ -17,12 +17,15 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/notification")
 @RequiredArgsConstructor
+@io.swagger.v3.oas.annotations.tags.Tag(name = "07. Notification", description = "푸시 알림 및 FCM 토큰 관리 API")
+@io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "02_BearerAuth")
 public class NotificationController {
 
     private final NotificationService notificationService;
 
     // POST /api/notification/token
     @PostMapping("/token")
+    @io.swagger.v3.oas.annotations.Operation(summary = "FCM 토큰 등록", description = "기기별 FCM 토큰을 서버에 등록합니다.")
     public ResponseEntity<Map<String, Object>> registerToken(@RequestBody Map<String, Object> payload,
                                                              Authentication authentication) {
         Long userId = resolveUserId(authentication);
@@ -45,6 +48,7 @@ public class NotificationController {
 
     // POST /api/notification/alarm
     @PostMapping("/alarm")
+    @io.swagger.v3.oas.annotations.Operation(summary = "경기 알림 토글", description = "특정 경기에 대한 푸시 알림 수신 여부를 설정/해제합니다.")
     public ResponseEntity<Map<String, Object>> toggleAlarm(@RequestBody Map<String, Object> payload,
                                                            Authentication authentication) {
         Long userId = resolveUserId(authentication);
@@ -68,6 +72,7 @@ public class NotificationController {
 
     // GET /api/notification/alarm?matchIds=abc,def
     @GetMapping("/alarm")
+    @io.swagger.v3.oas.annotations.Operation(summary = "알림 설정 상태 조회", description = "여러 경기에 대해 현재 사용자가 설정한 알림 상태를 조회합니다.")
     public ResponseEntity<Map<String, Object>> getAlarmStatus(@RequestParam(required = false) String matchIds,
                                                                Authentication authentication) {
         Long userId = resolveUserId(authentication);
@@ -89,6 +94,7 @@ public class NotificationController {
 
     // POST /api/notification/test
     @PostMapping("/test")
+    @io.swagger.v3.oas.annotations.Operation(summary = "테스트 알림 발송 (POST)", description = "현재 사용자에게 테스트 푸시 알림을 발송합니다.")
     public ResponseEntity<Map<String, Object>> sendTestNotification(@RequestBody(required = false) Map<String, Object> payload,
                                                                      Authentication authentication) {
         Long userId = resolveUserId(authentication);

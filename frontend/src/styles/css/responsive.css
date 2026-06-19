@@ -1,0 +1,100 @@
+/* responsive.css */
+
+/* Mobile Breakpoint (up to 800px) */
+@media (max-width: 800px) {
+  .calendar-container {
+    padding: 10px;
+  }
+
+  .rbc-calendar {
+    font-size: 11px;
+  }
+
+  .rbc-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .rbc-toolbar-label {
+    text-align: center;
+    margin: 10px 0;
+  }
+
+  .toolbar-controls {
+    display: flex;
+    gap: 5px;
+  }
+
+  /* Hide regular calendar on very small screens, show list view instead */
+  .desktop-calendar {
+    display: none;
+  }
+
+  .mobile-schedule-list {
+    display: block;
+    height: calc(100% - 60px);
+  }
+
+  .calendar-wrapper {
+    height: 100%;
+  }
+}
+
+/* Tablet Breakpoint (768px to 1024px for 10-inch tablets) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .calendar-container {
+    padding: 15px;
+  }
+
+  .mobile-schedule-list {
+    display: none;
+  }
+
+  .desktop-calendar {
+    display: block;
+    height: calc(100% - 60px);
+  }
+
+  .calendar-wrapper {
+    height: 100%;
+  }
+}
+
+/* PC Breakpoint (above 1024px) */
+@media (min-width: 1025px) {
+  .mobile-schedule-list {
+    display: none;
+  }
+
+  .desktop-calendar {
+    display: block;
+    height: calc(100% - 60px);
+  }
+
+  .calendar-wrapper {
+    height: 100%;
+  }
+
+  .date-selectors input[type="date"] {
+    width: 100%;
+    max-width: fit-content;
+    padding: 5px 25px 5px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 12px;
+    background-color: white;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+  }
+
+  .date-selectors input[type="date"]:hover {
+    border-color: #ff5722;
+  }
+
+  .date-selectors input[type="date"]:focus {
+    border-color: #ff5722;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 87, 34, 0.2);
+  }
+}

@@ -101,6 +101,8 @@ public class UserService {
             UserEntity userEntity = user.get();
             String hashedPwd = PasswordUtils.hashPassword(newPassword);
             userEntity.setPassword(hashedPwd);
+            // Increment version to invalidate all current JWTs & Refresh Tokens
+            userEntity.setPasswordVersion(userEntity.getPasswordVersion() + 1);
             userRepository.save(userEntity);
 
             return true;

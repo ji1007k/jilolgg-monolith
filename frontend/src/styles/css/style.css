@@ -4,8 +4,9 @@
 
 /* 전체 페이지 스타일 */
 body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f4f7fc;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #1a1a1a 0%, #e60012 100%);
+    background-attachment: fixed;
     margin: 0;
     padding: 0;
     text-align: center;
@@ -29,19 +30,18 @@ header {
 
 .header-container {
     box-sizing: border-box;
-    background-color: #333; /* 다크한 색상으로 고급스러운 느낌 */
+    background: #1a1a1a;
     color: white;
     padding: 15px 25px;
     width: 100%;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* 더 부드러운 그림자 */
-    border-bottom: 2px solid #444; /* 헤더 하단 경계선 */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(230, 0, 18, 0.3);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    /*max-width: 1200px;*/
     margin: 0 auto;
-    /*padding: 0 20px;*/
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
 
 
@@ -68,8 +68,10 @@ header {
 
 /* Main Link Hover 효과 */
 .header-container .main-link:hover {
-    color: #ff5722; /* 오렌지 색상으로 강조 */
-    text-decoration: underline;
+    color: rgba(255, 255, 255, 0.8);
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
 }
 
 .header-container .api-docs-link {
@@ -80,8 +82,10 @@ header {
 }
 
 .header-container .api-docs-link:hover {
-    color: #ff5722; /* 오렌지 색상으로 강조 */
-    text-decoration: underline;
+    color: rgba(255, 255, 255, 0.8);
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
 }
 
 @media (max-width: 500px) {
@@ -136,16 +140,17 @@ header {
 }
 
 .user-info .login-btn {
-    background-color: #ff5722;
-    border: 1px solid #ff5722;
+    background: linear-gradient(135deg, #1a1a1a 0%, #e60012 100%);
+    border: 1px solid rgba(230, 0, 18, 0.5);
     color: #fff;
+    box-shadow: 0 4px 15px rgba(230, 0, 18, 0.4);
+    transition: all 0.3s ease;
 }
 
 .user-info .login-btn:hover {
-    background-color: #fff;
-    border: 1px solid #ff5722;
-    color: #ff5722;
-    font-weight: 500;
+    background: linear-gradient(135deg, #e60012 0%, #1a1a1a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(230, 0, 18, 0.6);
 }
 
 #username-area {
@@ -163,8 +168,8 @@ header {
 
 .username-clickable:hover {
     cursor: pointer;
-    color: #ff5722;
-    text-decoration: underline;
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
     font-weight: 500;
 }
 
@@ -175,18 +180,21 @@ header {
 }
 
 .refresh-token-btn {
-    background-color: #ff5722;
+    background: linear-gradient(135deg, #1a1a1a 0%, #e60012 100%);
     color: white;
     padding: 6px 12px;
     font-size: 14px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(230, 0, 18, 0.4);
 }
 
 .refresh-token-btn:hover {
-    background-color: #e64a19;
+    background: linear-gradient(135deg, #e60012 0%, #1a1a1a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(230, 0, 18, 0.6);
 }
 
 /* 드롭다운 메뉴 스타일 */
@@ -209,6 +217,7 @@ header {
     display: block;
     font-size: 14px;
     transition: background-color 0.3s ease;
+    right: 5px;
 }
 
 /* 드롭다운 메뉴 Hover 효과 */
@@ -227,23 +236,28 @@ header {
    로그인 페이지 전용 스타일
 =============================== */
 .login-container {
-    background-color: #ffffff;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
     padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     width: 100%;
-    max-width: 380px; /* 최대 너비 설정 */
+    max-width: 380px;
     text-align: center;
     position: relative;
     margin: auto;
-    font-family: 'Roboto', sans-serif;
-    box-sizing: border-box; /* padding과 border를 포함한 전체 너비 설정 */
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    box-sizing: border-box;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .login-container h2 {
     font-size: 28px;
-    font-weight: 600;
-    color: #333;
+    font-weight: 700;
+    background: linear-gradient(135deg, #1a1a1a 0%, #e60012 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin-bottom: 20px;
 }
 
@@ -261,42 +275,48 @@ header {
 
 .login-container input {
     width: 100%;
-    padding: 12px;
-    margin-top: 5px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 8px;
+    border: 2px solid rgba(102, 126, 234, 0.2);
+    border-radius: 12px;
     font-size: 16px;
-    background-color: #f9f9f9;
-    transition: border-color 0.3s ease;
-    box-sizing: border-box; /* padding과 border 포함한 너비 설정 */
+    background: rgba(255, 255, 255, 0.9);
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    backdrop-filter: blur(10px);
 }
 
 .login-container input:focus {
     outline: none;
-    border-color: #ff5722; /* 입력창 강조: 주황색 */
+    border-color: #e60012;
+    box-shadow: 0 0 0 4px rgba(230, 0, 18, 0.1);
+    background: rgba(255, 255, 255, 1);
 }
 
 /* 로그인 버튼 */
 .login-container button {
     width: 100%;
-    padding: 12px;
-    margin-top: 20px;
+    padding: 14px;
+    margin-top: 24px;
     border: none;
-    border-radius: 8px;
+    border-radius: 12px;
     font-size: 18px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
     box-sizing: border-box;
+    font-weight: 600;
 }
 
 .login-container .login-btn {
-    background-color: #ff5722;
+    background: linear-gradient(135deg, #1a1a1a 0%, #e60012 100%);
     color: white;
-    font-weight: 500;
+    box-shadow: 0 8px 20px rgba(230, 0, 18, 0.4);
 }
 
 .login-container .login-btn:hover {
-    background-color: #e64a19;
+    background: linear-gradient(135deg, #e60012 0%, #1a1a1a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(230, 0, 18, 0.5);
 }
 
 /* 회원가입 링크 스타일 */
@@ -308,7 +328,7 @@ header {
 }
 
 .login-container .register-link:hover {
-    color: #0056b3;
+    color: #e60012;
     text-decoration: underline;
 }
 
@@ -386,16 +406,18 @@ header {
    마이페이지 전용 스타일
 =============================== */
 .mypage-container {
-    background-color: #ffffff;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
     padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     width: 100%;
-    max-width: 400px; /* 로그인 페이지보다 약간 넓게 */
+    max-width: 400px;
     text-align: center;
     margin: 100px auto;
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
     box-sizing: border-box;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* ================================
@@ -451,39 +473,45 @@ header {
 .mypage-container input,
 .mypage-container select {
     width: 100%;
-    padding: 12px;
-    margin-top: 5px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 8px;
+    border: 2px solid rgba(102, 126, 234, 0.2);
+    border-radius: 12px;
     font-size: 16px;
-    background-color: #f9f9f9;
-    transition: border-color 0.3s ease;
+    background: rgba(255, 255, 255, 0.9);
+    transition: all 0.3s ease;
     box-sizing: border-box;
+    backdrop-filter: blur(10px);
 }
 
 .mypage-container input:focus,
 .mypage-container select:focus {
     outline: none;
-    border-color: #ff5722;
+    border-color: #e60012;
+    box-shadow: 0 0 0 4px rgba(230, 0, 18, 0.1);
+    background: rgba(255, 255, 255, 1);
 }
 
 /* 저장 버튼 */
 .save-btn {
     width: 100%;
-    padding: 12px;
-    margin-top: 20px;
+    padding: 14px;
+    margin-top: 24px;
     border: none;
-    border-radius: 8px;
+    border-radius: 12px;
     font-size: 18px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
-    background-color: #ff5722;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #1a1a1a 0%, #e60012 100%);
     color: white;
-    font-weight: 500;
+    font-weight: 600;
+    box-shadow: 0 8px 20px rgba(230, 0, 18, 0.4);
 }
 
 .save-btn:hover {
-    background-color: #e64a19;
+    background: linear-gradient(135deg, #e60012 0%, #1a1a1a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(230, 0, 18, 0.5);
 }
 
 
@@ -510,8 +538,8 @@ header {
 /* 포커스 효과 */
 .mypage-form-group select:focus {
     outline: none;
-    border-color: #ff5722;
-    box-shadow: 0 0 5px rgba(255, 87, 34, 0.3);
+    border-color: #e60012;
+    box-shadow: 0 0 0 4px rgba(230, 0, 18, 0.1);
 }
 
 /* 옵션 스타일 */
@@ -548,21 +576,24 @@ header {
    탈퇴하기 버튼 스타일
 =============================== */
 .delete-btn {
-    background-color: #ff3b3b;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
     color: white;
     border: none;
-    border-radius: 8px;
-    padding: 12px;
+    border-radius: 12px;
+    padding: 14px;
     font-size: 18px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
     width: 100%;
-    margin-top: 20px;
+    margin-top: 24px;
+    box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
 }
 
 .delete-btn:hover {
-    background-color: #d32f2f;
+    background: linear-gradient(135deg, #ee5a5a 0%, #ff6b6b 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(255, 107, 107, 0.5);
 }
 
 /* ================================
@@ -574,53 +605,64 @@ header {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .modal {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    padding: 30px;
+    border-radius: 20px;
     text-align: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    width: 300px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    width: 320px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .modal p {
     font-size: 18px;
-    font-weight: 500;
-    margin-bottom: 15px;
-}
-
-.confirm-btn, .cancel-btn {
-    padding: 10px 20px;
-    font-size: 16px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    margin: 5px;
-    transition: background-color 0.3s ease;
-}
-
-.confirm-btn {
-    background-color: #ff3b3b;
-    color: white;
-}
-
-.confirm-btn:hover {
-    background-color: #d32f2f;
-}
-
-.cancel-btn {
-    background-color: #ccc;
+    font-weight: 600;
+    margin-bottom: 20px;
     color: #333;
 }
 
+.confirm-btn, .cancel-btn {
+    padding: 12px 24px;
+    font-size: 16px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    margin: 8px;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.confirm-btn {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+}
+
+.confirm-btn:hover {
+    background: linear-gradient(135deg, #ee5a5a 0%, #ff6b6b 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.5);
+}
+
+.cancel-btn {
+    background: linear-gradient(135deg, #1a1a1a 0%, #e60012 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(230, 0, 18, 0.4);
+}
+
 .cancel-btn:hover {
-    background-color: #bbb;
+    background: linear-gradient(135deg, #e60012 0%, #1a1a1a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(230, 0, 18, 0.5);
 }
 
 
@@ -649,33 +691,42 @@ header {
 .nav-container nav ul {
     list-style-type: none;
     display: flex;
-    background-color: #333;
+    background: #1a1a1a;
     padding: 0;
     margin: 0;
     flex-wrap: wrap;
     justify-content: center;
+    border-bottom: 1px solid rgba(230, 0, 18, 0.3);
 }
 
 .nav-container nav ul li {
-    padding: 10px;
-    margin-right: 10px;
+    padding: 12px 16px;
+    margin-right: 8px;
+    transition: all 0.3s ease;
 }
 
 .nav-container nav ul li a {
     color: white;
     text-decoration: none;
     font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.nav-container nav ul li:hover a {
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
 .nav-container nav ul li.active {
-    padding: 10px 15px 5px 15px;
-    border-bottom: 2px solid #ff5722;
+    padding: 12px 16px;
+    border-bottom: 3px solid rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.1);
 }
 
-
 .nav-container nav ul li.active a {
-    color: #ff5722;
-    font-weight: bold;
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 700;
 }
 
 /* 각 섹션 스타일 */

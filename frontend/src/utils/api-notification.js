@@ -1,3 +1,5 @@
+import { baseFetch } from './api';
+
 function getCookie(name) {
     if (typeof document === "undefined") return null;
 
@@ -11,9 +13,8 @@ async function ensureCsrfToken() {
     let csrfToken = getCookie("XSRF-TOKEN");
     if (csrfToken) return csrfToken;
 
-    await fetch("/api/csrf", {
+    await baseFetch("/api/csrf", {
         method: "GET",
-        credentials: "include",
     });
 
     csrfToken = getCookie("XSRF-TOKEN");
@@ -26,9 +27,8 @@ export async function apiGetAlarmStatus(matchIds) {
     }
 
     const query = encodeURIComponent(matchIds.join(","));
-    const response = await fetch(`/api/notification/alarm?matchIds=${query}`, {
+    const response = await baseFetch(`/api/notification/alarm?matchIds=${query}`, {
         method: "GET",
-        credentials: "include",
     });
 
     if (!response.ok) {
@@ -41,13 +41,12 @@ export async function apiGetAlarmStatus(matchIds) {
 
 export async function apiToggleMatchAlarm(matchId) {
     const csrfToken = await ensureCsrfToken();
-    const response = await fetch("/api/notification/alarm", {
+    const response = await baseFetch("/api/notification/alarm", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             ...(csrfToken ? { "X-XSRF-TOKEN": csrfToken } : {}),
         },
-        credentials: "include",
         body: JSON.stringify({ matchId }),
     });
 

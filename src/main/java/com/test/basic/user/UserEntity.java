@@ -25,6 +25,8 @@ public class UserEntity {
     private String name;
     private String authority;
     private String profileImageUrl;
+    @Builder.Default
+    private Integer passwordVersion = 1;
     @CreationTimestamp
     private LocalDateTime createdDt;
     private LocalDateTime updatedDt;

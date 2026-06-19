@@ -15,7 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/lol/teams")
-@Tag(name = "[LOL(Esports)] 3. Team API", description = "팀 관련 API")
+@Tag(name = "03. Team", description = "LoL Esports 팀 및 선수 정보 조회")
 public class TeamController {
     private static final Logger logger = LoggerFactory.getLogger(TeamController.class);
 
@@ -34,6 +34,7 @@ public class TeamController {
 
     // 리스트 필터 조회
     @GetMapping
+    @Operation(summary = "팀 목록 조회", description = "리그 ID 또는 팀 슬러그(slug) 목록으로 팀 정보를 조회합니다.")
     public ResponseEntity<List<TeamDto>> getTeams(@RequestParam(required = false) String leagueId,
                                                // GET /teams?slugs=slug1,slug2 자동 파싱됨
                                                @RequestParam(required = false) List<String> slugs) {
@@ -42,6 +43,7 @@ public class TeamController {
     }
 
     @GetMapping("/{slug}")
+    @Operation(summary = "팀 상세 조회", description = "팀 슬러그를 이용해 특정 팀의 상세 정보 및 선수 로스터를 조회합니다.")
     public ResponseEntity<Team> getTeamBySlug(@PathVariable String slug) {
         try {
             Team foundTeam = teamService.getTeamBySlugFromDB(slug);
@@ -54,9 +56,8 @@ public class TeamController {
 
     @PostMapping("/sync")
     @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
-    @SecurityRequirement(name = "03_CSRF")
-    @SecurityRequirement(name = "04_IgnoreCSRF")
-    @Operation(summary = "LOL 팀 정보 수동 동기화", description = "LOL 팀 정보 수동 동기화 API")
+    @SecurityRequirement(name = "02_BearerAuth")
+    @Operation(summary = "LOL 팀 정보 수동 동기화", description = "관리자 권한으로 외부 API로부터 모든 팀 및 선수 정보를 동기화합니다.")
     public ResponseEntity<String> syncTeams() {
         logger.info("==================== 팀 정보 수동 동기화 작업 시작 ====================");
         String result = syncTeamService.syncTeamsFromLolEsportsApi();

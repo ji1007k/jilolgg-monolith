@@ -5,6 +5,7 @@ import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import '@/styles/tailwind/lol/calendar.css';
 import '@/styles/css/lol-calendar.css';
+import '@/styles/css/responsive.css';
 
 import { addDays, addMonths, format, getDay, parse, startOfWeek, subDays, subMonths } from 'date-fns';
 import ko from 'date-fns/locale/ko';
@@ -105,48 +106,97 @@ function MyCalendar({ events }) {
 
     return (
         <div className="calendar-container">
-            <div className="calendar-wrapper" {...handlers}>
-                <Calendar
-                    localizer={localizer}
-                    formats={formats}
-                    events={events || refinedSchedules}
-                    startAccessor="start"
-                    endAccessor="end"
-                    defaultView="month"
-                    views={{
-                        month: true,
-                        week: CustomWeekView,
-                        day: CustomDayView,
-                    }}
-                    date={selectedDate}
-                    onNavigate={setSelectedDate}
-                    onView={setCurrentView}
-                    eventPropGetter={(event) => eventPropGetter(event, selectedTeam, favoriteTeamIds)}
-                    components={{
-                        toolbar: CustomToolbar,
-                        event: CalendarEvent,
-                        eventWrapper: CustomEventWrapper,
-                        month: {
-                            dateHeader: ({ date, label }) => (
-                                <div style={{ color: date.getDay() === 0 ? 'red' : undefined }}>
+            <div className="desktop-calendar">
+                <div className="calendar-wrapper" {...handlers}>
+                    <Calendar
+                        localizer={localizer}
+                        formats={formats}
+                        events={events || refinedSchedules}
+                        startAccessor="start"
+                        endAccessor="end"
+                        defaultView="month"
+                        views={{
+                            month: true,
+                            week: CustomWeekView
+                        }}
+                        date={selectedDate}
+                        onNavigate={setSelectedDate}
+                        onView={setCurrentView}
+                        eventPropGetter={(event) => eventPropGetter(event, selectedTeam, favoriteTeamIds)}
+                        components={{
+                            toolbar: CustomToolbar,
+                            event: CalendarEvent,
+                            eventWrapper: CustomEventWrapper,
+                            month: {
+                                dateHeader: ({ date, label }) => (
+                                    <div style={{ color: date.getDay() === 0 ? 'red' : undefined }}>
+                                        {label}
+                                    </div>
+                                ),
+                            },
+                            header: ({ date, label }) => (
+                                <div style={{ color: date.getDay() === 0 ? 'red' : 'inherit' }}>
                                     {label}
                                 </div>
                             ),
-                        },
-                        header: ({ date, label }) => (
-                            <div style={{ color: date.getDay() === 0 ? 'red' : 'inherit' }}>
-                                {label}
-                            </div>
-                        ),
-                    }}
-                    selectable
-                    longPressThreshold={100}
-                    onSelectSlot={async (slotInfo) => {
-                        if (!slotInfo?.start) return;
-                        if (currentView !== 'month') return;
-                        fetchMatchesForDate(slotInfo.start);
-                    }}
-                />
+                        }}
+                        selectable
+                        longPressThreshold={100}
+                        onSelectSlot={async (slotInfo) => {
+                            if (!slotInfo?.start) return;
+                            if (currentView !== 'month') return;
+                            fetchMatchesForDate(slotInfo.start);
+                        }}
+                    />
+                </div>
+            </div>
+
+            <div className="mobile-schedule-list">
+                {/* Mobile view can reuse MatchListPopup content as a full page or a simplified list */}
+                {/* For now, we'll keep the calendar but let CSS scale it, or we could add a dedicated list view here */}
+                {/* I'll use the existing Calendar but with 'day' view or 'week' view as default for mobile if needed */}
+                <div className="calendar-wrapper" {...handlers}>
+                     <Calendar
+                        localizer={localizer}
+                        formats={formats}
+                        events={events || refinedSchedules}
+                        startAccessor="start"
+                        endAccessor="end"
+                        defaultView="week"
+                        views={{
+                            month: true,
+                            week: CustomWeekView
+                        }}
+                        date={selectedDate}
+                        onNavigate={setSelectedDate}
+                        onView={setCurrentView}
+                        eventPropGetter={(event) => eventPropGetter(event, selectedTeam, favoriteTeamIds)}
+                        components={{
+                            toolbar: CustomToolbar,
+                            event: CalendarEvent,
+                            eventWrapper: CustomEventWrapper,
+                            month: {
+                                dateHeader: ({ date, label }) => (
+                                    <div style={{ color: date.getDay() === 0 ? 'red' : undefined }}>
+                                        {label}
+                                    </div>
+                                ),
+                            },
+                            header: ({ date, label }) => (
+                                <div style={{ color: date.getDay() === 0 ? 'red' : 'inherit' }}>
+                                    {label}
+                                </div>
+                            ),
+                        }}
+                        selectable
+                        longPressThreshold={100}
+                        onSelectSlot={async (slotInfo) => {
+                            if (!slotInfo?.start) return;
+                            if (currentView !== 'month') return;
+                            fetchMatchesForDate(slotInfo.start);
+                        }}
+                    />
+                </div>
             </div>
 
             {popupOpen && (

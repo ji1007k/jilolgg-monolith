@@ -5,12 +5,14 @@ import com.test.basic.lol.sync.SyncExecutionResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import java.time.LocalDate;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -19,7 +21,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/lol/matches")
 @RequiredArgsConstructor
-@Tag(name = "[LOL(Esports)] 5. Match API", description = "경기 일정 API")
+@Tag(name = "05. Match", description = "LoL Esports 경기 일정 조회 및 동기화")
 public class MatchController {
     private final MatchService matchService;
     private final MatchSyncOrchestratorService matchSyncOrchestratorService;
@@ -38,11 +40,11 @@ public class MatchController {
 
 
     @GetMapping
-    @Operation(summary = "경기 일정 목록 조회", description = "리그/날짜별 경기 일정 목록 조회 API")
+    @Operation(summary = "경기 일정 목록 조회", description = "특정 리그 및 날짜 범위 내의 경기 일정을 조회합니다.")
     @Parameters({
-            @Parameter(name = "leagueId", description = "리그ID"),
-            @Parameter(name = "startDate", description = "시작일"),
-            @Parameter(name = "endDate", description = "종료일")
+            @Parameter(name = "leagueId", description = "조회할 리그의 고유 ID (예: LCK=98767991310872058)"),
+            @Parameter(name = "startDate", description = "검색 시작 날짜 (yyyy-MM-dd)"),
+            @Parameter(name = "endDate", description = "검색 종료 날짜 (yyyy-MM-dd)")
     })
     public ResponseEntity<List<MatchDto>> getMatches(@RequestParam String leagueId,
                                                      @RequestParam LocalDate startDate,
@@ -56,7 +58,7 @@ public class MatchController {
     }
 
     @GetMapping("/team/{name}")
-    @Operation(summary = "팀별 경기 일정 조회", description = "팀명으로 경기 일정 조회 API")
+    @Operation(summary = "팀별 경기 일정 조회", description = "팀 이름을 기반으로 해당 팀의 전체 경기 일정을 조회합니다.")
     public ResponseEntity<List<MatchDto>> getMatchesByTeamName(@PathVariable("name") String name) {
         List<MatchDto> matches = matchService.getMatchesByTeamName(name);
         return ResponseEntity.ok(matches);
@@ -64,7 +66,8 @@ public class MatchController {
 
     @PostMapping("/sync")
     @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
-    @Operation(summary = "리그별 경기일정 수동 동기화", description = "리그별 경기일정 수동 동기화 API")
+    @Operation(summary = "리그별 경기일정 수동 동기화", description = "관리자 권한으로 특정 연도의 리그별 경기 일정을 외부 API와 동기화합니다.")
+    @SecurityRequirement(name = "02_BearerAuth")
     public ResponseEntity syncAllMatchesByLeagueIdFromApi(@RequestParam String year) {
         SyncExecutionResult result = matchSyncOrchestratorService.runManualLeagueSync(year);
         if (!result.lockAcquired()) {

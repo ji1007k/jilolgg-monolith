@@ -8,6 +8,7 @@ import com.test.basic.lol.domain.match.mapping.MatchExternalMappingService;
 import com.test.basic.lol.domain.match.manual.ManualMatchOverrideService;
 import com.test.basic.lol.domain.matchteam.MatchTeam;
 import com.test.basic.lol.domain.matchteam.MatchTeamRepository;
+import com.test.basic.lol.domain.matchteam.MatchTeamService;
 import com.test.basic.lol.domain.team.Team;
 import com.test.basic.lol.domain.team.TeamRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +38,7 @@ public class MatchSyncWorker {
     private final MatchRepository matchRepository;
     private final TeamRepository teamRepository;
     private final MatchTeamRepository matchTeamRepository;
+    private final MatchTeamService matchTeamService;
     private final ManualMatchOverrideService manualMatchOverrideService;
     private final MatchExternalMappingService matchExternalMappingService;
 
@@ -116,6 +119,22 @@ public class MatchSyncWorker {
             log.info("Match [{}] 상태 변경: {} → {}", match.getMatchId(), match.getState(), computedState);
             match.setState(computedState);
             isUpdated = true;
+        }
+
+        // [Improvement] Extract VOD URLs from all games
+        if (games != null) {
+            String vodUrls = games.stream()
+                    .filter(g -> g.getVods() != null)
+                    .flatMap(g -> g.getVods().stream())
+                    .filter(v -> "youtube".equalsIgnoreCase(v.getProvider()))
+                    .map(v -> "https://www.youtube.com/watch?v=" + v.getParameter())
+                    .distinct()
+                    .collect(Collectors.joining(","));
+
+            if (vodUrls != null && !vodUrls.isEmpty() && !Objects.equals(match.getVodUrl(), vodUrls)) {
+                match.setVodUrl(vodUrls);
+                isUpdated = true;
+            }
         }
 
         // 변경된 경우 업데이트
@@ -202,7 +221,12 @@ public class MatchSyncWorker {
             }
 
             if (teamUpdated) {
-                matchTeamRepository.save(matchTeam);
+                matchTeamService.upsertMatchTeam(
+                        match.getMatchId(),
+                        team.getTeamId(),
+                        matchTeam.getOutcome(),
+                        matchTeam.getGameWins()
+                );
             }
         }
 
@@ -333,7 +357,12 @@ public class MatchSyncWorker {
                         matchTeam.setGameWins(teamDto.getResult().getGameWins());
                     }
 
-                    matchTeamRepository.save(matchTeam);
+                    matchTeamService.upsertMatchTeam(
+                            savedMatch.getMatchId(),
+                            team.getTeamId(),
+                            matchTeam.getOutcome(),
+                            matchTeam.getGameWins()
+                    );
                 }
             }
 
@@ -346,87 +375,4 @@ public class MatchSyncWorker {
         }
         log.info("리그ID {} 데이터 갱신 완료 - {}건", leagueId, count);
     }
-
-
-    // 250526 미사용. 참고용. ==================================================
-
-    // 리그id, 연도별 데이터 동기화
-    /*public List<MatchDto> getMatchesByLeagueIdAndYearFromExternalApi(String leagueId, String year) {
-
-        List<MatchDto> allMatches = new ArrayList<>();
-        String nextPageToken = null;
-
-        do {
-            String finalToken = nextPageToken;
-
-            Mono<String> response = apiClient.fetchScheduleJsonByLeagueIdAndPageToken(leagueId, finalToken);
-
-            try {
-                JsonNode root = objectMapper.readTree(response.block());
-                JsonNode schedule = root.path("data").path("schedule");
-                JsonNode events = schedule.path("events");
-
-                List<MatchDto> pageMatches = parseMatchesFromEvents(events, leagueId, year);
-                allMatches.addAll(pageMatches);
-
-                // 중단 조건: 더 이상 해당 연도의 이벤트가 없음
-                boolean allBeforeTargetYear = StreamSupport.stream(events.spliterator(), false)
-                        .noneMatch(event -> event.path("startTime").asText().startsWith(year));
-                if (allBeforeTargetYear) break;
-
-                JsonNode pages = schedule.path("pages");
-                nextPageToken = pages.path("older").asText(null);
-
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to parse response", e);
-            }
-
-        } while (nextPageToken != null);
-
-        return allMatches;
-    }*/
-
-    /*public List<MatchDto> parseMatchesFromEvents(JsonNode events, String leagueId, String year) {
-        List<MatchDto> result = new ArrayList<>();
-
-        for (JsonNode event : events) {
-            String startTime = event.path("startTime").asText();
-            if (!startTime.startsWith(year)) continue;
-
-            List<MatchTeamDto> matchTeamDtos = StreamSupport.stream(
-                            event.path("match").path("teams").spliterator(), false)
-                    .map(team -> new MatchTeamDto(
-                            team.path("result").path("outcome").asText(),
-                            team.path("result").path("gameWins").asInt(),
-                            new TeamDto(team.path("code").asText(),
-                                    team.path("name").asText())
-                    ))
-                    .toList();
-
-            boolean completed = event.path("state").asText().equalsIgnoreCase("completed");
-            String winningTeamCode = completed
-                    ? matchTeamDtos.stream()
-                    .filter(team -> "win".equalsIgnoreCase(team.getOutcome()))
-                    .map(matchTeamDto -> matchTeamDto.getTeam().getCode())
-                    .findFirst().orElse(null)
-                    : null;
-
-            result.add(new MatchDto(
-                    event.path("match").path("id").asText(),
-                    startTime,
-                    event.path("state").asText(),
-                    event.path("strategy").path("type").asText(),
-                    event.path("blockName").asText(),
-                    winningTeamCode,
-                    matchTeamDtos.stream()
-                            .map(team -> {
-                                team.getTeam().setLeagueId(leagueId);
-                                return team;
-                            })
-                            .toList()
-            ));
-        }
-
-        return result;
-    }*/
 }

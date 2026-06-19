@@ -51,6 +51,9 @@ public class Team {
     @OneToMany(mappedBy = "team", fetch = FetchType.LAZY)
     private List<MatchTeam> matchTeams;
 
+    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<com.test.basic.lol.domain.player.Player> players;
+
     public Team(String teamId, String code, String name, String slug, String image, League league) {
         this.teamId = teamId;
         this.code = code;

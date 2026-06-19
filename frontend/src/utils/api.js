@@ -1,19 +1,42 @@
 // utils/api.js
+export async function baseFetch(url, options = {}) {
+    options.credentials = options.credentials || 'include';
+    options.headers = options.headers || {};
+    
+    let response = await fetch(url, options);
+
+    // 401 Unauthorized 발생 시 토큰 갱신 시도
+    if (response.status === 401 && !url.includes('/api/auth/token/refresh')) {
+        try {
+            const refreshRes = await refreshToken();
+            if (refreshRes) {
+                // 갱신 성공 후 원래 요청 재시도
+                response = await fetch(url, options);
+            }
+        } catch (err) {
+            console.error("Token refresh failed:", err);
+            // 갱신 실패 시 로그아웃 처리 등 추가 로직 가능
+        }
+    }
+
+    return response;
+}
+
 export async function login(username, password) {
     const usrInfo = `${username}:${password}`;
-    const utf8Encoded = String.fromCharCode(...new TextEncoder().encode(usrInfo));
+    const base64Encoded = btoa(usrInfo);
 
     try {
-
         const response = await fetch("/api/auth/login", {
             method: "GET",
+            credentials: 'include',
             headers: {
-                "Authorization": `Basic ${btoa(utf8Encoded)}`,
+                "Authorization": `Basic ${base64Encoded}`,
                 "Content-Type": "application/json",
             },
         });
 
-        if (!response.ok/* || !response.headers.get("Set-Cookie")*/) {
+        if (!response.ok) {
             return {
                 success: false,
                 errorMessage: "로그인 실패: 사용자명 또는 비밀번호를 확인하세요.",
@@ -25,8 +48,8 @@ export async function login(username, password) {
             success: true,
             mainPageUrl: data.mainPageUrl,
             expirationTime: data.expirationTime,
-            userId: data.userId,    // 사용자 ID
-            username: username,     // 사용자명
+            userId: data.userId,
+            username: username,
         };
     } catch (err) {
         console.error("로그인 오류:", err);
@@ -38,7 +61,6 @@ export async function login(username, password) {
 }
 
 export async function signup(username, password) {
-    // 회원가입 시 자체서명 SSL 인증서 때문에 발생하는 Failed to proxy Error 우회
     const response = await fetch("/api/auth/signup", {
         method: 'POST',
         headers: {
@@ -48,23 +70,19 @@ export async function signup(username, password) {
             email: username,
             password: password,
             name: username,
-            authority: 'SCOPE_ADMIN'
+            authority: 'SCOPE_USER'
         }),
     });
 
     if (!response.ok) {
-        console.log(await response.text());
-        throw new Error("회원가입 실패: 사용자명 또는 비밀번호를 확인하세요.");
+        throw new Error("회원가입 실패");
     }
 
-    const result = await response.text();
-    return result;
+    return await response.text();
 }
 
 export async function logout() {
-    // 로그아웃을 위한 처리
     const response = await fetch("/api/auth/logout", { method: "GET" });
-
     if (!response.ok) {
         throw new Error("로그아웃 실패");
     }
@@ -73,20 +91,22 @@ export async function logout() {
 export async function refreshToken() {
     const response = await fetch("/api/auth/token/refresh", {
         method: "POST",
-        credentials: 'include', // 쿠키 포함
+        credentials: 'include',
     });
 
-
     if (!response.ok) {
-        throw new Error('Failed to refresh token');
+        return null;
     }
 
-    return await response.json();
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+        return await response.json();
+    }
+    return null;
 }
 
 export async function fetchCsrfToken() {
     try {
-        // 백엔드 CsrfTokenController가 /csrf 경로에 매핑되어 있음
         await fetch("/api/csrf", {
             method: "GET",
             credentials: "include"

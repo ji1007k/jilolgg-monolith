@@ -11,15 +11,18 @@ RUN apt-get update && apt-get install -y curl \
 
 WORKDIR /app
 
+# 1. Gradle 설정 파일들 복사 (캐싱용)
 # Gradle Wrapper 파일과 Gradle 디렉토리를 복사
 COPY gradlew ./
 COPY gradle/ ./gradle/
 
-# Gradle Wrapper에 실행 권한 부여
-RUN chmod +x gradlew
-
+# 2. 소스 코드 전체 복사 (★이게 먼저 와서 기존 파일들을 다 덮어써야 합니다)
 # 소스 코드와 build.gradle 파일을 복사
 COPY . ./
+
+# 3. 모든 복사가 끝난 후, 최종적으로 실행 권한 부여 (★여기로 이동)
+# Gradle Wrapper에 실행 권한 부여
+RUN chmod +x gradlew
 
 # 의존성 다운로드 및 빌드(테스트 미포함)
 #RUN --mount=type=cache,target=/root/.gradle ./gradlew build --no-daemon --stacktrace --info -x test

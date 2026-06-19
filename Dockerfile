@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y curl \
 
 WORKDIR /app
 
+# 1. Gradle 설정 파일들 복사 (캐싱용)
 # [최적화] 소스 전체를 복사하기 전에 Gradle 파일만 먼저 복사해서 의존성 캐싱 효율 극대화
 COPY gradlew ./
 COPY gradle/ ./gradle/
@@ -19,10 +20,11 @@ COPY build.gradle settings.gradle ./
 # [선택] 프론트엔드 의존성 파일도 미리 복사하면 캐싱에 유리합니다.
 # COPY frontend/package*.json ./frontend/ (구조에 맞게 조정 필요)
 
-RUN chmod +x gradlew
-
-# 소스 코드 전체 복사
+# 2. 소스 코드 전체 복사 (★이게 먼저 와서 기존 파일들을 다 덮어써야 합니다)
 COPY . ./
+
+# 3. 모든 복사가 끝난 후, 최종적으로 실행 권한 부여 (★여기로 이동)
+RUN chmod +x ./gradlew
 
 # [수정] 이전 질문의 연장선으로, 테스트를 제외하고 빌드하려면 아래 줄의 주석을 해제하세요.
 RUN --mount=type=cache,target=/root/.gradle ./gradlew build -PwithFrontend --no-daemon -x test --stacktrace --info

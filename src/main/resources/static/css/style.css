@@ -148,6 +148,7 @@ header {
     border-radius: 5px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     top: 60px; /* 사용자 이름 바로 아래에 나타나도록 */
+    right: 5px;
 }
 
 /* 드롭다운 메뉴 항목 스타일 */

@@ -1,13 +1,13 @@
 -- schema.sql 실행 후 실행됨
 
-INSERT INTO users (password, name, email, authority)
-VALUES ('$2b$12$JgK.Du5J.DbMQ6zQ1Tx58OoKCEGr3NUG.p45zDQb0qALy9T5MczJy', '관리자', 'admin', 'SCOPE_ADMIN')
+INSERT INTO users (password, name, email, authority, password_version)
+VALUES ('$2b$12$JgK.Du5J.DbMQ6zQ1Tx58OoKCEGr3NUG.p45zDQb0qALy9T5MczJy', '관리자', 'admin', 'SCOPE_ADMIN', 1)
     ON CONFLICT (email) DO NOTHING;
-INSERT INTO users (password, name, email, authority)
-VALUES ('$2b$12$uafO29l5A0yTu8h5sH2GPeCZUaV.yKwwp7ZFdu4RlqCJqI3HEQvRW', '매니저', 'manager', 'SCOPE_MANAGER')
+INSERT INTO users (password, name, email, authority, password_version)
+VALUES ('$2b$12$uafO29l5A0yTu8h5sH2GPeCZUaV.yKwwp7ZFdu4RlqCJqI3HEQvRW', '매니저', 'manager', 'SCOPE_MANAGER', 1)
     ON CONFLICT (email) DO NOTHING;
-INSERT INTO users (password, name, email)
-VALUES ('$2b$12$RHbwxJ0xC1Jp2ip6aV0h3OhDLZFXvo1cNWmnXHPRmUylGzoWEp6zG', '일반사용자', 'user')
+INSERT INTO users (password, name, email, password_version)
+VALUES ('$2b$12$RHbwxJ0xC1Jp2ip6aV0h3OhDLZFXvo1cNWmnXHPRmUylGzoWEp6zG', '일반사용자', 'user', 1)
     ON CONFLICT (email) DO NOTHING;
 
 -- 기본 리그 순서 설정 (userId = 0)

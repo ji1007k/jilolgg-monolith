@@ -51,16 +51,23 @@ public class JwtTokenProvider {
                 .collect(Collectors.joining(" "));
 
         String userId, email, username;
+        Integer passwordVersion;
         Object principal = authentication.getPrincipal();
 
         if (principal instanceof CustomUserDetails userDetails) {
+            if (userDetails.getId() == null) {
+                throw new IllegalArgumentException("UserDetails ID cannot be null");
+            }
             userId = userDetails.getId().toString();
             email = userDetails.getEmail();
             username = userDetails.getUsername();
+            passwordVersion = userDetails.getPasswordVersion();
         } else if (principal instanceof Jwt jwt) {
             userId = jwt.getSubject();
             email = jwt.getClaimAsString("email");
             username = jwt.getClaimAsString("username");
+            Object pv = jwt.getClaim("pv");
+            passwordVersion = pv instanceof Number ? ((Number) pv).intValue() : null;
         } else {
             throw new IllegalStateException("Unknown principal type: " + principal.getClass());
         }
@@ -72,6 +79,7 @@ public class JwtTokenProvider {
                 .subject(userId)
                 .claim("email", email)
                 .claim("username", username)
+                .claim("pv", passwordVersion)
                 .claim("authorities", scope) // scope 대신 authorities 사용
                 .build();
 
@@ -93,6 +101,7 @@ public class JwtTokenProvider {
                 .issuedAt(now)    // JWT가 발급된 시간
                 .expiresAt(now.plusSeconds(REFRESH_TOKEN_EXPIRY))  // 리프레시 토큰의 만료 시간 (7일)
                 .subject(userDetails.getId().toString())   // 주체 (사용자 정보). userId
+                .claim("pv", userDetails.getPasswordVersion())
                 .claim("type", "refresh") // 리프레시 토큰 구분을 위한 "type" 클레임
                 .build();
 

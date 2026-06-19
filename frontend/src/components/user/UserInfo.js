@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext.js";
-import TokenExpiration from "@/components/auth/TokenExpiration";
 import { logout as apiLogout } from "@/utils/api.js";
 
 export default function UserInfo({ username }) {
@@ -46,7 +45,6 @@ export default function UserInfo({ username }) {
             <span className="username username-clickable" onClick={toggleDropdown}>
                 {username}
             </span>
-            <TokenExpiration />
 
             {dropdownActive && (
                 <div id="dropdown" className="dropdown-content">

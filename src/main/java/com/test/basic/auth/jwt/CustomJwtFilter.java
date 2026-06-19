@@ -86,6 +86,20 @@ public class CustomJwtFilter extends OncePerRequestFilter {
 
                 // JWT의 권한(Role) 정보는 따로 추출해서 확인
                 Jwt accessJwt = jwtTokenProvider.getJwtFromStr(accessToken);
+
+                // [Security Improvement] Password Version Check
+                Object pv = accessJwt.getClaim("pv");
+                Integer tokenPv = pv instanceof Number ? ((Number) pv).intValue() : null;
+                if (tokenPv != null) {
+                    UserDetails userDetails = customUserDetailsService.loadUserByUserId(accessJwt.getSubject());
+                    if (userDetails instanceof com.test.basic.auth.security.user.CustomUserDetails customUserDetails) {
+                        if (!tokenPv.equals(customUserDetails.getPasswordVersion())) {
+                            logger.warn("Password version mismatch! Token PV: {}, User PV: {}", tokenPv, customUserDetails.getPasswordVersion());
+                            throw new JwtException("Session expired due to credential change");
+                        }
+                    }
+                }
+
                 Collection<GrantedAuthority> authorities = extractAuthorities(accessJwt);
                 AbstractAuthenticationToken authentication = new JwtAuthenticationToken(accessJwt, authorities);
                 authentication.setAuthenticated(true);

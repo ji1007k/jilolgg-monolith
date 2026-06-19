@@ -219,27 +219,50 @@ function MatchListPopup ({ open, onClose, matches, date, isLoading, onPrevDate, 
                                                 <div className="teams-row">
                                                     <div className="team team-left">
                                                         <span className="team-code">{teamA.team.code}</span>
-                                                        {isCompleted &&
-                                                            (<span className={`result ${winner?.team.slug === teamA.team.slug ? "win" : "lose"}`}>
+                                                        {isCompleted && (
+                                                            <span className={`result ${winner?.team.slug === teamA.team.slug ? "win" : "lose"}`}>
                                                                 {winner?.team.slug === teamA.team.slug ? "승" : "패"}
-                                                            </span>)
-                                                        }
+                                                            </span>
+                                                        )}
                                                     </div>
                                                     <div className="score">
                                                         {teamA.gameWins ?? 0} : {teamB.gameWins ?? 0}
                                                     </div>
                                                     <div className="team team-right">
-                                                        {isCompleted &&
-                                                            (<span className={`result ${winner?.team.slug === teamB.team.slug ? "win" : "lose"}`}>
+                                                        {isCompleted && (
+                                                            <span className={`result ${winner?.team.slug === teamB.team.slug ? "win" : "lose"}`}>
                                                                 {winner?.team.slug === teamB.team.slug ? "승" : "패"}
-                                                            </span>)
-                                                        }
+                                                            </span>
+                                                        )}
                                                         <span className="team-code">{teamB.team.code}</span>
                                                     </div>
                                                 </div>
-                                            )
-                                            }
+                                            )}
 
+                                            {match.vodUrl && (
+                                                <div className="flex justify-center mt-2">
+                                                    {match.vodUrl.split(',').map((url, idx) => (
+                                                        <a 
+                                                            key={idx}
+                                                            href={url} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer"
+                                                            className="vod-link-btn"
+                                                            style={{ 
+                                                                fontSize: '0.7rem', 
+                                                                padding: '2px 8px', 
+                                                                borderRadius: '4px',
+                                                                backgroundColor: '#ff4e50',
+                                                                color: 'white',
+                                                                textDecoration: 'none',
+                                                                marginLeft: '4px'
+                                                            }}
+                                                        >
+                                                            VOD {match.vodUrl.split(',').length > 1 ? idx + 1 : ''}
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
                                     )
                                 })

@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.test.basic.lol.domain.league.League;
 import com.test.basic.lol.domain.league.LeagueRepository;
 import com.test.basic.lol.domain.matchteam.MatchTeamService;
+import com.test.basic.lol.domain.player.Player;
+import com.test.basic.lol.domain.player.PlayerRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
@@ -17,17 +19,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-// TODO 외부 API 데이터 바로 가져오는 로직 분리
 @Service
 @RequiredArgsConstructor
 public class TeamService {
 
     private final TeamRepository teamRepository;
-//    private final LolEsportsApiClient lolEsportsApiClient;
     private final TeamMapper teamMapper;
     private final ObjectMapper objectMapper;
     private final LeagueRepository leagueRepository;
     private final MatchTeamService matchTeamService;
+    private final PlayerRepository playerRepository;
 
 
     @Cacheable("teams")
@@ -42,14 +43,11 @@ public class TeamService {
     }
 
     public List<Team> getTeamsByCondition(String leagueId, List<String> slugs) {
-        // 전체 조회 (필터x)
         if (isEmptyCondition(leagueId, slugs)) {
             return teamRepository.findTeamsWithMatches();
         }
 
-        // 국제 대회 처리
         if (isInternationalLeague(leagueId)) {
-            // 국제 대회 경기 일정이 있는 팀 목록 조회
             List<String> teamIds = matchTeamService.findTeamIdsByLeagueId(leagueId);
             return teamRepository.findByTeamIdIn(teamIds);
         }
@@ -75,7 +73,6 @@ public class TeamService {
                 .orElseThrow(() -> new EntityNotFoundException("Team not found: " + slug));
     }
 
-    // FIXME API의 팀 정보 전체 속성 가진 DTO 클래스로 관리 (선수 정보 포함)
     public List<TeamSyncDto> parseTeamsFromResponse(String response) {
         try {
             JsonNode teamsNode = objectMapper.readTree(response)
@@ -83,15 +80,27 @@ public class TeamService {
 
             List<TeamSyncDto> teams = new ArrayList<>();
 
-            for (JsonNode team : teamsNode) {
-                teams.add(new TeamSyncDto(
-                        team.path("id").asText(),
-                        team.path("code").asText(),
-                        team.path("name").asText(),
-                        team.path("slug").asText(),
-                        team.path("image").asText(),
-                        team.path("homeLeague").path("name").asText()
-                ));
+            for (JsonNode teamNode : teamsNode) {
+                TeamSyncDto dto = new TeamSyncDto(
+                        teamNode.path("id").asText(),
+                        teamNode.path("code").asText(),
+                        teamNode.path("name").asText(),
+                        teamNode.path("slug").asText(),
+                        teamNode.path("image").asText(),
+                        teamNode.path("homeLeague").path("name").asText()
+                );
+
+                List<TeamSyncDto.PlayerSyncDto> playerDtos = new ArrayList<>();
+                for (JsonNode player : teamNode.path("roster")) {
+                    playerDtos.add(new TeamSyncDto.PlayerSyncDto(
+                            player.path("id").asText(),
+                            player.path("fullName").asText(),
+                            player.path("role").asText(),
+                            player.path("image").asText()
+                    ));
+                }
+                dto.setPlayers(playerDtos);
+                teams.add(dto);
             }
 
             return teams;
@@ -114,7 +123,7 @@ public class TeamService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void saveOrUpdate(TeamSyncDto dto) {
-        if (dto.getHomeLeague().isEmpty())
+        if (dto.getHomeLeague() == null || dto.getHomeLeague().isEmpty())
             throw new RuntimeException("League is Empty");
 
         League league = leagueRepository.findByName(dto.getHomeLeague())
@@ -130,34 +139,20 @@ public class TeamService {
         team.setImage(dto.getImage());
         team.setLeague(league);
 
-        teamRepository.save(team);
-    }
+        Team savedTeam = teamRepository.save(team);
 
-
-    // TODO 삭제 또는 리팩토링 =======================================================
-
-   /* public List<Team> getTeamsByCode(Set<String> duplicateCodes) {
-        return teamRepository.findByCodeIn(duplicateCodes);
-    }
-
-    public Team getTeamByName(String teamName) {
-        return teamRepository.findByName("TBD").orElse(null);
-    }*/
-
-    // FIXME API 응답 데이터 DTO 따로 생성
-    /*public TeamSyncDto getTeamBySlugFromExternalApi(String slug) {
-        Mono<String> result = lolEsportsApiClient.fetchTeamBySlug(slug);
-        List<TeamSyncDto> teams = parseTeamsFromResponse(result.block());
-
-        if (teams == null || teams.isEmpty()) {
-            throw new EntityNotFoundException("Team not found with slug: " + slug);
+        // Sync Players
+        if (dto.getPlayers() != null) {
+            for (TeamSyncDto.PlayerSyncDto pDto : dto.getPlayers()) {
+                Player player = playerRepository.findByPlayerId(pDto.getId())
+                        .orElseGet(Player::new);
+                player.setPlayerId(pDto.getId());
+                player.setName(pDto.getName());
+                player.setRole(pDto.getRole());
+                player.setImage(pDto.getImage());
+                player.setTeam(savedTeam);
+                playerRepository.save(player);
+            }
         }
-
-        return teams.get(0);
     }
-
-    public List<TeamSyncDto> getAllTeamsFromExternalApi() {
-        Mono<String> result = lolEsportsApiClient.fetchAllTeams();
-        return parseTeamsFromResponse(result.block());
-    }*/
 }

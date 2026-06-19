@@ -63,7 +63,7 @@ function MatchHistoryPopup({ team, matches, open, onClose, isLoading }) {
                                             {hasVod && (
                                                 <div className="vod-btn-wrapper">
                                                     <button
-                                                        onClick={() => window.open(`https://vod.example.com/${match.matchId}`, "_blank")}
+                                                        onClick={() => window.open(match.vodUrl || `https://www.youtube.com/results?search_query=${teamA.code}+vs+${teamB.code}`, "_blank")}
                                                         className="vod-btn"
                                                     >
                                                         🎥 영상 보기

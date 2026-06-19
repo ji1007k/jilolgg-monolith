@@ -67,18 +67,26 @@ public class SyncLolEsportsSchedulerProd {
     }
 
     public boolean isUpdateTime(LocalDate date) {
-        // 1. 해당 날짜 경기 중 가장 이른 시간 조회
         LocalDateTime startOfDay = date.atStartOfDay();
         LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
 
+        // 1. 진행 중인 경기가 있으면 즉시 업데이트
+        if (matchService.hasLiveMatches(startOfDay, endOfDay)) {
+            return true;
+        }
+
+        // 2. 해당 날짜 남은 경기 중 가장 이른 시간 조회 (종료된 경기 제외)
         Optional<LocalDateTime> firstMatchTime = matchService.getFirstMatchTimeOfDay(startOfDay, endOfDay);
 
-        if (firstMatchTime.isEmpty()) return false;
+        if (firstMatchTime.isEmpty()) {
+            // 더 이상 남은 경기가 없으면 (모든 경기 종료) 업데이트 중단
+            return false;
+        }
 
-        // 2. 첫 경기 시작시간 -1시간 전부터 갱신 시작
+        // 3. 첫 경기 시작시간 -1시간 전부터 갱신 시작
         LocalDateTime updateStartTime = firstMatchTime.get().minusHours(1);
 
-        // 3. 현재 시각이 그 시간 이후면 true
+        // 4. 현재 시각이 그 시간 이후면 true
         return LocalDateTime.now().isAfter(updateStartTime);
     }
 }

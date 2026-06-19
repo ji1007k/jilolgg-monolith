@@ -45,6 +45,9 @@ public class Match {
     @Column(length = 50)
     private String strategy;
 
+    @Column(columnDefinition = "TEXT")
+    private String vodUrl;
+
     @OneToMany(mappedBy = "match")
     private List<MatchTeam> matchTeams;
 

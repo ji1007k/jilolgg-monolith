@@ -1,3 +1,5 @@
+import { baseFetch } from './api';
+
 // 쿠키에서 특정 이름을 가진 값을 가져오는 함수
 function getCookie(name) {
     const value = `; ${document.cookie}`;
@@ -6,11 +8,9 @@ function getCookie(name) {
     return null; // 쿠키가 없으면 null을 반환
 }
 
-
 export async function fetchFavoriteTeam() {
-    const response = await fetch('/api/lol/favorites', {
+    const response = await baseFetch('/api/lol/favorites', {
         method: "GET",
-        credentials: "include",
     });
 
     if (!response.ok) {
@@ -22,13 +22,12 @@ export async function fetchFavoriteTeam() {
 
 export async function apiAddFavoriteTeam(teamId) {
     const csrfToken = getCookie("XSRF-TOKEN");
-    const response = await fetch(`/api/lol/favorites/${teamId}`, {
+    const response = await baseFetch(`/api/lol/favorites/${teamId}`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             "X-XSRF-TOKEN": csrfToken,
         },
-        credentials: "include",
     });
 
     if (!response.ok) {
@@ -38,13 +37,12 @@ export async function apiAddFavoriteTeam(teamId) {
 
 export async function apiRemoveFavoriteTeam(teamId) {
     const csrfToken = getCookie("XSRF-TOKEN");
-    const response = await fetch(`/api/lol/favorites/${teamId}`, {
+    const response = await baseFetch(`/api/lol/favorites/${teamId}`, {
         method: "DELETE",
         headers: {
             "Content-Type": "application/json",
             "X-XSRF-TOKEN": csrfToken,
         },
-        credentials: "include",
     });
 
     if (!response.ok) {
@@ -53,9 +51,8 @@ export async function apiRemoveFavoriteTeam(teamId) {
 }
 
 export async function getAllSchedules() {
-    const response = await fetch('/api/lol/matches', {
+    const response = await baseFetch('/api/lol/matches', {
         method: 'GET',
-        credentials: 'include'
     });
 
     if (!response.ok) {
@@ -65,27 +62,10 @@ export async function getAllSchedules() {
     return await response.json();
 }
 
-// 첫 진입 시 해당년도 전체 경기일정 조회
-/*
-export async function getMatchesByLeagueIdAndYear(leagueId, year) {
-    const response = await fetch(`/api/lol/matches?leagueId=${leagueId}&year=${year}`, {
-        method: 'GET',
-        credentials: 'include'
-    });
-
-    if (!response.ok) {
-        throw new Error('경기 일정 조회 실패');
-    }
-
-    return await response.json();
-}
-*/
-
 // 달력에서 선택한 날짜 기준으로 데이터 조회
 export async function getMatchesByLeagueIdAndDate(leagueId, startDate, endDate) {
-    const response = await fetch(`/api/lol/matches?leagueId=${leagueId}&startDate=${startDate}&endDate=${endDate}`, {
+    const response = await baseFetch(`/api/lol/matches?leagueId=${leagueId}&startDate=${startDate}&endDate=${endDate}`, {
         method: 'GET',
-        credentials: 'include'
     });
 
     if (!response.ok) {
@@ -96,7 +76,7 @@ export async function getMatchesByLeagueIdAndDate(leagueId, startDate, endDate) 
 }
 
 export async function getFavoritTeamSchedule(favoriteTeamCode) {
-    const response = await fetch(`/api/lol/matches/team/${favoriteTeamCode}`, {
+    const response = await baseFetch(`/api/lol/matches/team/${favoriteTeamCode}`, {
         method: 'GET',
     });
 
@@ -108,7 +88,7 @@ export async function getFavoritTeamSchedule(favoriteTeamCode) {
 }
 
 export async function apiFetchTournaments(leagueId, year) {
-    const response = await fetch(`/api/lol/tournaments?leagueId=${leagueId}&year=${year}`, {
+    const response = await baseFetch(`/api/lol/tournaments?leagueId=${leagueId}&year=${year}`, {
         method: 'GET',
     })
 
@@ -120,7 +100,7 @@ export async function apiFetchTournaments(leagueId, year) {
 }
 
 export async function apiFetchStandings(tournamentId) {
-    const response = await fetch(`/api/lol/standings/${tournamentId}`, {
+    const response = await baseFetch(`/api/lol/standings/${tournamentId}`, {
         method: 'GET',
     })
 
@@ -132,7 +112,7 @@ export async function apiFetchStandings(tournamentId) {
 }
 
 export async function apiGetMatchHistory(matchIds) {
-    const response = await fetch(`/api/lol/matchhistory`, {
+    const response = await baseFetch(`/api/lol/matchhistory`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -149,14 +129,13 @@ export async function apiGetMatchHistory(matchIds) {
 
 export async function apiUpdateLeagueOrders(leagueIds) {
     const csrfToken = getCookie("XSRF-TOKEN");
-    const response = await fetch(`/api/lol/leagues/orders`, {
+    const response = await baseFetch(`/api/lol/leagues/orders`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
             "X-XSRF-TOKEN": csrfToken,
         },
         body: JSON.stringify(leagueIds),
-        credentials: "include",
     });
 
     if (!response.ok) {

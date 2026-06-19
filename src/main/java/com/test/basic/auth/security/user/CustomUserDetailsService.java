@@ -52,6 +52,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 user.getEmail(),
                 user.getPassword(),
                 user.getName(),
+                user.getPasswordVersion(),
                 grantedAuthorities
         );
     }
@@ -71,6 +72,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 user.getEmail(),
                 user.getPassword(),
                 user.getName(),
+                user.getPasswordVersion(),
                 grantedAuthorities
         );
     }

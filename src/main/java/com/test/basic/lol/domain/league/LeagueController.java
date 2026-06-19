@@ -20,7 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/lol/leagues")
-@Tag(name = "[LOL(Esports)] 1. League API", description = "리그 관련 API")
+@Tag(name = "04. League", description = "LoL Esports 리그 정보 조회 및 설정")
 public class LeagueController {
 
     public final LeagueService leagueService;
@@ -46,6 +46,7 @@ public class LeagueController {
     }
 
     @GetMapping
+    @io.swagger.v3.oas.annotations.Operation(summary = "리그 목록 조회", description = "DB에 저장된 모든 리그 정보를 조회합니다. 로그인 시 사용자 맞춤 순서가 적용됩니다.")
     public ResponseEntity<List<LeagueDto>> getAllLeagues() {
         Long userId = getUserIdFromAuthentication();
         return ResponseEntity.ok(leagueService.getAllLeagues(userId).stream()
@@ -55,6 +56,8 @@ public class LeagueController {
 
     @PutMapping("/orders")
     @PreAuthorize("isAuthenticated()")
+    @io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "02_BearerAuth")
+    @io.swagger.v3.oas.annotations.Operation(summary = "리그 노출 순서 변경", description = "사용자별로 리그 목록의 노출 순서를 저장합니다.")
     public ResponseEntity<Void> updateLeagueOrders(@RequestBody List<String> leagueIds) {
         Long userId = getUserIdFromAuthentication();
         if (userId != null) {
@@ -67,6 +70,8 @@ public class LeagueController {
     @Timed(value = "lol.batch.league", description = "리그 동기화 실행 시간")
     @PostMapping("/sync")
     @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
+    @io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "02_BearerAuth")
+    @io.swagger.v3.oas.annotations.Operation(summary = "리그 정보 수동 동기화", description = "관리자 권한으로 외부 API로부터 최신 리그 정보를 동기화합니다.")
     public ResponseEntity<List<LeagueDto>> getAllLeaguesFromApi() {
         syncLolEsportsApiService.syncLeaguesFromLolEsportsApi();
         return ResponseEntity.ok(leagueService.getAllLeagues());

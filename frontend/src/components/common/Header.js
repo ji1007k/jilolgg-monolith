@@ -8,7 +8,7 @@ import {usePathname} from "next/navigation.js";
 import {useEffect, useState} from "react";
 
 export default function Header() {
-    const { username, expirationTime } = useAuth();  // AuthContext에서 값 가져오기
+    const { username } = useAuth();  // AuthContext에서 값 가져오기
     const pathname = usePathname();
     const isMainPage = pathname === "/";
     const [activeSection, setActiveSection] = useState('');
@@ -52,7 +52,7 @@ export default function Header() {
                 </div>
                 <div className="user-info">
                     {username ? (
-                        <UserInfo username={username} expirationTime={expirationTime} />
+                        <UserInfo username={username} />
                     ) : (
                         <LoginLink />
                     )}

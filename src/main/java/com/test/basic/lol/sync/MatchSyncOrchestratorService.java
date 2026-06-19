@@ -65,7 +65,7 @@ public class MatchSyncOrchestratorService {
             }
 
             syncMatchService.syncTodaysMatchesFromLolEsportsApi(todayMatches);
-            matchCacheService.invalidateAllCaches();
+            // matchCacheService.invalidateAllCaches(); // 과도한 캐시 무효화로 인한 부하 방지를 위해 주석 처리
         });
     }
 

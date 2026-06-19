@@ -16,7 +16,8 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/users")
-@Tag(name = "User API", description = "사용자 관리 API")  // API 그룹 태그
+@Tag(name = "02. User", description = "사용자 계정 관리 및 정보 조회 API")
+@io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "02_BearerAuth")
 public class UserController {
 
     private UserService userService;
@@ -96,6 +97,7 @@ public class UserController {
     }
 
     @PostMapping("/password")
+    @Operation(summary = "비밀번호 확인", description = "입력한 비밀번호가 현재 사용자의 비밀번호와 일치하는지 확인합니다.")
     public ResponseEntity<String> checkPassword(@RequestParam Long id,
                                                @RequestParam String password) {
         boolean isMatched = userService.checkPassword(id, password);
@@ -108,6 +110,7 @@ public class UserController {
 
     // 비밀번호 변경 API
     @PutMapping("/password")
+    @Operation(summary = "비밀번호 변경", description = "새로운 비밀번호로 사용자 정보를 업데이트하고 모든 기존 세션을 무효화합니다.")
     public ResponseEntity<String> changePassword(@RequestParam Long id,
                                                  @RequestParam String newPassword) {
 

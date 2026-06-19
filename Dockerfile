@@ -21,10 +21,11 @@ RUN chmod +x gradlew
 # 소스 코드와 build.gradle 파일을 복사
 COPY . ./
 
-# 의존성 다운로드 및 빌드(테스트 포함)
+# 의존성 다운로드 및 빌드(테스트 미포함)
 #RUN --mount=type=cache,target=/root/.gradle ./gradlew build --no-daemon --stacktrace --info -x test
 # -PwithFrontend: Next.js 정적 산출물을 Spring static 경로로 복사 포함
-RUN --mount=type=cache,target=/root/.gradle ./gradlew build -PwithFrontend --no-daemon --stacktrace --info
+RUN --mount=type=cache,target=/root/.gradle ./gradlew build -PwithFrontend --no-daemon -x test --stacktrace --info
+#RUN --mount=type=cache,target=/root/.gradle ./gradlew build -PwithFrontend --no-daemon --stacktrace --info
 # 테스트 생략
 #RUN --mount=type=cache,target=/root/.gradle ./gradlew build --no-daemon -x test
 

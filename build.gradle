@@ -123,3 +123,8 @@ copyFrontend.dependsOn buildFrontend
 if (project.hasProperty("withFrontend")) {
     processResources.dependsOn copyFrontend
 }
+
+// build.gradle 파일 맨 밑에 추가
+jar {
+    enabled = false // 의존성이 제외된 순수 자바 클래스 파일인 plain.jar 생성을 아예 막기
+}

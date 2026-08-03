@@ -7,6 +7,7 @@
 - `erd.md`: 현재 DB 스키마 기반 ERD
 - `report/optimization/summary.md`: 성능/캐싱 실험 요약 리포트
 - `commit-convention.md`: 커밋 메시지 규칙
+- `agent-authoring-guide.md`: 기능별 전담 에이전트(`.claude/agents/`) 작성 규칙
 
 ## Archive
 - `archive/notes/2026-02-24.md`: 작업 로그 스냅샷

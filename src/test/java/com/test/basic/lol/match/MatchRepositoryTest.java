@@ -5,6 +5,7 @@ import com.test.basic.lol.domain.match.MatchRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
@@ -16,6 +17,10 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
+// @DataJpaTest는 기본적으로 DataSource를 자체 임베디드 DB로 교체한다.
+// 이 프로젝트의 테스트 H2는 MODE=PostgreSQL / DATABASE_TO_UPPER=false로 운영 DB 의미를 맞춰 둔 설정이므로
+// 교체를 끄고 application.yml의 데이터소스를 그대로 사용해야 한다.
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
 // 이렇게 실행된 쿼리는 Hibernate를 거치지 않고, 스프링의 DataSource를 통해 직접 실행되기 때문에
 // Hibernate SQL 로그에 출력 안됨

@@ -2,6 +2,9 @@ package com.test.basic.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.test.basic.auth.AuthController;
+import com.test.basic.auth.RefreshToken;
+import com.test.basic.auth.RefreshTokenRepository;
+import com.test.basic.auth.RefreshTokenService;
 import com.test.basic.auth.csrf.CsrfTokenController;
 import com.test.basic.auth.security.config.SecurityConfig;
 import com.test.basic.auth.security.user.CustomUserDetailsService;
@@ -18,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
@@ -62,13 +65,18 @@ public class UserControllerTest {
 
     // Mock Bean ====================
     // UserService를 Mock 처리하여 실제 서비스 호출을 Mocking
-    // @MockBean을 사용했지만, Spring Boot 3.4부터는 @MockitoBean을 사용
-    // **25-02-06 jikim: Swagger ui 와 spring boot 3.4 버전 충돌로 sb 버전 3.3.1 로 변경함에 따라 MockBean 사용
-    @MockBean   // 테스트에 필요한 서비스 계층 주입 (Spring 컨텍스트가 포함되는 경우)
+    // 과거 springdoc 2.1.0이 Spring Boot 3.4와 충돌해 3.3.1 + @MockBean을 유지했으나,
+    // springdoc 2.8.x로 올리며 해소되어 Boot 3.5 + @MockitoBean으로 전환함.
+    @MockitoBean   // 테스트에 필요한 서비스 계층 주입 (Spring 컨텍스트가 포함되는 경우)
     private UserService userService;    // AuthController 의존성 주입용
 
-    @MockBean
+    @MockitoBean
     private CustomUserDetailsService customUserDetailsService;  // Security의 인증 로직 Mocking
+
+    @MockitoBean
+    private RefreshTokenService refreshTokenService;            // AuthController 의존성 주입용
+    @MockitoBean
+    private RefreshTokenRepository refreshTokenRepository;      // AuthController 의존성 주입용
 
     // Test Support ====================
     @Autowired
@@ -102,6 +110,11 @@ public class UserControllerTest {
         authTestSupport.createTestAdminUser();
         UserDetails mockUser = authTestSupport.createTestAdminUser();
         when(customUserDetailsService.loadUserByUsername(mockUser.getUsername())).thenReturn(mockUser);
+
+        // 로그인 응답에서 refresh_token 쿠키를 만들 때 사용되므로 stub 필요 (없으면 NPE로 500)
+        when(refreshTokenService.createRefreshToken(anyLong()))
+                .thenReturn(RefreshToken.builder().token("test-refresh-token").build());
+
         this.jwtTokenInfo = authTestSupport.loginAdminAndCreateJWT("admin", "admin");
 
         // 2) CSRF 토큰 발급

@@ -1,6 +1,9 @@
 package com.test.basic.auth.crypto;
 
 import com.test.basic.auth.AuthController;
+import com.test.basic.auth.RefreshToken;
+import com.test.basic.auth.RefreshTokenRepository;
+import com.test.basic.auth.RefreshTokenService;
 import com.test.basic.auth.security.config.SecurityConfig;
 import com.test.basic.auth.security.user.CustomUserDetailsService;
 import com.test.basic.common.support.AuthTestSupport;
@@ -12,13 +15,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -33,10 +37,14 @@ public class RSAControllerTest {
     MockMvc mockMvc;
 
     // 사용자 인증 ====================
-    @MockBean
+    @MockitoBean
     private UserService userService;    // AuthController 의존성 주입용
-    @MockBean
+    @MockitoBean
     private CustomUserDetailsService customUserDetailsService;
+    @MockitoBean
+    private RefreshTokenService refreshTokenService;            // AuthController 의존성 주입용
+    @MockitoBean
+    private RefreshTokenRepository refreshTokenRepository;      // AuthController 의존성 주입용
 
     @Autowired
     private AuthTestSupport authTestSupport;
@@ -49,6 +57,10 @@ public class RSAControllerTest {
         authTestSupport.createTestAdminUser();
         UserDetails mockUser = authTestSupport.createTestAdminUser();
         when(customUserDetailsService.loadUserByUsername(mockUser.getUsername())).thenReturn(mockUser);
+
+        // 로그인 응답에서 refresh_token 쿠키를 만들 때 사용되므로 stub 필요 (없으면 NPE로 500)
+        when(refreshTokenService.createRefreshToken(anyLong()))
+                .thenReturn(RefreshToken.builder().token("test-refresh-token").build());
 
         this.jwtTokenInfo = authTestSupport.loginAdminAndCreateJWT("admin", "admin");
     }

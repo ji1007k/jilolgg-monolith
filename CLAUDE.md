@@ -98,7 +98,13 @@ Redisson은 `RedissonAutoConfigurationV2`를 `spring.autoconfigure.exclude`로 �
 ## 테스트
 
 - 단위 테스트는 `@ExtendWith(MockitoExtension.class)` + `@Mock`/`@InjectMocks`, 통합 테스트는 `src/test/resources/application.yml` 기준. 스프링 빈 대체는 `@MockitoBean`(`org.springframework.test.context.bean.override.mockito`) — `@MockBean`은 Boot 4에서 제거되므로 쓰지 말 것.
-- **현재 `./gradlew test`는 65개 중 16개가 실패한다(기존 문제, 업그레이드와 무관).** 원인은 커밋 `c00f31f`에서 `AuthController`에 `RefreshTokenService` 의존성이 추가됐는데 `@WebMvcTest` 슬라이스에 해당 mock이 없어 컨텍스트 로딩이 깨진 것. CI가 `-x test`로 돌아 여태 드러나지 않았다. 새 테스트를 짜기 전에 이걸 먼저 고칠 것.
+- `.github/workflows/build.yml`과 Dockerfile이 `-x test`로 빌드하므로 **CI는 테스트를 돌리지 않는다.** 깨진 테스트가 오래 방치될 수 있으니 로컬에서 직접 확인할 것.
+- 테스트를 건드릴 때 반복해서 걸린 함정들:
+  - `@WebMvcTest`에 `AuthController`를 포함하면 `RefreshTokenService`/`RefreshTokenRepository` mock이 필요하고, `createRefreshToken`도 stub해야 한다(안 하면 null 반환 → 로그인 500).
+  - `@Transactional` 롤백은 identity 시퀀스를 되돌리지 않는다. 그래서 `db/h2/user.sql`은 id를 1001~1003으로 **명시**하고, `AuthTestSupport.ADMIN_USER_ID`가 이 값과 짝을 이룬다. 둘 중 하나만 바꾸면 깨진다.
+  - `webEnvironment = RANDOM_PORT` 테스트는 서버가 별도 트랜잭션에서 돌기 때문에 `@Sql`을 `SqlConfig.TransactionMode.ISOLATED`로 커밋시켜야 서버가 시드를 본다.
+  - `@DataJpaTest`는 데이터소스를 자체 임베디드 DB로 갈아끼운다. 이 프로젝트의 H2 설정(PostgreSQL 모드)을 쓰려면 `@AutoConfigureTestDatabase(replace = NONE)`가 필요하다.
+  - 테스트 설정의 `globally_quoted_identifiers: true`는 `@Column(columnDefinition = ...)`의 타입명까지 따옴표로 감싼다. 엔티티에 `columnDefinition`을 쓰면 H2 DDL이 조용히 실패해 해당 테이블만 사라진다.
 - 테스트 DB는 **H2 in-memory**(`MODE=PostgreSQL`, `ddl-auto: create-drop`, `defer-datasource-initialization: true`)이고 `src/test/resources/db/h2/*.sql`이 시드 데이터를 넣는다. 프로덕션 스키마는 `src/main/resources/db/postgres/schema.sql`이므로 스키마 변경 시 양쪽을 맞춰야 한다.
 - Redis는 mock이 아니라 **원격 인스턴스에 실제 연결**한다(`SPRING_DATA_REDIS_HOST` 환경변수로 오버라이드 가능). Redis가 필요한 테스트는 네트워크에 의존한다.
 - 인증이 필요한 테스트는 `common/support/AuthTestSupport`, `AuthRestTemplateTestSupport`와 `common/fixture/UserFixture`를 활용한다.

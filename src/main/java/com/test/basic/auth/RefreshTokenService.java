@@ -20,8 +20,14 @@ public class RefreshTokenService {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
         
-        // Remove existing token if any
-        refreshTokenRepository.findByUser(user).ifPresent(refreshTokenRepository::delete);
+        // Remove existing token if any.
+        // user_id에 유니크 제약(@OneToOne)이 걸려 있는데 Hibernate는 한 트랜잭션 안에서
+        // delete보다 insert를 먼저 실행한다. flush로 삭제를 먼저 반영하지 않으면
+        // 같은 사용자가 재로그인할 때 제약 위반(409)이 발생한다.
+        refreshTokenRepository.findByUser(user).ifPresent(existing -> {
+            refreshTokenRepository.delete(existing);
+            refreshTokenRepository.flush();
+        });
 
         RefreshToken refreshToken = RefreshToken.builder()
                 .user(user)

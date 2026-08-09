@@ -42,10 +42,11 @@ public class AuthRestTemplateTestSupport {
                 .toList();
 
         UserDetails mockUser = new CustomUserDetails(
-                1L, // 혹은 UUID.randomUUID()
+                AuthTestSupport.ADMIN_USER_ID,
                 email,      // email
                 password,   // password
                 username,    // username
+                1,          // passwordVersion (UserEntity 기본값과 동일)
                 authorities
         );
 

@@ -50,7 +50,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -143,13 +142,13 @@ public class SecurityConfig {
                 // 특정 요청에서 CSRF 해제
                 .csrf((csrf) -> csrf
                         .ignoringRequestMatchers(
-                                new AntPathRequestMatcher("/auth/login"),
-                                new AntPathRequestMatcher("/auth/signup"),
-                                new AntPathRequestMatcher("/auth/token/refresh"),
+                                "/auth/login",
+                                "/auth/signup",
+                                "/auth/token/refresh",
                                 // 경기 전적 조회
-                                new AntPathRequestMatcher("/lol/matchhistory"),
+                                "/lol/matchhistory",
                                 // 리그 순서 변경 (CSRF 토큰 문제 발생 시 임시 허용)
-                                new AntPathRequestMatcher("/lol/leagues/orders")
+                                "/lol/leagues/orders"
                         )
                         .csrfTokenRepository(customCsrfTokenRepository())
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())	// 토큰 해석기 지정(spring security 6~)

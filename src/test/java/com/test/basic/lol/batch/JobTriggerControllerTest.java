@@ -9,7 +9,7 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -30,13 +30,13 @@ public class JobTriggerControllerTest {
 //    @Autowired
 //    private JobLauncherTestUtils jobLauncherTestUtils;
 
-    @MockBean
+    @MockitoBean
     private JwtTokenProvider jwtTokenProvider;
 
-    @MockBean
+    @MockitoBean
     private JobLauncher jobLauncher;
 
-    @MockBean
+    @MockitoBean
     private Job job;
 
     // TODO 테스트용 API 코드 분리

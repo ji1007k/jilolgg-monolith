@@ -53,7 +53,8 @@ CREATE TABLE IF NOT EXISTS "matches"
     state      VARCHAR(50),
     block_name VARCHAR(100),
     game_count INT,
-    strategy   VARCHAR(50)
+    strategy   VARCHAR(50),
+    vod_url    TEXT
     -- 외래키 추가 가능: REFERENCES leagues(league_id)
 );
 -- 날짜 비교 조회 시 인덱스 범위 스캔 목적

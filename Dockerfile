@@ -1,5 +1,5 @@
 # Stage 1: Build dependencies
-FROM gradle:7.3-jdk17 AS build
+FROM gradle:8.12.1-jdk21 AS build
 
 USER root
 
@@ -33,7 +33,7 @@ RUN --mount=type=cache,target=/root/.gradle ./gradlew build -PwithFrontend --no-
 #RUN --mount=type=cache,target=/root/.gradle ./gradlew build --no-daemon -x test
 
 # Stage 2: Final runtime image
-FROM eclipse-temurin:17-jdk-alpine AS runtime
+FROM eclipse-temurin:21-jdk-alpine AS runtime
 
 WORKDIR /app
 

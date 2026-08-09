@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
@@ -19,6 +19,8 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.SqlConfig;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -38,6 +40,15 @@ import static org.mockito.Mockito.when;
 @Rollback       // 테스트 후 자동 롤백
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS) // 테스트 인스턴스를 클래스 단위로 유지 -> 인스턴스 변수 공유
+
+// RANDOM_PORT라 서버가 별도 스레드/트랜잭션에서 동작한다.
+// 기본값(INFERRED)으로 두면 시드가 테스트 트랜잭션 안에서 롤백되어 서버 쪽에서 보이지 않으므로
+// ISOLATED로 별도 트랜잭션에서 커밋시킨다.
+@Sql(
+        scripts = {"/db/h2/user.sql"},
+        executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD,
+        config = @SqlConfig(transactionMode = SqlConfig.TransactionMode.ISOLATED)
+)
 @DisplayName("== 사용자 관리 통합 테스트 ==")
 
 // 이렇게 실행된 쿼리는 Hibernate를 거치지 않고, 스프링의 DataSource를 통해 직접 실행되기 때문에
@@ -57,7 +68,7 @@ public class UserIntegrationTest {
     @Autowired
     private AuthRestTemplateTestSupport authRestTemplateTestSupport;  // 실제 HTTP 요청을 보내는 객체. + CSRF 자동 처리
 
-    @MockBean
+    @MockitoBean
     private CustomUserDetailsService customUserDetailsService;  // ✅ MockBean으로 주입
 
     private UserEntity user;

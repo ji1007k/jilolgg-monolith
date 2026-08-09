@@ -45,7 +45,10 @@ public class Match {
     @Column(length = 50)
     private String strategy;
 
-    @Column(columnDefinition = "TEXT")
+    // columnDefinition="TEXT"를 쓰면 테스트 설정의 globally_quoted_identifiers가 타입명까지 따옴표로 감싸
+    // ("vod_url" "TEXT") H2에서 matches 테이블 생성이 실패한다.
+    // 운영 스키마는 schema.sql이 관리하고(ddl-auto=none) vod_url은 거기서 TEXT로 정의되므로 길이만 지정한다.
+    @Column(length = 2048)
     private String vodUrl;
 
     @OneToMany(mappedBy = "match")

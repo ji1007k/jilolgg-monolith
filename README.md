@@ -72,7 +72,7 @@ graph TD
 
 | 구분 | 기술 스택 |
 | --- | --- |
-| **Backend** | Java 17, Spring Boot 3.3.1, Spring Batch, Spring Security, Spring Data JPA, Redisson |
+| **Backend** | Java 21, Spring Boot 3.5.16, Spring Batch, Spring Security, Spring Data JPA, Redisson |
 | **Frontend** | Next.js 15, React 19 |
 | **Storage** | PostgreSQL, Redis |
 | **Infra** | Railway, Docker, GitHub Actions, Firebase Admin SDK |

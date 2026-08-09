@@ -29,6 +29,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Slf4j
 public class AuthTestSupport {
 
+    /** db/h2/user.sql이 심는 admin 계정의 id. 시드 값과 반드시 일치해야 한다. */
+    public static final Long ADMIN_USER_ID = 1001L;
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -53,10 +56,11 @@ public class AuthTestSupport {
                 .toList();
 
         UserDetails mockUser = new CustomUserDetails(
-                1L, // 혹은 UUID.randomUUID()
+                ADMIN_USER_ID,
                 email,      // email
                 password,   // password
                 username,    // username
+                1,          // passwordVersion (UserEntity 기본값과 동일)
                 authorities
         );
 

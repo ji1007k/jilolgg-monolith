@@ -4,3 +4,6 @@
 
 # Git 체크아웃 시 인코딩 자동 변환
 *.properties text working-tree-encoding=UTF-8
+
+# 컨테이너 엔트리포인트는 LF 이어야 실행된다
+*.sh text eol=lf

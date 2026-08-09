@@ -50,26 +50,24 @@ RUN adduser \
   --no-create-home \
   --uid "${UID}" \
   appuser \
-  && mkdir -p /app/logs \
-  && chown -R ${UID}:${UID} /app/logs
+  && mkdir -p /app/logs /app/secrets \
+  && chown -R ${UID}:${UID} /app/logs /app/secrets \
+  && chmod 700 /app/secrets
 
 # JAR 파일을 복사
 COPY --from=build --chown=appuser:appuser /app/build/libs/*.jar app.jar
 
+# 엔트리포인트 스크립트 복사 (JWT 개인키를 환경변수에서 복원한다)
+COPY --chown=appuser:appuser docker-entrypoint.sh /app/docker-entrypoint.sh
+
 # 파일에 실행 권한 추가 (보너스)
-RUN chmod +x app.jar
+RUN chmod +x app.jar /app/docker-entrypoint.sh
 
 # 사용자 전환
 USER appuser
 
-# 컨테이너 실행 시 JAR 파일 실행 (LF 형식 필요)
-ENTRYPOINT exec java \
-  -Xms128m \
-  -Xmx256m \
-  -XX:MaxMetaspaceSize=512m \
-  -Dfile.encoding=UTF-8 \
-  -Duser.timezone=Asia/Seoul \
-  -jar app.jar
+# 컨테이너 실행 (스크립트는 LF 형식이어야 한다 — .gitattributes의 *.sh eol=lf 참조)
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 
 
 EXPOSE 8080

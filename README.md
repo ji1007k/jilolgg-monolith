@@ -104,6 +104,21 @@ Redis는 도커로 띄워도 된다.
 docker run -d --name jilolgg-redis -p 6379:6379 redis:7
 ```
 
+### JWT 키 준비
+
+JWT 서명용 RSA 개인키는 **저장소에 포함하지 않는다.** 최초 1회 직접 만들어야 한다.
+
+```bash
+mkdir -p secrets
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out secrets/app.key
+openssl rsa -in secrets/app.key -pubout -out src/main/resources/jwt/app.pub
+```
+
+- `secrets/`는 `.gitignore` 대상이다. **개인키를 커밋하지 말 것.**
+- 공개키(`src/main/resources/jwt/app.pub`)는 비밀이 아니라 classpath에 둔다. 개인키를 새로 만들면 **공개키도 반드시 같이 갱신**해야 한다. 짝이 맞지 않으면 로그인은 되지만 이후 모든 요청이 401이 된다.
+- 키 위치는 `JWT_PRIVATE_KEY_LOCATION`으로 바꿀 수 있다. 기본값은 `file:./secrets/app.key`.
+- 운영 환경 주입 방식은 [시크릿 관리 설계](docs/secret-management.md) 5절 참조.
+
 ### 백엔드 실행
 
 ```bash

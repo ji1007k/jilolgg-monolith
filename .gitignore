@@ -46,3 +46,5 @@ src/main/resources/*firebase-adminsdk*.json
 ### Build Outputs & Logs ###
 logs/
 src/main/resources/static/jikimi/
+### Secrets (절대 커밋 금지) ###
+secrets/

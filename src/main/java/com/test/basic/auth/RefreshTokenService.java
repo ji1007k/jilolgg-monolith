@@ -20,22 +20,24 @@ public class RefreshTokenService {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
         
-        // Remove existing token if any.
-        // user_id에 유니크 제약(@OneToOne)이 걸려 있는데 Hibernate는 한 트랜잭션 안에서
-        // delete보다 insert를 먼저 실행한다. flush로 삭제를 먼저 반영하지 않으면
-        // 같은 사용자가 재로그인할 때 제약 위반(409)이 발생한다.
-        refreshTokenRepository.findByUser(user).ifPresent(existing -> {
-            refreshTokenRepository.delete(existing);
-            refreshTokenRepository.flush();
-        });
+        String token = UUID.randomUUID().toString();
+        LocalDateTime expiryDate = LocalDateTime.now().plusDays(7);
 
-        RefreshToken refreshToken = RefreshToken.builder()
-                .user(user)
-                .token(UUID.randomUUID().toString())
-                .expiryDate(LocalDateTime.now().plusDays(7))
-                .build();
-
-        return refreshTokenRepository.save(refreshToken);
+        // user_id에 유니크 제약(@OneToOne)이 걸려 있다.
+        // 기존 행을 지우고 새로 넣으면 같은 사용자의 로그인 요청이 동시에 들어올 때
+        // 두 트랜잭션이 각각 insert를 시도해 제약 위반(409)이 발생한다.
+        // 지우지 않고 값만 갱신하면 UPDATE라 경합이 나도 충돌하지 않는다.
+        return refreshTokenRepository.findByUser(user)
+                .map(existing -> {
+                    existing.setToken(token);
+                    existing.setExpiryDate(expiryDate);
+                    return refreshTokenRepository.save(existing);
+                })
+                .orElseGet(() -> refreshTokenRepository.save(RefreshToken.builder()
+                        .user(user)
+                        .token(token)
+                        .expiryDate(expiryDate)
+                        .build()));
     }
 
     public RefreshToken verifyExpiration(RefreshToken token) {

@@ -17,6 +17,7 @@ Gradle root project 이름은 `basic`이고 Java 패키지도 `com.test.basic`�
 ```
 
 - 프로필 기본값이 **prod**(`application.yml`의 `${SPRING_PROFILES_ACTIVE:prod}`)이므로 로컬 실행 시 `dev` 지정 필수. dev는 `localhost:5432/basic` PostgreSQL과 `localhost:6379` Redis를 요구한다.
+- 위 `-D` 옵션이 동작하는 것은 `build.gradle`의 `tasks.named('bootRun')` 블록이 `spring.*` 시스템 프로퍼티를 앱 JVM으로 전달하기 때문이다. **이 블록을 지우면 명령이 조용히 prod로 뜨면서 DataSource 오류로 죽는다.** bootRun은 앱을 별도 JVM으로 띄우므로 Gradle JVM의 `-D`가 그냥은 전달되지 않는다. 환경변수 `SPRING_PROFILES_ACTIVE=dev`나 `--args='--spring.profiles.active=dev'`도 같은 효과다.
 - `./gradlew build` — 백엔드만 빌드(프론트 제외).
 - `./gradlew build -PwithFrontend` — `-PwithFrontend`가 있을 때만 `processResources`가 `copyFrontend`에 의존한다. Docker 빌드도 이 플래그를 쓴다.
 - `./gradlew copyFrontend` — `npm run build` 실행 후 `frontend/out` → `src/main/resources/static/jikimi`로 복사. `node_modules`가 이미 있으면 `npmInstall`은 스킵된다.

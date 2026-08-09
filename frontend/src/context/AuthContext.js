@@ -1,7 +1,7 @@
 "use client";
 
 // src/context/AuthContext.js
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { refreshToken as refreshTokenApi, login as apiLogin, fetchCsrfToken } from "@/utils/api";
 import {useRouter} from "next/navigation.js"; // API 로직 분리된 곳에서 import
 import { requestForToken } from "@/utils/firebase";
@@ -97,7 +97,15 @@ export const AuthProvider = ({ children }) => {
         return () => window.removeEventListener('keydown', handler);
     }, []);
 
+    // 로그인 요청이 진행 중인지 표시. Ctrl+Alt+A는 keydown이라 키를 누르고 있으면
+    // 자동 반복으로 여러 번 호출되고, 그러면 같은 사용자의 로그인 요청이 동시에 나가
+    // 서버에서 refresh token 제약 위반(409)이 날 수 있다.
+    const devLoginInFlight = useRef(false);
+
     const devLogin = async (username = 'admin', password = 'admin') => {
+        if (devLoginInFlight.current) return;
+        devLoginInFlight.current = true;
+
         try {
             const result = await apiLogin(username, password);
             if (result.success) {
@@ -106,6 +114,8 @@ export const AuthProvider = ({ children }) => {
             }
         } catch (err) {
             console.error("관리자 로그인 실패", err);
+        } finally {
+            devLoginInFlight.current = false;
         }
     };
 

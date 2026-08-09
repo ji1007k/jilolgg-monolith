@@ -213,7 +213,7 @@ cd jilolgg && ./gradlew bootRun -Dspring.profiles.active=dev
 주의사항:
 
 - Windows에서 `Unable to delete directory ...\build\test-results\test\binary`로 테스트가 실패하면 코드 문제가 아니라 **파일 잠금**이다. IDE나 이전 데몬이 잡고 있는 것이니 `./gradlew --stop` 후 재실행하면 풀린다.
-- **전체 `./gradlew test`는 기존에 65개 중 16개가 실패한다.** `AuthController`에 `RefreshTokenService` 의존성이 추가됐는데 `@WebMvcTest` 슬라이스에 mock이 없어 컨텍스트 로딩이 깨진 것으로, 동기화 작업과 무관하다. 네가 만든 실패와 혼동하지 말고 범위를 필터해서 돌려라.
+- **CI는 테스트를 돌리지 않는다.** `.github/workflows/build.yml`과 Dockerfile이 `-x test`로 빌드한다. 깨진 테스트가 오래 방치될 수 있으니 반드시 로컬에서 직접 확인하고, 실패가 나오면 네 변경 때문인지 원래 깨져 있던 것인지 `git stash`로 구분한 뒤 보고하라.
 - 테스트는 H2 in-memory(`MODE=PostgreSQL`)를 쓰지만 **Redis는 원격 인스턴스에 실제 연결한다**(`SPRING_DATA_REDIS_HOST`로 오버라이드 가능). 네트워크가 없으면 실패한다. 실패 시 코드 문제인지 네트워크 문제인지 구분해서 보고하라.
 - `SyncMatchJobTest`는 외부 `esports-api.lolesports.com`을 실제로 호출한다. 외부 API 상태에 따라 결과가 달라진다.
 - dev 프로필은 `localhost:5432/basic` PostgreSQL과 `localhost:6379` Redis를 요구한다.

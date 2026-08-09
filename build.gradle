@@ -93,6 +93,19 @@ tasks.withType(Test).configureEach {
     maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
 }
 
+// bootRun은 애플리케이션을 별도 JVM으로 띄우기 때문에, Gradle JVM에 준
+// -Dspring.xxx 시스템 프로퍼티가 그대로는 전달되지 않는다.
+// 그래서 `./gradlew bootRun -Dspring.profiles.active=dev`가 조용히 무시되고
+// 기본값인 prod 프로필로 떠서 DataSource 오류로 죽는다.
+// spring.* 프로퍼티만 골라 앱 JVM으로 넘겨 문서화된 명령이 실제로 동작하게 한다.
+tasks.named('bootRun') {
+    System.properties.each { key, value ->
+        if (key.toString().startsWith('spring.')) {
+            systemProperty(key.toString(), value)
+        }
+    }
+}
+
 // Force Java compile encoding
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'

@@ -1,71 +1,19 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import Popup from 'reactjs-popup';
 import format from 'date-fns/format';
 import 'reactjs-popup/dist/index.css';
-import { FiBell, FiBellOff, FiX } from 'react-icons/fi';
+import { FiX } from 'react-icons/fi';
 import ko from "date-fns/locale/ko";
 import Loading from "@components/common/Loading.js";
 import {useSwipeable} from "react-swipeable";
-import { useAuth } from "@/context/AuthContext.js";
-import { apiGetAlarmStatus, apiToggleMatchAlarm } from "@/utils/api-notification.js";
-import { requestForToken } from "@/utils/firebase.js";
+import { useMatchAlarms } from "@components/lol/calendar/hooks/useMatchAlarms.js";
+import MatchAlarmButton from "@components/lol/calendar/MatchAlarmButton.jsx";
 
 function MatchListPopup ({ open, onClose, matches, date, isLoading, onPrevDate, onNextDate }) {
     const matchDate = format(new Date(date), "yyyy년 M월 d일 (EEE)", { locale: ko });
-    const { userId } = useAuth();
-    const [alarmMap, setAlarmMap] = useState({});
-    const [togglingMatchId, setTogglingMatchId] = useState(null);
-    const [toast, setToast] = useState(null);
 
-    const unstartedMatchIds = useMemo(() => {
-        return (matches || [])
-            .filter(match => match.state === "unstarted")
-            .map(match => match.matchId);
-    }, [matches]);
-
-    useEffect(() => {
-        // 로그인 여부와 무관하게 조회한다. 비로그인은 기기 식별자로 구독 상태를 찾는다.
-        if (!open || unstartedMatchIds.length === 0) {
-            setAlarmMap({});
-            return;
-        }
-
-        let cancelled = false;
-
-        async function fetchAlarmStatus() {
-            try {
-                const enabledMatchIds = await apiGetAlarmStatus(unstartedMatchIds);
-                if (cancelled) return;
-
-                const nextAlarmMap = {};
-                enabledMatchIds.forEach((matchId) => {
-                    nextAlarmMap[matchId] = true;
-                });
-                setAlarmMap(nextAlarmMap);
-            } catch (error) {
-                if (!cancelled) {
-                    console.error("알림 상태 조회 실패:", error);
-                }
-            }
-        }
-
-        fetchAlarmStatus();
-
-        return () => {
-            cancelled = true;
-        };
-        // userId가 바뀌면(로그인/로그아웃) 구독 주체가 달라지므로 다시 조회한다.
-    }, [open, userId, unstartedMatchIds]);
-
-    useEffect(() => {
-        if (!toast) return;
-
-        const timer = setTimeout(() => {
-            setToast(null);
-        }, 2500);
-
-        return () => clearTimeout(timer);
-    }, [toast]);
+    // 알림 상태/토글은 주간 일정·경기 상세와 공유한다.
+    const { alarmMap, togglingMatchId, toast, toggleAlarm } = useMatchAlarms(matches, open);
 
     const handlers = useSwipeable({
         onSwipedLeft: () => onNextDate(),  // 오른쪽에서 왼쪽으로 스와이프 → 다음 날짜
@@ -74,42 +22,8 @@ function MatchListPopup ({ open, onClose, matches, date, isLoading, onPrevDate, 
         trackMouse: true, // 데스크탑에서도 마우스로 테스트 가능
     });
 
-    const handleToggleAlarm = async (match) => {
-        const matchId = match.matchId;
-
-        setTogglingMatchId(matchId);
-        try {
-            const tokenResult = await requestForToken();
-            if (!tokenResult?.ok) {
-                if (tokenResult?.reason === "permission_denied") {
-                    setToast({ type: "error", message: "브라우저 알림 권한이 필요합니다. 사이트 알림을 허용해주세요." });
-                } else {
-                    setToast({ type: "error", message: "알림 토큰 발급에 실패했습니다. 페이지를 새로고침 후 다시 시도해주세요." });
-                }
-                return;
-            }
-
-            const result = await apiToggleMatchAlarm(matchId);
-            const isEnabled = Boolean(result.enabled);
-
-            setAlarmMap(prev => ({
-                ...prev,
-                [matchId]: isEnabled,
-            }));
-
-            if (isEnabled) {
-                const matchStartTimeText = format(new Date(match.startTime), "yyyy년 MM월 dd일 HH시 mm분", { locale: ko });
-                setToast({ type: "success", message: `${matchStartTimeText}에 알림이 설정되었습니다.` });
-            } else {
-                setToast({ type: "info", message: "알림 설정이 해제되었습니다." });
-            }
-        } catch (error) {
-            console.error("알림 설정 변경 실패:", error);
-            setToast({ type: "error", message: "알림 설정 변경에 실패했습니다." });
-        } finally {
-            setTogglingMatchId(null);
-        }
-    };
+    const handleToggleAlarm = (match) =>
+        toggleAlarm(match, (m) => format(new Date(m.startTime), "yyyy년 MM월 dd일 HH시 mm분", { locale: ko }));
 
     return (
         <Popup
@@ -172,24 +86,13 @@ function MatchListPopup ({ open, onClose, matches, date, isLoading, onPrevDate, 
                                                     <span>{format(new Date(match.startTime), 'HH:mm')}</span>
                                                 </div>
 
-                                                {isUnstarted && (
-                                                    <button
-                                                        type="button"
-                                                        className={`alarm-bell-btn ${alarmMap[match.matchId] ? "active" : "inactive"}`}
-                                                        onClick={() => handleToggleAlarm(match)}
-                                                        disabled={togglingMatchId === match.matchId}
-                                                        aria-label={alarmMap[match.matchId] ? "알림 해제" : "알림 설정"}
-                                                        title={alarmMap[match.matchId] ? "알림 해제" : "알림 설정"}
-                                                    >
-                                                        {togglingMatchId === match.matchId ? (
-                                                            <span className="alarm-bell-loading">...</span>
-                                                        ) : alarmMap[match.matchId] ? (
-                                                            <FiBell />
-                                                        ) : (
-                                                            <FiBellOff />
-                                                        )}
-                                                    </button>
-                                                )}
+                                                <MatchAlarmButton
+                                                    match={match}
+                                                    alarmMap={alarmMap}
+                                                    togglingMatchId={togglingMatchId}
+                                                    onToggle={handleToggleAlarm}
+                                                />
+
                                             </div>
 
                                             {(isLive || isCompleted)  && (

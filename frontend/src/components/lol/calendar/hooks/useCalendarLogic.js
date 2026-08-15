@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
-import { fetchFavoriteTeam, getMatchesByLeagueIdAndDate } from '@utils/api-lol';
+import { getMatchesByLeagueIdAndDate } from '@utils/api-lol';
+import {
+    getFavoriteTeamIds,
+    getLocalLeagueOrder,
+    applyLeagueOrder,
+} from '@utils/userPreferences';
 import { useAuth } from '@/context/AuthContext';
 import { useCalendar } from '@/context/CalendarContext.js';
 import { refineTeamSchedule } from '@/components/lol/calendar/utils/refineTeamSchedule';
@@ -29,9 +34,14 @@ export const useCalendarLogic = () => {
             try {
                 const res = await fetch('/api/lol/leagues');
                 const data = await res.json();
-                setLeagues(data);
-                if (!selectedLeague && data.length > 0) {
-                    setSelectedLeague(data[0]);
+
+                // 로그인 사용자는 서버가 이미 정렬해서 내려준다.
+                // 비로그인 사용자는 이 브라우저에 저장된 순서를 여기서 적용한다.
+                const ordered = applyLeagueOrder(data, getLocalLeagueOrder());
+
+                setLeagues(ordered);
+                if (!selectedLeague && ordered.length > 0) {
+                    setSelectedLeague(ordered[0]);
                 }
             } catch (e) {
                 // eslint-disable-next-line no-console
@@ -40,7 +50,23 @@ export const useCalendarLogic = () => {
         };
 
         fetchLeagues();
-    }, [setSelectedLeague]);
+        // userId가 바뀌면(로그인/로그아웃) 적용할 순서의 출처가 달라지므로 다시 불러온다.
+    }, [userId, setSelectedLeague]);
+
+    // 즐겨찾기는 리그/날짜와 무관하므로 별도 effect로 둔다.
+    // (기존에는 일정 조회 안에 있어서 날짜를 넘길 때마다 같이 다시 불렀다)
+    useEffect(() => {
+        const loadFavorites = async () => {
+            try {
+                setFavoriteTeamIds(await getFavoriteTeamIds());
+            } catch (e) {
+                // eslint-disable-next-line no-console
+                console.error('즐겨찾기 로딩 실패', e);
+            }
+        };
+
+        loadFavorites();
+    }, [userId, setFavoriteTeamIds]);
 
     useEffect(() => {
         const fetchSchedule = async () => {
@@ -52,17 +78,12 @@ export const useCalendarLogic = () => {
             const leagueId = selectedLeague?.id || selectedLeague?.leagueId;
             if (!leagueId) return;
 
-            if (userId) {
-                const favorites = await fetchFavoriteTeam();
-                setFavoriteTeamIds(favorites.map((team) => team.teamId));
-            }
-
             const matches = await getMatchesByLeagueIdAndDate(leagueId, startDate, endDate);
             setRawSchedules(matches);
         };
 
         fetchSchedule();
-    }, [userId, selectedLeague, selectedDate, currentView, setFavoriteTeamIds]);
+    }, [selectedLeague, selectedDate, currentView]);
 
     useEffect(() => {
         setRefinedSchedules(refineTeamSchedule(rawSchedules, currentView));

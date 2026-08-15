@@ -118,7 +118,11 @@ public class SecurityConfig {
                                 "/lol/tournaments",
                                 "/lol/matches", "/lol/matches/**",
                                 "/lol/standings/**",
-                                "/lol/matchhistory", "/lol/matchhistory/**"
+                                "/lol/matchhistory", "/lol/matchhistory/**",
+                                // 알림은 로그인 없이도 받을 수 있다.
+                                // 비로그인 요청은 X-Device-Id 헤더로 구독 주체를 식별한다
+                                // (NotificationController.resolveOwner 참조).
+                                "/notification/**"
                         ).permitAll()
                         // post
                         .requestMatchers(HttpMethod.GET, "/posts").permitAll()

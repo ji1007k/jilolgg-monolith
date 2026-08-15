@@ -28,8 +28,19 @@ public class NotificationService {
     private final MatchRepository matchRepository;
 
     @Transactional
-    public void registerToken(Long userId, String tokenStr, String deviceInfo) {
-        Optional<FcmToken> existingToken = tokenRepository.findByUserIdAndToken(userId, tokenStr);
+    public void registerToken(NotificationOwner owner, String tokenStr, String deviceInfo) {
+        // 같은 기기에서 비로그인으로 쓰다 로그인하면 동일 FCM 토큰이 'd:'와 'u:' 양쪽에 남아
+        // 푸시가 중복 발송된다. 토큰 하나는 주체 하나만 갖도록 정리한다.
+        // 같은 토큰을 쓰던 이전 주체는 곧 이 사용자이므로, 이때 구독도 함께 넘긴다.
+        tokenRepository.findByToken(tokenStr).stream()
+                .filter(existing -> !owner.key().equals(existing.getOwnerKey()))
+                .forEach(stale -> {
+                    log.info("FCM 토큰 주체 이동: {} -> {}", stale.getOwnerKey(), owner.key());
+                    migrateAlarms(stale.getOwnerKey(), owner);
+                    tokenRepository.delete(stale);
+                });
+
+        Optional<FcmToken> existingToken = tokenRepository.findByOwnerKeyAndToken(owner.key(), tokenStr);
         if (existingToken.isPresent()) {
             FcmToken token = existingToken.get();
             token.setDeviceInfo(deviceInfo);
@@ -38,34 +49,66 @@ public class NotificationService {
         }
 
         tokenRepository.save(FcmToken.builder()
-                .userId(userId)
+                .ownerKey(owner.key())
+                .userId(owner.userId())
                 .token(tokenStr)
                 .deviceInfo(deviceInfo)
                 .updatedAt(LocalDateTime.now())
                 .build());
     }
 
+    /**
+     * 이전 주체(보통 비로그인 기기)가 걸어둔 경기 알림을 새 주체로 옮긴다.
+     * 이미 같은 경기를 구독 중이면 중복이므로 이전 것을 버린다.
+     */
+    private void migrateAlarms(String fromOwnerKey, NotificationOwner to) {
+        List<MatchAlarm> alarms = alarmRepository.findByOwnerKey(fromOwnerKey);
+        if (alarms.isEmpty()) {
+            return;
+        }
+
+        for (MatchAlarm alarm : alarms) {
+            boolean alreadySubscribed = alarmRepository
+                    .findByOwnerKeyAndMatchId(to.key(), alarm.getMatchId())
+                    .isPresent();
+
+            if (alreadySubscribed) {
+                alarmRepository.delete(alarm);
+                continue;
+            }
+
+            alarm.setOwnerKey(to.key());
+            alarm.setUserId(to.userId());
+        }
+
+        log.info("경기 알림 {}건을 {} -> {}로 이관", alarms.size(), fromOwnerKey, to.key());
+    }
+
     @Transactional
-    public boolean toggleAlarm(Long userId, String matchId) {
-        Optional<MatchAlarm> existing = alarmRepository.findByUserIdAndMatchId(userId, matchId);
+    public boolean toggleAlarm(NotificationOwner owner, String matchId) {
+        Optional<MatchAlarm> existing = alarmRepository.findByOwnerKeyAndMatchId(owner.key(), matchId);
         if (existing.isPresent()) {
             alarmRepository.delete(existing.get());
-            log.info("Alarm disabled for user {} match {}", userId, matchId);
+            log.info("Alarm disabled for {} match {}", owner.key(), matchId);
             return false; // 알람 해제
         } else {
-            alarmRepository.save(MatchAlarm.builder().userId(userId).matchId(matchId).build());
-            log.info("Alarm enabled for user {} match {}", userId, matchId);
+            alarmRepository.save(MatchAlarm.builder()
+                    .ownerKey(owner.key())
+                    .userId(owner.userId())
+                    .matchId(matchId)
+                    .build());
+            log.info("Alarm enabled for {} match {}", owner.key(), matchId);
             return true; // 알람 설정
         }
     }
 
     @Transactional(readOnly = true)
-    public Set<String> getEnabledMatchIds(Long userId, List<String> matchIds) {
+    public Set<String> getEnabledMatchIds(NotificationOwner owner, List<String> matchIds) {
         if (matchIds == null || matchIds.isEmpty()) {
             return Set.of();
         }
 
-        return alarmRepository.findByUserIdAndMatchIdIn(userId, matchIds)
+        return alarmRepository.findByOwnerKeyAndMatchIdIn(owner.key(), matchIds)
                 .stream()
                 .map(MatchAlarm::getMatchId)
                 .collect(Collectors.toSet());
@@ -92,8 +135,8 @@ public class NotificationService {
         for (Match match : upcomingMatches) {
             List<MatchAlarm> alarms = alarmRepository.findByMatchId(match.getMatchId());
             for (MatchAlarm alarm : alarms) {
-                List<FcmToken> tokens = tokenRepository.findByUserId(alarm.getUserId());
-                // 같은 유저에서 동일 토큰이 중복 저장되었을 수 있어 중복 발송을 방지합니다.
+                List<FcmToken> tokens = tokenRepository.findByOwnerKey(alarm.getOwnerKey());
+                // 같은 주체에서 동일 토큰이 중복 저장되었을 수 있어 중복 발송을 방지합니다.
                 List<String> distinctTokens = new ArrayList<>(tokens.stream()
                         .map(FcmToken::getToken)
                         .collect(Collectors.toSet()));
@@ -129,8 +172,8 @@ public class NotificationService {
     }
 
     @Transactional(readOnly = true)
-    public int sendTestPushToUser(Long userId, String title, String body) {
-        List<FcmToken> tokens = tokenRepository.findByUserId(userId);
+    public int sendTestPushToUser(NotificationOwner owner, String title, String body) {
+        List<FcmToken> tokens = tokenRepository.findByOwnerKey(owner.key());
         if (tokens.isEmpty()) {
             return 0;
         }

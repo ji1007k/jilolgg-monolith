@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
+import { deviceIdHeader } from "@/utils/userPreferences";
 
 // public/firebase-messaging-sw.js 에 넣은 값과 동일한 설정값을 .env.local에 넣거나 여기에 직접 입력.
 const firebaseConfig = {
@@ -92,6 +93,7 @@ export const requestForToken = async () => {
                 headers: {
                     'Content-Type': 'application/json',
                     ...(csrfToken ? { 'X-XSRF-TOKEN': csrfToken } : {}),
+                    ...deviceIdHeader(),
                 },
                 credentials: "include",
                 body: JSON.stringify({

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { apiUpdateLeagueOrders } from '@/utils/api-lol';
+import { saveLeagueOrder } from '@/utils/userPreferences';
 
 const LeagueOrderModal = ({ isOpen, onClose, leagues, onUpdate }) => {
     const [orderedLeagues, setOrderedLeagues] = useState([]);
@@ -28,7 +28,8 @@ const LeagueOrderModal = ({ isOpen, onClose, leagues, onUpdate }) => {
         try {
             // 백엔드 LeagueDto의 @JsonProperty("id")가 leagueId에 매핑되어 있으므로, 프론트에서는 id를 사용해야 함
             const leagueIds = orderedLeagues.map(l => l.id);
-            await apiUpdateLeagueOrders(leagueIds);
+            // 비로그인이면 이 브라우저에만, 로그인이면 서버에 저장된다.
+            await saveLeagueOrder(leagueIds);
             onUpdate(orderedLeagues); // 부모 컴포넌트에 변경된 목록 전달
             onClose();
         } catch (error) {

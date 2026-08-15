@@ -1,44 +1,74 @@
-name: "[CI] Build & Push Monolith App (Next.js + Spring Boot)"
+name: "[CI] PR 검증 (테스트 + 빌드)"
 
+# PR에서는 이미지를 굽지 않고 "이 변경이 안전한가"만 확인한다.
+# 이미지 빌드는 main 병합 후 release-main.yml이 담당한다.
 on:
-  # push:
-  #   branches:
-  #     - main  # main 브랜치에 직접 커밋/푸시될 때 실행
   pull_request:
     branches:
-      - main  # PR 요청 시 실행
+      - main
+      - develop
     types: [opened, synchronize, reopened]
+  workflow_dispatch:
 
 jobs:
-  build:
-    name: "[CI] Monolith Image Build & Push to GHCR"
+  verify:
+    name: "[CI] Gradle 테스트 & 빌드 검증"
     runs-on: ubuntu-22.04
+
+    # 테스트가 Redis에 실제로 접속한다. 원격 인스턴스를 쓰면 느리고 불안정하므로
+    # 러너 안에 일회용 Redis를 띄우고 아래 env로 그쪽을 보게 한다.
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      SPRING_DATA_REDIS_HOST: localhost
+      SPRING_DATA_REDIS_PORT: "6379"
+      SPRING_DATA_REDIS_PASSWORD: ""
 
     steps:
       - name: "[1] 저장소 코드 다운로드 (Checkout)"
         uses: actions/checkout@v4
 
-      - name: "[2] Docker Buildx 설정"
-        uses: docker/setup-buildx-action@v2
+      - name: "[2] JDK 21 설정"
+        uses: actions/setup-java@v4
         with:
-          version: latest
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
 
-      - name: "[3] GitHub Container Registry(GHCR) 로그인"
-        uses: docker/login-action@v3
+      - name: "[3] Node.js 22 설정"
+        uses: actions/setup-node@v4
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: "[4] 도커 이미지 URL 환경 변수 등록"
-        run: echo "REPO_URL=ghcr.io/${{ github.repository }}" >> $GITHUB_ENV
-        
-      - name: "[5] 모놀리식 앱 통합 빌드 및 GHCR 푸시"
-        run: |
-          # 프론트엔드(Next.js)와 백엔드(Spring Boot)가 통합된 서버 이미지를 빌드합니다.
-          # Dockerfile 내부에서 Node.js 설치 및 Gradle 빌드가 함께 이뤄집니다.
-          docker build -t $REPO_URL:latest .
-          docker push $REPO_URL:latest
+      - name: "[4] gradlew 실행 권한 부여"
+        # 저장소에 실행 비트가 없으면 여기서 Permission denied로 죽는다.
+        # git update-index --chmod=+x 로 커밋해두었지만, 방어적으로 한 번 더 준다.
+        run: chmod +x ./gradlew
 
+      - name: "[5] 백엔드 테스트"
+        # 외부 esports API에 의존하는 테스트는 제외한다(build.gradle 참조).
+        run: ./gradlew test -PexcludeExternalApiTests
 
+      - name: "[6] 테스트 리포트 업로드"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: build/reports/tests/test
+          retention-days: 7
 
+      - name: "[7] 프론트 포함 전체 빌드 검증"
+        # 실제 배포 이미지와 같은 조합으로 빌드되는지 확인한다.
+        # 테스트는 [5]에서 이미 돌렸으므로 여기서는 생략한다.
+        run: ./gradlew build -PwithFrontend -x test

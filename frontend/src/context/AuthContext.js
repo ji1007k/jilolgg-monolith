@@ -5,6 +5,14 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import { refreshToken as refreshTokenApi, login as apiLogin, fetchCsrfToken } from "@/utils/api";
 import {useRouter} from "next/navigation.js"; // API 로직 분리된 곳에서 import
 import { requestForToken } from "@/utils/firebase";
+import { fetchFavoriteTeam } from "@/utils/api-lol";
+import {
+    hasLocalPreferences,
+    readLocalPreferences,
+    clearLocalPreferences,
+    mergeLocalPreferencesIntoAccount,
+} from "@/utils/userPreferences";
+import MergePreferencesModal from "@components/auth/MergePreferencesModal.jsx";
 
 // TODO userid, username 객체로 합치기
 // 기본 값 설정
@@ -24,6 +32,8 @@ export const AuthProvider = ({ children }) => {
     const [userId, setUserId] = useState(null);
     const [username, setUsername] = useState(null);
     const [expirationTime, setExpirationTime] = useState(null);
+    const [mergePromptOpen, setMergePromptOpen] = useState(false);
+    const [mergeBusy, setMergeBusy] = useState(false);
     const router = useRouter();
 
     // FIXME 서버에서 설정한 토큰 만료시간 사용하도록 수정
@@ -51,6 +61,61 @@ export const AuthProvider = ({ children }) => {
 
         // 로그인 성공 시 FCM 권한 요청 및 백엔드 토큰 등록
         requestForToken();
+
+        // 비로그인 상태에서 이 브라우저에 저장해둔 설정 처리.
+        // localStorage에 userId를 넣은 뒤여야 userPreferences가 로그인 상태로 판단한다.
+        reconcileLocalPreferences();
+    };
+
+    /**
+     * 로컬 설정과 계정 설정을 맞춘다.
+     * - 로컬에 아무것도 없으면 할 일 없음
+     * - 계정이 비어 있으면 충돌이 아니므로 묻지 않고 그대로 올린다
+     * - 양쪽 다 있고 다르면 사용자에게 묻는다
+     */
+    const reconcileLocalPreferences = async () => {
+        if (!hasLocalPreferences()) return;
+
+        try {
+            const { favoriteTeamIds: localFavorites, leagueOrder: localOrder } = readLocalPreferences();
+            const serverFavorites = (await fetchFavoriteTeam()).map((team) => team.teamId);
+
+            // 계정 즐겨찾기가 비어 있고 로컬 리그 순서만 있는 경우도 "충돌 없음"으로 본다.
+            // 리그 순서는 서버 조회 없이 덮어써도 잃을 것이 없다(기본 순서일 뿐).
+            const favoritesConflict =
+                localFavorites.length > 0 &&
+                serverFavorites.length > 0 &&
+                localFavorites.some((id) => !serverFavorites.includes(id));
+
+            const orderConflict = localOrder.length > 0 && serverFavorites.length > 0;
+
+            if (!favoritesConflict && !orderConflict) {
+                await mergeLocalPreferencesIntoAccount();
+                return;
+            }
+
+            setMergePromptOpen(true);
+        } catch (e) {
+            // 병합에 실패해도 로그인 자체는 성공한 상태다. 로컬 설정을 남겨두고 넘어간다.
+            console.error("로컬 설정 확인 실패", e);
+        }
+    };
+
+    const handleMergePreferences = async () => {
+        setMergeBusy(true);
+        try {
+            await mergeLocalPreferencesIntoAccount();
+        } finally {
+            setMergeBusy(false);
+            setMergePromptOpen(false);
+            // 병합 결과를 화면에 반영하려면 다시 읽어야 한다.
+            window.location.reload();
+        }
+    };
+
+    const handleKeepAccountPreferences = () => {
+        clearLocalPreferences();
+        setMergePromptOpen(false);
     };
 
 
@@ -124,6 +189,12 @@ export const AuthProvider = ({ children }) => {
             userId, username, expirationTime,
             login, logout, refreshToken, devLogin }}>
             {children}
+            <MergePreferencesModal
+                isOpen={mergePromptOpen}
+                busy={mergeBusy}
+                onMerge={handleMergePreferences}
+                onKeepAccount={handleKeepAccountPreferences}
+            />
         </AuthContext.Provider>
     );
 };

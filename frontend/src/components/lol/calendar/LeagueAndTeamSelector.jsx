@@ -1,6 +1,5 @@
 import {useEffect, useState} from "react";
 import {useCalendar} from "@/context/CalendarContext.js";
-import {useAuth} from "@/context/AuthContext.js";
 import FavoriteTeamButton from "@components/lol/calendar/FavoriteTeamButton.jsx";
 import LeagueDropdown from "@components/lol/calendar/LeagueDropdown.jsx";
 import LeagueOrderModal from "@components/lol/calendar/LeagueOrderModal.jsx";
@@ -11,7 +10,6 @@ const LeagueAndTeamSelector = ({ leagues, setLeagues }) => {
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
 
     const {selectedLeague, setSelectedLeague, favoriteTeamIds} = useCalendar();
-    const {userId} = useAuth();
 
 
     // 리그 변경 시 팀 fetch
@@ -70,21 +68,19 @@ const LeagueAndTeamSelector = ({ leagues, setLeagues }) => {
                     leagues={leagues}
                     selectedLeague={selectedLeague}
                     onChange={setSelectedLeague}
-                    onOpenSettings={userId ? () => setIsOrderModalOpen(true) : null} // 👈 설정 버튼 핸들러 전달
+                    onOpenSettings={() => setIsOrderModalOpen(true)} // 👈 설정 버튼 핸들러 전달 (로그인 불필요)
                 />
             </div>
 
-            {userId && (
-                <div
-                    className={`favorite-teams-section scroll-hidden${favoriteTeams.length === 0 ? ' empty' : ''}`}
-                >
-                    <div className="team-btn-container">
-                        {favoriteTeams.map(team => (
-                            <FavoriteTeamButton key={team.teamId} {...team} />
-                        ))}
-                    </div>
+            <div
+                className={`favorite-teams-section scroll-hidden${favoriteTeams.length === 0 ? ' empty' : ''}`}
+            >
+                <div className="team-btn-container">
+                    {favoriteTeams.map(team => (
+                        <FavoriteTeamButton key={team.teamId} {...team} />
+                    ))}
                 </div>
-            )}
+            </div>
 
             <div
                 className={`nonfavorite-teams-section scroll-hidden${nonFavoriteTeams.length === 0 ? ' empty' : ''}`}

@@ -9,6 +9,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 // 전역(글로벌) 예외 처리 및 공통 설정을 담당하는 클래스에 붙여 사용하는 어노테이션
 // Spring MVC의 예외 처리기(@ExceptionHandler)가 적용되는 영역
@@ -17,6 +18,15 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 // 인증/인가 외 에러 처리를 위한 핸들러
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    // 🔹 서비스가 의도적으로 지정한 상태코드를 그대로 내보낸다.
+    // 이 핸들러가 없으면 아래 Exception 핸들러가 먼저 잡아 전부 500이 된다.
+    // (@ExceptionHandler는 ResponseStatusExceptionResolver보다 먼저 동작한다)
+    // 예: "동기화 작업이 실행 중입니다"(409), "X-Device-Id 헤더가 필요합니다"(400)
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<String> handleResponseStatus(ResponseStatusException e) {
+        return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
+    }
 
     // 🔹 400: 잘못된 요청 (유효성 검사 실패)
     @ExceptionHandler(MethodArgumentNotValidException.class)

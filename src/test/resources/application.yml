@@ -15,10 +15,15 @@ spring:
 
   data:
     # Redis 설정
+    # 기본값은 반드시 로컬이어야 한다. 원격(Railway) 인스턴스를 기본값으로 두면
+    # 테스트를 돌릴 때마다 운영 Redis에 접속해 요금이 발생하고, 네트워크 상태에
+    # 따라 테스트가 흔들린다. Redisson은 컨텍스트마다 커넥션을 10개씩 열고
+    # 테스트는 병렬로 실행되므로 체감보다 훨씬 많이 붙는다.
+    # 원격을 봐야 하면 그때만 환경변수로 덮어쓴다.
     redis:
-      host: ${SPRING_DATA_REDIS_HOST:hopper.proxy.rlwy.net}
-      port: ${SPRING_DATA_REDIS_PORT:14765}
-      password: ${SPRING_DATA_REDIS_PASSWORD:ghtscjQSRIcJbgwgQMqhFZXqlKDhnpSU}
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      password: ${SPRING_DATA_REDIS_PASSWORD:}
       timeout: 2000
 
   # 테스트 데이터 자동 로드 설정

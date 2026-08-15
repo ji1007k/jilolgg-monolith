@@ -107,7 +107,8 @@ Redisson은 `RedissonAutoConfigurationV2`를 `spring.autoconfigure.exclude`로 �
   - `@DataJpaTest`는 데이터소스를 자체 임베디드 DB로 갈아끼운다. 이 프로젝트의 H2 설정(PostgreSQL 모드)을 쓰려면 `@AutoConfigureTestDatabase(replace = NONE)`가 필요하다.
   - 테스트 설정의 `globally_quoted_identifiers: true`는 `@Column(columnDefinition = ...)`의 타입명까지 따옴표로 감싼다. 엔티티에 `columnDefinition`을 쓰면 H2 DDL이 조용히 실패해 해당 테이블만 사라진다.
 - 테스트 DB는 **H2 in-memory**(`MODE=PostgreSQL`, `ddl-auto: create-drop`, `defer-datasource-initialization: true`)이고 `src/test/resources/db/h2/*.sql`이 시드 데이터를 넣는다. 프로덕션 스키마는 `src/main/resources/db/postgres/schema.sql`이므로 스키마 변경 시 양쪽을 맞춰야 한다.
-- Redis는 mock이 아니라 **원격 인스턴스에 실제 연결**한다(`SPRING_DATA_REDIS_HOST` 환경변수로 오버라이드 가능). Redis가 필요한 테스트는 네트워크에 의존한다.
+- Redis는 mock이 아니라 **실제 인스턴스에 연결**한다. 기본값은 `localhost:6379`이므로 로컬에 Redis가 떠 있어야 한다(`SPRING_DATA_REDIS_HOST`/`_PORT`/`_PASSWORD`로 오버라이드). **기본값을 원격으로 되돌리지 말 것** — 테스트마다 운영 Redis에 붙어 요금이 나가고 결과가 네트워크에 흔들린다.
+- 외부 esports API를 실제로 호출하는 테스트(`LolEsportsApiClientIntergrationTest`, `SyncMatchJobTest`)는 `-PexcludeExternalApiTests`로 제외할 수 있다. CI가 이 옵션을 쓴다.
 - 인증이 필요한 테스트는 `common/support/AuthTestSupport`, `AuthRestTemplateTestSupport`와 `common/fixture/UserFixture`를 활용한다.
 
 ## 빌드/배포 흐름

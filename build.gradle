@@ -88,9 +88,17 @@ dependencies {
 // Use JUnit Platform (JUnit5)
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
-    
+
     // CPU 코어 수의 절반을 사용하여 테스트를 병렬로 실행 (속도 향상)
     maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+
+    // 외부 esports API를 실제로 호출하는 테스트는 CI에서 제외한다.
+    // 우리 코드와 무관하게 외부 서비스 상태에 따라 실패해서, PR 검증을 신뢰할 수 없게 만든다.
+    // 로컬에서는 그냥 ./gradlew test 로 전부 돌린다.
+    if (project.hasProperty("excludeExternalApiTests")) {
+        exclude "**/LolEsportsApiClientIntergrationTest.class"
+        exclude "**/SyncMatchJobTest.class"
+    }
 }
 
 // bootRun은 애플리케이션을 별도 JVM으로 띄우기 때문에, Gradle JVM에 준

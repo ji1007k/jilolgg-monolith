@@ -1,21 +1,34 @@
 name: "[CD] Deploy JILoL.gg SpringBoot to Railway"
 
+# main push에 직접 반응하지 않는다.
+# Railway는 GHCR의 이미지를 받아가므로, 이미지가 새로 올라가기 전에 재배포하면
+# 옛 이미지가 그대로 다시 뜬다(변경이 반영되지 않는다).
+# 그래서 이미지 빌드 워크플로가 "성공"으로 끝났을 때만 배포한다.
 on:
-  push:
-    branches:
-      - main    # main 브랜치에 푸시될 때마다 실행됨
+  workflow_run:
+    workflows:
+      - "[CI] Main Image Build & Push"
+    types:
+      - completed
 
 jobs:
   deployBasicBeSpringBoot:
+    name: "[CD] Railway 재배포"
     runs-on: ubuntu-latest
 
+    # 이미지 빌드가 실패했으면 배포하지 않는다.
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
     steps:
-      # [1] 이미지가 이미 GHCR에 있다는 가정하에, 별도의 빌드/체크아웃 생략
-      # [2] Railway CLI 설치 (매번 설치해서 사용. 최신 버전 유지)
+      - name: "[1] 배포 대상 확인"
+        run: |
+          echo "이미지 빌드 커밋: ${{ github.event.workflow_run.head_sha }}"
+          echo "빌드 결과: ${{ github.event.workflow_run.conclusion }}"
+
+      # [2] 이미지는 이미 GHCR에 올라가 있으므로 체크아웃/빌드를 생략한다.
       - name: Install Railway CLI
         run: npm install -g @railway/cli
 
-      # [3] CLI를 이용한 배포 트리거
       - name: Trigger Railway Redeploy
         run: |
           railway redeploy \
@@ -25,4 +38,3 @@ jobs:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_PROJECT_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
           RAILWAY_ENVIRONMENT_ID: ${{ secrets.RAILWAY_ENV_ID }}
-          

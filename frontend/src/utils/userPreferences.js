@@ -20,6 +20,45 @@ import {
 
 const FAVORITE_TEAMS_KEY = 'jilolgg.favoriteTeamIds';
 const LEAGUE_ORDER_KEY = 'jilolgg.leagueOrder';
+const DEVICE_ID_KEY = 'jilolgg.deviceId';
+
+/** 서버가 비로그인 구독 주체를 식별하는 헤더 이름. NotificationController와 맞춰야 한다. */
+export const DEVICE_ID_HEADER = 'X-Device-Id';
+
+/**
+ * 이 브라우저의 기기 식별자. 없으면 만들어 저장한다.
+ *
+ * 즐겨찾기·리그 순서와 달리 경기 알림은 서버가 "어느 기기가 어느 경기를 구독했는지"
+ * 알아야 하므로, 로그인 없이 알림을 받으려면 서버에 보낼 식별자가 필요하다.
+ * 사용자를 특정하는 값이 아니라 이 브라우저를 가리키는 임의의 값이다.
+ */
+export function getDeviceId() {
+    if (typeof window === 'undefined') return null;
+
+    try {
+        let deviceId = window.localStorage.getItem(DEVICE_ID_KEY);
+        if (deviceId) return deviceId;
+
+        deviceId = (window.crypto && typeof window.crypto.randomUUID === 'function')
+            ? window.crypto.randomUUID()
+            : `dev-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+
+        window.localStorage.setItem(DEVICE_ID_KEY, deviceId);
+        return deviceId;
+    } catch (e) {
+        // 시크릿 모드 등에서 저장이 막히면 알림 구독을 유지할 수 없다.
+        console.warn('[userPreferences] 기기 식별자 생성 실패', e);
+        return null;
+    }
+}
+
+/** 알림 API 요청에 붙일 헤더. 로그인 상태면 서버가 계정을 쓰므로 굳이 보내지 않는다. */
+export function deviceIdHeader() {
+    if (isLoggedIn()) return {};
+
+    const deviceId = getDeviceId();
+    return deviceId ? { [DEVICE_ID_HEADER]: deviceId } : {};
+}
 
 /**
  * 로그인 여부 판별.

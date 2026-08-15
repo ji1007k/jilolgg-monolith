@@ -1,4 +1,5 @@
 import { baseFetch } from './api';
+import { deviceIdHeader } from './userPreferences';
 
 function getCookie(name) {
     if (typeof document === "undefined") return null;
@@ -29,6 +30,7 @@ export async function apiGetAlarmStatus(matchIds) {
     const query = encodeURIComponent(matchIds.join(","));
     const response = await baseFetch(`/api/notification/alarm?matchIds=${query}`, {
         method: "GET",
+        headers: { ...deviceIdHeader() },
     });
 
     if (!response.ok) {
@@ -46,6 +48,7 @@ export async function apiToggleMatchAlarm(matchId) {
         headers: {
             "Content-Type": "application/json",
             ...(csrfToken ? { "X-XSRF-TOKEN": csrfToken } : {}),
+            ...deviceIdHeader(),
         },
         body: JSON.stringify({ matchId }),
     });

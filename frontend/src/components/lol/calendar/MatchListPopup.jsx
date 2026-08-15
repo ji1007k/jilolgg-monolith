@@ -24,7 +24,8 @@ function MatchListPopup ({ open, onClose, matches, date, isLoading, onPrevDate, 
     }, [matches]);
 
     useEffect(() => {
-        if (!open || !userId || unstartedMatchIds.length === 0) {
+        // 로그인 여부와 무관하게 조회한다. 비로그인은 기기 식별자로 구독 상태를 찾는다.
+        if (!open || unstartedMatchIds.length === 0) {
             setAlarmMap({});
             return;
         }
@@ -53,6 +54,7 @@ function MatchListPopup ({ open, onClose, matches, date, isLoading, onPrevDate, 
         return () => {
             cancelled = true;
         };
+        // userId가 바뀌면(로그인/로그아웃) 구독 주체가 달라지므로 다시 조회한다.
     }, [open, userId, unstartedMatchIds]);
 
     useEffect(() => {
@@ -74,11 +76,6 @@ function MatchListPopup ({ open, onClose, matches, date, isLoading, onPrevDate, 
 
     const handleToggleAlarm = async (match) => {
         const matchId = match.matchId;
-
-        if (!userId) {
-            setToast({ type: "error", message: "알림 설정은 로그인 후 사용할 수 있습니다." });
-            return;
-        }
 
         setTogglingMatchId(matchId);
         try {

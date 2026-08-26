@@ -1,0 +1,48 @@
+name: "[BOT] Claude 코드 작업"
+
+# 모바일에서 이슈나 PR에 "@claude ..." 라고 코멘트하면 Claude가 코드를 고쳐 PR을 연다.
+# 배포는 그 PR을 develop -> main 으로 머지하면 release-main.yml이 이어받는다.
+#
+# 멘션 감지는 액션이 알아서 한다(기본 트리거 문구 @claude). 별도 if 조건을 걸지 않는다.
+# 프로젝트 규칙은 저장소 루트의 CLAUDE.md를 그대로 따른다.
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  issues:
+    types: [opened, assigned, labeled]
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  claude:
+    name: "[BOT] 지시 수행"
+    runs-on: ubuntu-22.04
+
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+
+    steps:
+      - name: "[1] 저장소 코드 다운로드 (Checkout)"
+        uses: actions/checkout@v4
+        with:
+          # 기본값(1커밋)이면 브랜치를 따거나 diff를 보기 어렵다.
+          fetch-depth: 0
+          # GITHUB_TOKEN으로 만든 PR에는 다른 워크플로가 발동하지 않는다.
+          # BOT_PAT를 등록해두면 Claude가 연 PR에도 build.yml(테스트/빌드 검증)이 붙는다.
+          token: ${{ secrets.BOT_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: "[2] Claude 실행"
+        uses: anthropics/claude-code-action@v1
+        with:
+          # Pro/Max 구독을 쓰는 경우. API 키로 과금하려면 이 줄을 지우고
+          # anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }} 로 바꾼다.
+          # 두 가지를 동시에 넣지 말 것.
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.BOT_PAT || secrets.GITHUB_TOKEN }}
+          claude_args: |
+            --max-turns 30

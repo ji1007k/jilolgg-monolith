@@ -1,7 +1,11 @@
+import { useMemo } from 'react';
 import Popup from 'reactjs-popup';
 import 'reactjs-popup/dist/index.css';
 import format from 'date-fns/format';
+import ko from 'date-fns/locale/ko';
 import {FiX} from "react-icons/fi";
+import { useMatchAlarms } from "@components/lol/calendar/hooks/useMatchAlarms.js";
+import MatchAlarmButton from "@components/lol/calendar/MatchAlarmButton.jsx";
 
 // TODO 
 //  - CODE -> SLUG 또는 TEAM_ID 사용
@@ -9,6 +13,13 @@ import {FiX} from "react-icons/fi";
  * 일정 클릭 팝업 이벤트
  */
 const CustomEventWrapper = ({ open, event, children }) => {
+    // 상세 팝업에서도 일자별 팝업과 같은 알림 버튼을 쓴다.
+    // 훅은 목록을 받으므로 이 경기 하나만 담아 넘긴다.
+    const alarmTargets = useMemo(() => (event ? [event] : []), [event]);
+    const { alarmMap, togglingMatchId, toast, toggleAlarm } = useMatchAlarms(alarmTargets, true);
+
+    const handleToggleAlarm = (match) =>
+        toggleAlarm(match, (m) => format(new Date(m.startTime), "M월 d일 HH시 mm분", { locale: ko }));
 
     return (
         <Popup
@@ -60,7 +71,18 @@ const CustomEventWrapper = ({ open, event, children }) => {
                                                 {isCompleted && <span className="label completed">종료</span>}
                                                 <span>{format(new Date(event.startTime), 'HH:mm')}</span>
                                             </div>
+
+                                            <MatchAlarmButton
+                                                match={event}
+                                                alarmMap={alarmMap}
+                                                togglingMatchId={togglingMatchId}
+                                                onToggle={handleToggleAlarm}
+                                            />
                                         </div>
+
+                                        {toast && (
+                                            <div className={`schedule-alarm-toast ${toast.type}`}>{toast.message}</div>
+                                        )}
 
                                         {(isLive || isCompleted) && (
                                             <div className="flex justify-center">

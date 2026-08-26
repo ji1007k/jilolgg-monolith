@@ -52,3 +52,30 @@ jobs:
         run: |
           echo "### 배포 대상 이미지" >> $GITHUB_STEP_SUMMARY
           echo "- \`$REPO_URL:$IMAGE_TAG\` (커밋 ${GITHUB_SHA::7})" >> $GITHUB_STEP_SUMMARY
+
+  deploy:
+    name: "[CD] Railway 재배포"
+    needs: image-release
+    runs-on: ubuntu-latest
+
+    # 이미지 빌드와 같은 워크플로에 두고 needs로 묶는다.
+    # 별도 워크플로 + workflow_run 으로 연결했더니 트리거 자체가 생성되지 않았다
+    # (배포 워크플로 실행 17건이 전부 push 이벤트였고 workflow_run 은 0건).
+    # needs 는 같은 실행 안에서 순서가 보장되므로 "이미지가 올라간 뒤 배포"가 확실하다.
+    steps:
+      - name: "[1] 배포 대상 확인"
+        run: |
+          echo "배포 커밋 ${GITHUB_SHA::7}"
+
+      - name: "[2] Railway CLI 설치"
+        run: npm install -g @railway/cli
+
+      - name: "[3] Railway 재배포 트리거"
+        run: |
+          railway redeploy \
+            --service "${{ secrets.RAILWAY_SERVICE_ID }}" \
+            -y
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_PROJECT_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+          RAILWAY_ENVIRONMENT_ID: ${{ secrets.RAILWAY_ENV_ID }}

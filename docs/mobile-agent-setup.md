@@ -17,28 +17,63 @@
 
 ## 1. 최초 설정 (한 번만)
 
+세 가지를 등록한다. 성격이 서로 다르다.
+
+| 무엇 | 정체 | 왜 필요한가 |
+| --- | --- | --- |
+| Claude GitHub 앱 | GitHub 앱(계정 권한) | Claude가 이 저장소의 코멘트를 읽고 브랜치·PR을 만들 수 있게 함 |
+| `CLAUDE_CODE_OAUTH_TOKEN` | Claude 인증 토큰 | Actions 안에서 도는 Claude가 "누구 계정으로" 동작할지 |
+| `BOT_PAT` | GitHub Personal Access Token | Claude가 연 PR에도 CI 검증이 붙게 하려고 |
+
 ### 1-1. Claude GitHub 앱 설치
 
-저장소에 Claude GitHub 앱을 설치한다. 저장소 관리자 권한이 필요하다.
+<https://github.com/apps/claude> 에 접속해 **Install** 을 누른다.
+설치 대상으로 `ji1007k/jilolgg-monolith` 저장소를 고른다(전체 저장소 대신 이 저장소만 골라도 된다).
 
-### 1-2. 시크릿 등록
+저장소 관리자 권한이 필요하다.
 
-저장소 **Settings → Secrets and variables → Actions** 에서 등록한다.
+### 1-2. `CLAUDE_CODE_OAUTH_TOKEN` 발급
 
-| 시크릿 | 필수 | 용도 |
-| --- | --- | --- |
-| `CLAUDE_CODE_OAUTH_TOKEN` | 필수 | Claude Pro/Max 구독으로 인증. API 키 과금을 쓰려면 대신 `ANTHROPIC_API_KEY`를 넣고 `claude.yml`의 입력을 바꾼다 |
-| `BOT_PAT` | 권장 | `repo` + `workflow` 스코프의 personal access token |
+Claude **Pro / Max 구독**을 쓰는 경우다. 별도 API 과금이 붙지 않는다.
 
-**둘 중 하나만 넣을 것** — `CLAUDE_CODE_OAUTH_TOKEN`과 `ANTHROPIC_API_KEY`를 동시에 설정하지 않는다.
+로컬 터미널에서 Claude Code CLI로 발급한다.
 
-### 1-3. BOT_PAT가 왜 필요한가
+```bash
+claude setup-token
+```
 
-GitHub은 `GITHUB_TOKEN`으로 만든 PR에는 **다른 워크플로를 발동시키지 않는다.**
-`BOT_PAT` 없이 두면 Claude가 연 PR에 `build.yml`(테스트/빌드 검증)이 붙지 않아,
+출력된 토큰 문자열을 그대로 시크릿 값으로 넣는다.
+
+**API 키로 과금하려면** 대신 `ANTHROPIC_API_KEY`(`sk-ant-`로 시작)를 등록하고
+`.github/workflows/claude.yml`의 입력을 `anthropic_api_key`로 바꾼다.
+API 키는 Anthropic 콘솔에서 발급한다. **두 가지를 동시에 넣지 말 것.**
+
+### 1-3. `BOT_PAT` 발급
+
+이름은 이 저장소에서 임의로 정한 것이다. 실체는 **GitHub Personal Access Token**이다.
+
+<https://github.com/settings/tokens> → **Generate new token (classic)**
+
+- 스코프: **`repo`** 와 **`workflow`** 두 개를 체크
+- 만료일: 만료되면 조용히 동작이 바뀌므로(아래 참조) 달력에 적어둘 것
+
+**왜 필요한가** — GitHub은 `GITHUB_TOKEN`으로 만든 PR에는 **다른 워크플로를 발동시키지 않는다.**
+그대로 두면 Claude가 연 PR에 `build.yml`(테스트/빌드 검증)이 붙지 않아,
 검증되지 않은 변경을 그대로 머지하게 된다.
 
-`BOT_PAT`가 없으면 워크플로는 `GITHUB_TOKEN`으로 조용히 동작한다(PR은 열리지만 CI가 안 붙는다).
+`BOT_PAT`가 없거나 만료되면 워크플로는 실패하지 않고 `GITHUB_TOKEN`으로 **조용히** 동작한다.
+PR은 열리지만 CI가 안 붙는다. Claude가 연 PR에 체크가 하나도 없으면 이걸 의심할 것.
+
+### 1-4. 시크릿 등록
+
+저장소 → **Settings → Secrets and variables → Actions → New repository secret**
+
+| Name | Secret |
+| --- | --- |
+| `CLAUDE_CODE_OAUTH_TOKEN` | 1-2에서 받은 토큰 |
+| `BOT_PAT` | 1-3에서 받은 토큰 |
+
+이름은 `.github/workflows/claude.yml`이 참조하는 것과 정확히 일치해야 한다.
 
 ## 2. 쓰는 법
 

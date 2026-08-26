@@ -32,6 +32,45 @@ const localizer = dateFnsLocalizer({
     locales: { ko },
 });
 
+/**
+ * 달력 한 벌. 데스크톱/모바일이 서로 다른 기본 뷰로 각각 렌더된다(CSS로 하나만 보임).
+ * 뷰 상태를 자기가 들고 있어야 스와이프가 실제 화면과 맞는다.
+ */
+function CalendarPane({ defaultView, events, calendarProps, onShift, onViewChange }) {
+    const [view, setView] = useState(defaultView);
+    // onSelectDay는 Calendar가 아는 prop이 아니므로 분리해서 넘기지 않는다.
+    const { onSelectDay, ...restProps } = calendarProps;
+
+    const handlers = useSwipeable({
+        onSwipedLeft: () => onShift(view, 1),
+        onSwipedRight: () => onShift(view, -1),
+        preventScrollOnSwipe: true,
+        trackMouse: true,
+    });
+
+    const handleView = (nextView) => {
+        setView(nextView);
+        onViewChange(nextView);
+    };
+
+    return (
+        <div className="calendar-wrapper" {...handlers}>
+            <Calendar
+                {...restProps}
+                events={events}
+                view={view}
+                onView={handleView}
+                onSelectSlot={(slotInfo) => {
+                    if (!slotInfo?.start) return;
+                    // 일자별 팝업은 월간 화면에서만 연다. 주간 화면은 목록 자체가 상세다.
+                    if (view !== 'month') return;
+                    onSelectDay(slotInfo.start);
+                }}
+            />
+        </div>
+    );
+}
+
 function MyCalendar({ events }) {
     const [isLoading, setIsLoading] = useState(true);
     const {
@@ -60,20 +99,19 @@ function MyCalendar({ events }) {
         );
     }
 
-    const handlers = useSwipeable({
-        onSwipedLeft: () => {
-            if (currentView === 'month') setSelectedDate((prev) => addMonths(prev, 1));
-            else if (currentView === 'week') setSelectedDate((prev) => addDays(prev, 7));
-            else if (currentView === 'day') setSelectedDate((prev) => addDays(prev, 1));
-        },
-        onSwipedRight: () => {
-            if (currentView === 'month') setSelectedDate((prev) => subMonths(prev, 1));
-            else if (currentView === 'week') setSelectedDate((prev) => subDays(prev, 7));
-            else if (currentView === 'day') setSelectedDate((prev) => subDays(prev, 1));
-        },
-        preventScrollOnSwipe: true,
-        trackMouse: true,
-    });
+    /**
+     * 스와이프로 이동할 거리는 "지금 보이는 뷰"에 따라 달라진다.
+     * 데스크톱/모바일 달력이 currentView 상태를 공유하는데 모바일은 주간으로 시작하면서도
+     * onView가 불리지 않아 currentView가 'month'로 남았고, 그 결과 주간 화면에서
+     * 좌우로 밀면 한 달씩 건너뛰었다. 각 달력이 자기 뷰를 들고 그 값으로 계산하게 한다.
+     */
+    const shiftDate = (view, direction) => {
+        setSelectedDate((prev) => {
+            if (view === 'month') return direction > 0 ? addMonths(prev, 1) : subMonths(prev, 1);
+            if (view === 'week') return direction > 0 ? addDays(prev, 7) : subDays(prev, 7);
+            return direction > 0 ? addDays(prev, 1) : subDays(prev, 1);
+        });
+    };
 
     const fetchMatchesForDate = async (date) => {
         const { startDate, endDate } = getDateRange('day', date);
@@ -104,99 +142,54 @@ function MyCalendar({ events }) {
         await fetchMatchesForDate(newDate);
     };
 
+    // 데스크톱/모바일 달력이 공유하는 설정. 다른 건 기본 뷰뿐이다.
+    const calendarProps = {
+        localizer,
+        formats,
+        startAccessor: 'start',
+        endAccessor: 'end',
+        views: { month: true, week: CustomWeekView },
+        date: selectedDate,
+        onNavigate: setSelectedDate,
+        eventPropGetter: (event) => eventPropGetter(event, selectedTeam, favoriteTeamIds),
+        components: {
+            toolbar: CustomToolbar,
+            event: CalendarEvent,
+            eventWrapper: CustomEventWrapper,
+            month: {
+                dateHeader: ({ date, label }) => (
+                    <div style={{ color: date.getDay() === 0 ? 'red' : undefined }}>{label}</div>
+                ),
+            },
+            header: ({ date, label }) => (
+                <div style={{ color: date.getDay() === 0 ? 'red' : 'inherit' }}>{label}</div>
+            ),
+        },
+        selectable: true,
+        longPressThreshold: 100,
+        onSelectDay: fetchMatchesForDate,
+    };
+
     return (
         <div className="calendar-container">
             <div className="desktop-calendar">
-                <div className="calendar-wrapper" {...handlers}>
-                    <Calendar
-                        localizer={localizer}
-                        formats={formats}
-                        events={events || refinedSchedules}
-                        startAccessor="start"
-                        endAccessor="end"
-                        defaultView="month"
-                        views={{
-                            month: true,
-                            week: CustomWeekView
-                        }}
-                        date={selectedDate}
-                        onNavigate={setSelectedDate}
-                        onView={setCurrentView}
-                        eventPropGetter={(event) => eventPropGetter(event, selectedTeam, favoriteTeamIds)}
-                        components={{
-                            toolbar: CustomToolbar,
-                            event: CalendarEvent,
-                            eventWrapper: CustomEventWrapper,
-                            month: {
-                                dateHeader: ({ date, label }) => (
-                                    <div style={{ color: date.getDay() === 0 ? 'red' : undefined }}>
-                                        {label}
-                                    </div>
-                                ),
-                            },
-                            header: ({ date, label }) => (
-                                <div style={{ color: date.getDay() === 0 ? 'red' : 'inherit' }}>
-                                    {label}
-                                </div>
-                            ),
-                        }}
-                        selectable
-                        longPressThreshold={100}
-                        onSelectSlot={async (slotInfo) => {
-                            if (!slotInfo?.start) return;
-                            if (currentView !== 'month') return;
-                            fetchMatchesForDate(slotInfo.start);
-                        }}
-                    />
-                </div>
+                <CalendarPane
+                    defaultView="month"
+                    events={events || refinedSchedules}
+                    calendarProps={calendarProps}
+                    onShift={shiftDate}
+                    onViewChange={setCurrentView}
+                />
             </div>
 
             <div className="mobile-schedule-list">
-                {/* Mobile view can reuse MatchListPopup content as a full page or a simplified list */}
-                {/* For now, we'll keep the calendar but let CSS scale it, or we could add a dedicated list view here */}
-                {/* I'll use the existing Calendar but with 'day' view or 'week' view as default for mobile if needed */}
-                <div className="calendar-wrapper" {...handlers}>
-                     <Calendar
-                        localizer={localizer}
-                        formats={formats}
-                        events={events || refinedSchedules}
-                        startAccessor="start"
-                        endAccessor="end"
-                        defaultView="week"
-                        views={{
-                            month: true,
-                            week: CustomWeekView
-                        }}
-                        date={selectedDate}
-                        onNavigate={setSelectedDate}
-                        onView={setCurrentView}
-                        eventPropGetter={(event) => eventPropGetter(event, selectedTeam, favoriteTeamIds)}
-                        components={{
-                            toolbar: CustomToolbar,
-                            event: CalendarEvent,
-                            eventWrapper: CustomEventWrapper,
-                            month: {
-                                dateHeader: ({ date, label }) => (
-                                    <div style={{ color: date.getDay() === 0 ? 'red' : undefined }}>
-                                        {label}
-                                    </div>
-                                ),
-                            },
-                            header: ({ date, label }) => (
-                                <div style={{ color: date.getDay() === 0 ? 'red' : 'inherit' }}>
-                                    {label}
-                                </div>
-                            ),
-                        }}
-                        selectable
-                        longPressThreshold={100}
-                        onSelectSlot={async (slotInfo) => {
-                            if (!slotInfo?.start) return;
-                            if (currentView !== 'month') return;
-                            fetchMatchesForDate(slotInfo.start);
-                        }}
-                    />
-                </div>
+                <CalendarPane
+                    defaultView="week"
+                    events={events || refinedSchedules}
+                    calendarProps={calendarProps}
+                    onShift={shiftDate}
+                    onViewChange={setCurrentView}
+                />
             </div>
 
             {popupOpen && (

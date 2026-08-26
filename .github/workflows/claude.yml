@@ -45,7 +45,5 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.BOT_PAT || secrets.GITHUB_TOKEN }}
 
-          # 진단용: 실패 원인이 로그에 가려져 확인이 안 돼 임시로 켠다. 원인 확인 후 제거할 것.
-          show_full_output: true
           claude_args: |
             --max-turns 30

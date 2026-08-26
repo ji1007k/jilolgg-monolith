@@ -7,10 +7,12 @@
 - `erd.md`: 현재 DB 스키마 기반 ERD
 - `report/optimization/summary.md`: 성능/캐싱 실험 요약 리포트
 - `commit-convention.md`: 커밋 메시지 규칙
+- `local-setup.md`: 클론부터 로컬 실행까지의 절차
 - `agent-authoring-guide.md`: 기능별 전담 에이전트(`.claude/agents/`) 작성 규칙
 
 ## Archive
 - `archive/notes/2026-02-24.md`: 작업 로그 스냅샷
+- `archive/README-2026-08-26.md`: 포트폴리오형 개편 이전 README
 - `archive/legacy-2025/`: 2025년 인프라/운영 문서(EC2/GHCR/SSM/OIDC 등)
 - `archive/reports/optimization/performance-report.md`: 성능 원본 리포트
 - `archive/reports/optimization/caching-report.md`: 캐싱 원본 리포트

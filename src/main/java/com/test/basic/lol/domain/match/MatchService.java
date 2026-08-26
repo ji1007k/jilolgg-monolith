@@ -1,6 +1,8 @@
 package com.test.basic.lol.domain.match;
 
 import com.test.basic.lol.domain.match.mapping.MatchExternalMapping;
+import com.test.basic.lol.domain.matchteam.MatchTeamDto;
+import com.test.basic.lol.domain.team.TeamDto;
 import com.test.basic.lol.domain.match.mapping.MatchExternalMappingRepository;
 import com.test.basic.lol.domain.match.mapping.MatchExternalMappingService;
 import jakarta.persistence.EntityManager;
@@ -122,14 +124,14 @@ public class MatchService {
 
         if (cached != null) {
             logger.info(">>> Redis 캐시 Hit: {}", redisKey);
-            return dedupeForDisplay(cached);
+            return hideSupersededPlaceholders(dedupeForDisplay(cached));
         }
 
         logger.info(">>> Redis 캐시 Miss. DB 조회 시작: {}", redisKey);
 
         List<Match> matches = dbFallback.get();
         List<MatchDto> dtos = matches.stream().map(matchMapper::entityToDto).toList();
-        List<MatchDto> deduped = dedupeForDisplay(dtos);
+        List<MatchDto> deduped = hideSupersededPlaceholders(dedupeForDisplay(dtos));
         matchCacheService.cacheMatchList(redisKey, deduped);
 
         return deduped;
@@ -148,6 +150,67 @@ public class MatchService {
 
     public List<Match> saveMatches(List<Match> matchesToSave) {
         return matchRepository.saveAll(matchesToSave);
+    }
+
+    /** 외부 API가 대진 확정 전 자리를 채워두는 플레이스홀더 팀. 코드는 TBDC지만 name/slug는 TBD다. */
+    private static final String PLACEHOLDER_TEAM_SLUG = "tbd";
+
+    /**
+     * 대진이 확정되면서 밀려난 플레이스홀더 경기를 화면에서 감춘다.
+     *
+     * 외부 API는 플레이오프/플레이-인 대진표 자리와 실제 편성 경기에 서로 다른 matchId를 발급한다.
+     * 확정되면 API 응답에서 자리 쪽은 사라지지만, 동기화가 삽입·갱신만 하고 삭제는 하지 않아
+     * DB에는 옛 자리가 남는다. 그 결과 같은 시각에 "TBD vs TBD"와 실제 경기가 함께 노출된다.
+     *
+     * 같은 시각에 실제 경기가 있을 때만 자리를 숨긴다.
+     * 아직 대진이 안 잡힌 자리는 "이 시간에 경기가 예정돼 있다"는 정보이므로 그대로 둔다.
+     *
+     * 데이터는 건드리지 않는다. DB 정리는 동기화 쪽에서 따로 다룬다.
+     */
+    private List<MatchDto> hideSupersededPlaceholders(List<MatchDto> source) {
+        if (source == null || source.size() < 2) {
+            return source;
+        }
+
+        // 같은 시각에 실제 경기가 하나라도 있는지
+        Set<String> slotsWithRealMatch = source.stream()
+                .filter(dto -> dto != null && !isPlaceholderMatch(dto))
+                .map(MatchDto::getStartTime)
+                .filter(StringUtils::hasText)
+                .collect(Collectors.toSet());
+
+        if (slotsWithRealMatch.isEmpty()) {
+            return source;
+        }
+
+        return source.stream()
+                .filter(dto -> {
+                    if (dto == null || !isPlaceholderMatch(dto)) {
+                        return true;
+                    }
+
+                    boolean superseded = slotsWithRealMatch.contains(dto.getStartTime());
+                    if (superseded) {
+                        logger.debug(">>> 확정 경기에 밀려난 플레이스홀더 숨김: matchId={}, startTime={}",
+                                dto.getMatchId(), dto.getStartTime());
+                    }
+                    return !superseded;
+                })
+                .collect(Collectors.toList());
+    }
+
+    /** 참가 팀이 없거나 전부 TBD면 아직 대진이 확정되지 않은 자리로 본다. */
+    private boolean isPlaceholderMatch(MatchDto dto) {
+        List<MatchTeamDto> participants = dto.getParticipants();
+        if (participants == null || participants.isEmpty()) {
+            return true;
+        }
+
+        return participants.stream().allMatch(participant -> {
+            TeamDto team = participant == null ? null : participant.getTeam();
+            // 코드(TBDC)는 팀마다 다를 수 있어 slug로 판별한다. TB(Team Bliss) 같은 실제 팀과 섞이면 안 된다.
+            return team == null || PLACEHOLDER_TEAM_SLUG.equalsIgnoreCase(team.getSlug());
+        });
     }
 
     private List<MatchDto> dedupeForDisplay(List<MatchDto> source) {

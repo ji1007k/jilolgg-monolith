@@ -1,5 +1,6 @@
 package com.test.basic.common.fixture;
 
+import java.util.UUID;
 import com.test.basic.user.UserEntity;
 
 import java.time.LocalDateTime;
@@ -28,10 +29,15 @@ public class UserFixture {
     }
 
     public static UserEntity defaultUser() {
+        // 이름도 유니크해야 한다. 고정값이면 같은 fork에서 두 테스트가 이 픽스처를 저장했을 때
+        // findByName이 2건을 받아 NonUniqueResultException이 난다.
+        // 테스트 클래스가 늘어 fork 분배가 바뀌는 순간 갑자기 터지는 종류의 결함이다.
+        // fork는 별도 JVM이라 시간 기반 값으로는 충돌을 못 막는다.
+        String unique = "testuser-" + UUID.randomUUID().toString().substring(0, 8);
         return UserEntity.builder()
-                .email("testuser" + System.currentTimeMillis() + "@email.com")
+                .email(unique + "@email.com")
                 .password("password123")
-                .name("testuser")
+                .name(unique)
                 .authority("SCOPE_USER")
                 .createdDt(LocalDateTime.now())
                 .build();

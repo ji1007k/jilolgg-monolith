@@ -115,8 +115,18 @@ Redisson은 `RedissonAutoConfigurationV2`를 `spring.autoconfigure.exclude`로 �
 
 `Dockerfile`이 멀티스테이지로 Node 22 설치 → `./gradlew build -PwithFrontend -x test`(테스트 생략) → `eclipse-temurin:21-jdk-alpine` 런타임. `jar { enabled = false }`로 plain jar 생성을 막아 `build/libs/*.jar`가 하나만 남게 되어 있다(COPY 와일드카드가 이에 의존).
 
-- `.github/workflows/build.yml` — main PR 시 GHCR에 이미지 빌드/푸시.
-- `.github/workflows/deploy-railway.yml` — main push 시 `railway redeploy` 트리거(이미지가 GHCR에 이미 있다고 가정, 체크아웃/빌드 없음).
+- `.github/workflows/build.yml` — PR 검증만 한다(테스트 + 빌드). 이미지는 굽지 않는다.
+- `.github/workflows/release-main.yml` — main push 시 이미지를 굽고(`:latest` + `:<sha7>`) `deploy-image.yml`을 호출해 배포한다.
+- `.github/workflows/deploy-image.yml` — 배포 로직의 단일 진입점. 롤백도 여기로 한다(`workflow_dispatch`에 되돌릴 태그 입력).
+- `.github/workflows/release-tag.yml` — `v*` 태그 push 시 재빌드 없이 semver 태그를 추가하고 GitHub Release를 만든 뒤 배포한다.
+
+**배포는 `:latest`가 아니라 커밋별 불변 태그로 고정한다.** `railway redeploy`는 서비스에 설정된 태그를 다시 당길 뿐이라, `:latest`로 두면 그 시점의 최신을 가져와 **재현도 롤백도 불가능하다**(Railway 문서: *"For tags without versions ... Railway redeploys the existing tag to pull the latest image digest"*). 그래서 Railway public GraphQL API의 `serviceInstanceUpdate`로 소스 이미지를 바꾼다 — CLI 4.16.1에는 이미지 태그를 바꾸는 명령이 없다.
+
+**`RAILWAY_API_TOKEN`은 account 또는 workspace 토큰이어야 한다.** 프로젝트 토큰으로는 읽기만 되고 `serviceInstanceUpdate`가 `Not Authorized`로 거절된다(실측).
+
+배포된 것이 어느 커밋인지는 `GET /version`으로 확인한다(인증 불필요). `/actuator/**`는 `SCOPE_ADMIN` 전용이라 배포 직후 확인에 쓸 수 없다.
+
+**이미지를 되돌려도 `schema.sql`이 만든 스키마 변경은 되돌아가지 않는다.** 롤백은 "코드만 되돌린다"는 뜻이다.
 
 컨테이너 JVM은 `-Xmx256m`로 제한되어 있다. 메모리를 크게 쓰는 변경은 이 한도를 고려할 것.
 

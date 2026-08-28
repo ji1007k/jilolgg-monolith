@@ -1,5 +1,7 @@
 package com.test.basic.user;
 
+import com.test.basic.auth.security.user.CustomUserDetails;
+import org.springframework.security.core.GrantedAuthority;
 import com.test.basic.common.fixture.UserFixture;
 import com.test.basic.common.utils.PasswordUtils;
 import com.test.basic.common.utils.RSAUtil;
@@ -260,4 +262,59 @@ public class UserServiceTest {
         assertThatThrownBy(() -> userService.changePassword(user.getId(), ""))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+    // ── 권한 누락으로 "가입은 되는데 로그인이 안 되는" 계정 방지 ──────────
+
+    @Test
+    @DisplayName("권한없이_가입하면_기본권한이_채워진다")
+    void createUser_withoutAuthority_getsDefault() {
+        // authority가 NULL로 저장되면 로그인 시 권한 파싱에서 막혀 401이 난다.
+        // DB 컬럼에 default가 있어도 JPA가 NULL을 명시해 넣어 적용되지 않는다.
+        UserEntity user = UserEntity.builder()
+                .email("no-authority@test.com")
+                .password("pw1234")
+                .name("권한없음")
+                .authority(null)
+                .build();
+
+        when(userRepository.save(any(UserEntity.class))).thenAnswer(i -> i.getArgument(0));
+
+        UserEntity created = userService.createUser(user);
+
+        assertThat(created.getAuthority()).isEqualTo(UserEntity.DEFAULT_AUTHORITY);
+    }
+
+    @Test
+    @DisplayName("권한을_지정해_가입하면_그대로_유지된다")
+    void createUser_withAuthority_keepsIt() {
+        UserEntity user = UserEntity.builder()
+                .email("admin@test.com")
+                .password("pw1234")
+                .name("관리자")
+                .authority("SCOPE_ADMIN")
+                .build();
+
+        when(userRepository.save(any(UserEntity.class))).thenAnswer(i -> i.getArgument(0));
+
+        UserEntity created = userService.createUser(user);
+
+        assertThat(created.getAuthority()).isEqualTo("SCOPE_ADMIN");
+    }
+
+    @Test
+    @DisplayName("권한문자열_파싱은_null과_빈값을_견딘다")
+    void parseAuthorities_toleratesNullAndBlank() {
+        // 예전에는 호출부가 getAuthority().split(",")을 그대로 불러 NPE가 났다.
+        assertThat(CustomUserDetails.parseAuthorities(null))
+                .extracting(GrantedAuthority::getAuthority)
+                .containsExactly(UserEntity.DEFAULT_AUTHORITY);
+
+        assertThat(CustomUserDetails.parseAuthorities("   "))
+                .extracting(GrantedAuthority::getAuthority)
+                .containsExactly(UserEntity.DEFAULT_AUTHORITY);
+
+        assertThat(CustomUserDetails.parseAuthorities("SCOPE_ADMIN, SCOPE_USER ,,SCOPE_ADMIN"))
+                .extracting(GrantedAuthority::getAuthority)
+                .containsExactly("SCOPE_ADMIN", "SCOPE_USER");
+    }
+
 }

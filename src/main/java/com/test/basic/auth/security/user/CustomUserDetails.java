@@ -1,6 +1,12 @@
 package com.test.basic.auth.security.user;
 
+import com.test.basic.user.UserEntity;
 import lombok.Getter;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.util.StringUtils;
+
+import java.util.Arrays;
+import java.util.stream.Collectors;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -14,6 +20,24 @@ import java.util.Collection;
     => JWT 기반 인증 후 사용자 정보 바로 꺼낼 수 있음
  */
 public class CustomUserDetails implements UserDetails {
+
+    /**
+     * 쉼표로 구분된 권한 문자열을 GrantedAuthority 목록으로 바꾼다.
+     *
+     * 값이 비어 있으면 기본 권한을 준다. 예전에는 호출부마다 getAuthority().split(",")를
+     * 그대로 불렀는데, 권한이 null인 계정에서 NPE가 나고 그게 인증 실패로 감싸여
+     * "가입은 되는데 로그인만 401"이 되었다. 로그에도 원인이 남지 않아 추적이 어려웠다.
+     */
+    public static Collection<GrantedAuthority> parseAuthorities(String authority) {
+        String source = StringUtils.hasText(authority) ? authority : UserEntity.DEFAULT_AUTHORITY;
+
+        return Arrays.stream(source.split(","))
+                .map(String::trim)
+                .filter(StringUtils::hasText)
+                .distinct()
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
+    }
 
     @Getter
     private final Long id;

@@ -1,5 +1,6 @@
 package com.test.basic.user;
 
+import org.springframework.util.StringUtils;
 import com.test.basic.common.utils.PasswordUtils;
 import com.test.basic.common.utils.RSAUtil;
 import jakarta.servlet.http.HttpSession;
@@ -30,6 +31,13 @@ public class UserService {
 
         String hashedPwd = PasswordUtils.hashPassword(user.getPassword());
         user.setPassword(hashedPwd);
+
+        // 권한이 없으면 로그인 시 권한 파싱에서 막혀 "가입은 되는데 로그인이 안 되는" 계정이 된다.
+        // 엔티티에 기본값을 뒀지만 가입은 @RequestBody(no-args 생성자) 경로라 여기서 한 번 더 보장한다.
+        if (!StringUtils.hasText(user.getAuthority())) {
+            user.setAuthority(UserEntity.DEFAULT_AUTHORITY);
+        }
+
         return userRepository.save(user);
     }
 

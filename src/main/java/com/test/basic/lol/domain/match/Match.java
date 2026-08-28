@@ -51,6 +51,15 @@ public class Match {
     @Column(length = 2048)
     private String vodUrl;
 
+    /**
+     * 확정 경기에 밀려난 대진표 자리를 감추기 위한 표시. NULL이면 노출한다.
+     * 행을 지우지 않는 이유는 잘못 숨겼을 때 되돌릴 수 있어야 하기 때문이다.
+     */
+    private LocalDateTime hiddenAt;
+
+    @Column(length = 64)
+    private String hiddenReason;
+
     @OneToMany(mappedBy = "match")
     private List<MatchTeam> matchTeams;
 

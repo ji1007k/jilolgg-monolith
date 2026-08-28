@@ -46,4 +46,4 @@ jobs:
           github_token: ${{ secrets.BOT_PAT || secrets.GITHUB_TOKEN }}
 
           claude_args: |
-            --max-turns 30
+            --max-turns 60

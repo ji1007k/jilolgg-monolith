@@ -42,10 +42,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         // DB에서 조회한 사용자 정보를 기반으로 UserDetails 객체 생성
         // DB에서 권한 정보 가져오기 (comma-separated values로 가정)
-        String[] authorities = user.getAuthority().split(",");
-        Collection<GrantedAuthority> grantedAuthorities = Arrays.stream(authorities)
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList());
+        Collection<GrantedAuthority> grantedAuthorities = CustomUserDetails.parseAuthorities(user.getAuthority());
 
         return new CustomUserDetails(
                 user.getId(),
@@ -62,10 +59,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         UserEntity user = userRepository.findById(Long.valueOf(userId))
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        String[] authorities = user.getAuthority().split(",");
-        Collection<GrantedAuthority> grantedAuthorities = Arrays.stream(authorities)
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList());
+        Collection<GrantedAuthority> grantedAuthorities = CustomUserDetails.parseAuthorities(user.getAuthority());
 
         return new CustomUserDetails(
                 user.getId(),

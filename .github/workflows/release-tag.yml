@@ -1,0 +1,92 @@
+name: "[CD] semver 릴리스"
+
+# v1.2.0 같은 태그를 찍으면 사람이 읽는 버전 라벨을 붙이고 배포한다.
+#
+# 다시 빌드하지 않는다. main 에서 이미 구워 검증한 :<sha7> 이미지에
+# 다이제스트를 유지한 채 태그만 하나 더 붙인다(imagetools create).
+# 재빌드하면 릴리스가 "검증한 그 아티팩트"가 아니라 다른 물건이 된다.
+#
+# 사용법: main 에 이미 올라간 커밋에 태그를 찍는다.
+#   git tag v1.2.0 && git push upstream v1.2.0
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  retag:
+    name: "[CD] 이미지 재태깅 & GitHub Release"
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write   # gh release create
+      packages: write   # GHCR 태그 추가
+
+    outputs:
+      image_tag: ${{ steps.tag.outputs.image_tag }}
+
+    steps:
+      - name: "[1] 저장소 코드 다운로드 (Checkout)"
+        uses: actions/checkout@v4
+
+      - name: "[2] GHCR 로그인"
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: "[3] 태그가 가리키는 커밋의 이미지 확인"
+        id: tag
+        # main 을 거치지 않은 커밋에 태그를 찍으면 :<sha7> 이미지가 없다.
+        # 조용히 넘어가면 "릴리스는 만들어졌는데 배포는 옛 이미지"가 되므로 여기서 죽인다.
+        run: |
+          REPO="ghcr.io/${{ github.repository }}"
+          SHA7="${GITHUB_SHA::7}"
+          echo "REPO=$REPO" >> $GITHUB_ENV
+          echo "SHA7=$SHA7" >> $GITHUB_ENV
+          echo "image_tag=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+
+          if ! docker buildx imagetools inspect "$REPO:$SHA7" > /dev/null 2>&1; then
+            echo "::error::$REPO:$SHA7 이미지가 없다. 이 커밋이 main 에 머지되어 이미지가 구워진 뒤에 태그를 찍을 것."
+            exit 1
+          fi
+
+      - name: "[4] 다이제스트 유지한 채 semver 태그 추가"
+        run: |
+          docker buildx imagetools create -t "$REPO:${GITHUB_REF_NAME}" "$REPO:$SHA7"
+          DIGEST=$(docker buildx imagetools inspect "$REPO:${GITHUB_REF_NAME}" \
+            | awk '/^Digest:/ {print $2; exit}')
+          echo "DIGEST=$DIGEST" >> $GITHUB_ENV
+          echo "$REPO:${GITHUB_REF_NAME} -> $DIGEST"
+
+      - name: "[5] GitHub Release 생성"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # 본문에 커밋과 다이제스트를 남긴다.
+        # /version 은 커밋을 돌려주므로, 이 매핑이 "v1.2.0 이 어느 커밋인가"의 근거가 된다.
+        # --notes 는 --generate-notes 로 만들어진 변경 목록 앞에 붙는다.
+        # 본문을 파일로 만들어 넘긴다. run 블록 안에 여러 줄 문자열을 직접 쓰면
+        # 이어지는 줄이 블록 들여쓰기를 벗어나 YAML 자체가 깨진다.
+        run: |
+          cat > release-notes.md <<EOF
+          커밋: \`${GITHUB_SHA}\`
+          이미지: \`$REPO:${GITHUB_REF_NAME}\`
+          다이제스트: \`$DIGEST\`
+
+          같은 다이제스트가 \`$REPO:$SHA7\` 로도 올라가 있습니다. 재빌드 없이 태그만 추가했습니다.
+          EOF
+
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
+            --generate-notes \
+            --notes-file release-notes.md
+
+  deploy:
+    name: "[CD] Railway 배포"
+    needs: retag
+    uses: ./.github/workflows/deploy-image.yml
+    with:
+      image_tag: ${{ needs.retag.outputs.image_tag }}
+    secrets: inherit

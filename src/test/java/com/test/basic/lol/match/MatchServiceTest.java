@@ -194,4 +194,21 @@ public class MatchServiceTest {
         assertThat(result).hasSize(2);
     }
 
+    @Test
+    @DisplayName("팀정보가_없는_경기는_숨기지_않는다")
+    void keepsMatchWithoutParticipants() {
+        // 대진표 자리가 아니라 팀 데이터가 유실된 실제 경기다(현재 1,248건).
+        // 같은 시각에 경기가 여러 개인 리그에서 이걸 자리로 오인하면 완료 경기가 사라진다.
+        MatchDto noTeams = dto("m-noteam");
+        noTeams.setStartTime(SLOT);
+        noTeams.setParticipants(List.of());
+
+        List<MatchDto> result = queryWithCachedList(List.of(
+                noTeams,
+                realDto("117030752644841571", SLOT)
+        ));
+
+        assertThat(result).hasSize(2);
+    }
+
 }

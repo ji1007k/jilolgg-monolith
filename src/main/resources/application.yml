@@ -68,6 +68,14 @@ jwt:
 uploads:
   path: uploads/
 
+# 대진 확정으로 밀려난 대진표 자리 정리
+#   log   - 대상만 로그로 남기고 데이터를 건드리지 않는다 (기본값)
+#   apply - 실제로 숨김 표시를 남긴다
+# 관찰 기간 동안 log로 두고, 로그에 찍힌 대상이 타당하면 apply로 바꾼다.
+sync:
+  placeholder-cleanup:
+    mode: log
+
 
 # https://developer.riotgames.com/
 lol:

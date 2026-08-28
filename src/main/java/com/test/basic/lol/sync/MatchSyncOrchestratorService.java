@@ -5,6 +5,7 @@ import com.test.basic.lol.domain.league.LeagueService;
 import com.test.basic.lol.domain.match.Match;
 import com.test.basic.lol.domain.match.MatchCacheService;
 import com.test.basic.lol.domain.match.MatchService;
+import com.test.basic.lol.domain.match.PlaceholderReconciler;
 import com.test.basic.lol.domain.match.SyncMatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,7 @@ public class MatchSyncOrchestratorService {
     private final MatchCacheService matchCacheService;
     private final BatchJobService batchJobService;
     private final MatchService matchService;
+    private final PlaceholderReconciler placeholderReconciler;
 
     @FunctionalInterface
     private interface SyncTask {
@@ -45,12 +47,35 @@ public class MatchSyncOrchestratorService {
                     .toList();
 
             syncMatchService.syncMatchesByLeagueIdsAndYear(leagueIds, year);
+            reconcilePlaceholders();
             matchCacheService.invalidateAllCaches();
         });
     }
 
     public SyncExecutionResult runBatchYearSync(String year) {
-        return runWithGlobalLock("batch-year-sync", () -> batchJobService.executeMatchSyncJob(year));
+        return runWithGlobalLock("batch-year-sync", () -> {
+            batchJobService.executeMatchSyncJob(year);
+            // 배치는 비동기로 뜨므로 이 시점의 정리는 직전 실행 결과를 대상으로 한다.
+            // 매 동기화마다 다시 계산하는 구조라 한 번 늦어도 다음 실행에서 반영된다.
+            if (reconcilePlaceholders() > 0) {
+                matchCacheService.invalidateAllCaches();
+            }
+        });
+    }
+
+    /**
+     * 대진 확정으로 밀려난 대진표 자리를 정리한다.
+     * 실패해도 동기화 자체를 실패로 만들지 않는다 — 표시를 다듬는 후처리일 뿐이다.
+     *
+     * @return 실제로 상태가 바뀐 건수
+     */
+    private int reconcilePlaceholders() {
+        try {
+            return placeholderReconciler.reconcile();
+        } catch (Exception e) {
+            log.error(">>> 플레이스홀더 정리 실패(동기화는 계속 진행): {}", e.getMessage(), e);
+            return 0;
+        }
     }
 
     public SyncExecutionResult runTodaySync(LocalDate today) {

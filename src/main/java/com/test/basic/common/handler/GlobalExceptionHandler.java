@@ -1,5 +1,7 @@
 package com.test.basic.common.handler;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
@@ -18,6 +20,8 @@ import org.springframework.web.server.ResponseStatusException;
 // 인증/인가 외 에러 처리를 위한 핸들러
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     // 🔹 서비스가 의도적으로 지정한 상태코드를 그대로 내보낸다.
     // 이 핸들러가 없으면 아래 Exception 핸들러가 먼저 잡아 전부 500이 된다.
@@ -53,14 +57,28 @@ public class GlobalExceptionHandler {
     }
 
     // 🔹 409: 데이터 무결성 위반 (중복 데이터 등)
+    // 응답 본문에는 원인을 담지 않는다(제약조건 이름이 스키마를 노출한다).
+    // 대신 반드시 로그로 남긴다 - 이걸 빠뜨려서 운영에서 로그인이 계속 409로
+    // 실패하는데도 어떤 제약이 깨졌는지 알 수 없는 상태가 이어졌다.
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<String> handleIntegrityViolation(DataIntegrityViolationException e) {
+        logger.error("데이터 무결성 위반 | 근본 원인: {}", rootCauseMessage(e), e);
         return ResponseEntity.status(HttpStatus.CONFLICT).body("Cannot process request due to integrity violation");
+    }
+
+    /** JDBC 드라이버가 던진 실제 메시지(제약조건 이름·컬럼명)는 최하위 원인에 들어 있다. */
+    private static String rootCauseMessage(Throwable e) {
+        Throwable cause = e;
+        while (cause.getCause() != null && cause.getCause() != cause) {
+            cause = cause.getCause();
+        }
+        return cause.getClass().getSimpleName() + ": " + cause.getMessage();
     }
 
     // 🔹 500: 서버 내부 오류
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleGlobalException(Exception e) {
+        logger.error("처리되지 않은 예외", e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error: " + e.getMessage());
     }
 }

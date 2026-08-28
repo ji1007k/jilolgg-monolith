@@ -124,6 +124,8 @@ Redisson은 `RedissonAutoConfigurationV2`를 `spring.autoconfigure.exclude`로 �
 
 **`RAILWAY_API_TOKEN`은 account 또는 workspace 토큰이어야 한다.** 프로젝트 토큰으로는 읽기만 되고 `serviceInstanceUpdate`가 `Not Authorized`로 거절된다(실측).
 
+**배포 트리거는 반드시 `serviceInstanceDeployV2`다.** `serviceInstanceRedeploy`는 "직전 배포를 그대로 다시" 돌리는 것이라 소스 이미지를 바꿔도 옛 태그가 다시 뜬다. **그런데 에러가 나지 않아 성공으로 보인다** — 실제로 이것 때문에 롤백이 조용히 무시됐다. 그래서 `deploy-image.yml`은 마지막에 `/version`을 폴링해 **운영이 직접 답하게** 한다. 워크플로가 초록이라는 것만으로 배포됐다고 판단하지 말 것.
+
 배포된 것이 어느 커밋인지는 `GET /version`으로 확인한다(인증 불필요). `/actuator/**`는 `SCOPE_ADMIN` 전용이라 배포 직후 확인에 쓸 수 없다.
 
 **이미지를 되돌려도 `schema.sql`이 만든 스키마 변경은 되돌아가지 않는다.** 롤백은 "코드만 되돌린다"는 뜻이다.

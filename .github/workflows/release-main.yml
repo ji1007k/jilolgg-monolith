@@ -37,8 +37,13 @@ jobs:
       - name: "[5] 모놀리식 이미지 빌드"
         # Dockerfile 내부에서 Node 설치 -> ./gradlew build -PwithFrontend -x test 가 실행된다.
         # 테스트는 PR 단계(build.yml)에서 이미 돌렸다.
+        # --build-arg 로 넣은 값은 이미지에 ENV 로 박혀 GET /version 이 그대로 돌려준다.
+        # 배포된 것이 정말 이 커밋인지 밖에서 확인하는 근거가 된다.
         run: |
           docker build \
+            --build-arg GIT_SHA="$GITHUB_SHA" \
+            --build-arg IMAGE_TAG="$IMAGE_TAG" \
+            --build-arg BUILT_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             -t "$REPO_URL:latest" \
             -t "$REPO_URL:$IMAGE_TAG" \
             .

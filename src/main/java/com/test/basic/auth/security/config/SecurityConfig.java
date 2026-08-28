@@ -100,6 +100,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/swagger-ui/**", "/api/v3/api-docs/**").permitAll()
                         // 로그인, 회원가입, CSRF 토큰 발급
                         .requestMatchers("/auth/login", "/auth/signup", "/csrf").permitAll()
+                        // 배포 버전 확인. actuator 는 ADMIN 전용이라 배포 직후 확인에 못 쓴다.
+                        // 커밋 해시만 반환한다(VersionController).
+                        .requestMatchers("/version").permitAll()
                         // frontend
                         .requestMatchers("/jikimi/**").permitAll()
                         // lol

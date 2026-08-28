@@ -96,6 +96,47 @@ Redisson은 `RedissonAutoConfigurationV2`를 `spring.autoconfigure.exclude`로 �
 
 `lol/domain/<엔티티>` 패키지는 Entity / Repository / Service / Controller / Dto / Mapper(MapStruct)를 한곳에 모으는 패키지-바이-피처 스타일이다. 관심사가 갈리면 접미사로 분리한다 — 예: `MatchService`(조회/영속), `MatchApiService`(외부 API 호출), `MatchCacheService`(캐시), `SyncMatchService`/`MatchSyncWorker`(동기화). 새 코드도 이 규칙을 따를 것.
 
+## 프론트엔드 (`frontend/`)
+
+Next.js 15 App Router + React 19. `output: 'export'` 정적 빌드이므로 **서버 컴포넌트에서 DB나 백엔드를 직접 호출할 수 없다.** 데이터는 전부 클라이언트에서 `/api/**`로 가져온다. `basePath`는 `/jikimi`.
+
+### 스타일 — Tailwind가 주력이 아니다
+
+여기서 가장 자주 오해가 생기는 지점이다.
+
+- Tailwind가 설치돼 있지만 **실제 스타일은 대부분 커스텀 CSS 클래스**다 (`header-container`, `user-info`, `main-link` 등). Tailwind는 일부에서만 보조로 쓴다.
+- 스타일은 `src/styles/css/` 아래 8개 파일에 나뉘어 있다: `style.css`(공통·헤더·레이아웃), `lol-calendar.css`(경기 일정, 가장 큼), `standings.css`, `post-style.css`, `chat.css`, `loading.css`, `responsive.css`, 그리고 `src/styles/tailwind/lol/calendar.css`.
+- `src/app/layout.js`가 `style.css`를 로드한다. 나머지는 사용하는 컴포넌트에서 import한다.
+- **CSS 변수(커스텀 프로퍼티)를 쓰지 않는다.** 색상이 약 356곳에 하드코딩돼 있다(총 3,344줄). 테마·다크모드처럼 색을 일괄로 바꾸는 작업은 Tailwind `dark:` 프리픽스로 해결되지 않으며, CSS 변수 도입부터 해야 하는 큰 작업이다.
+- 달력은 `react-big-calendar`를 쓰고 라이브러리 기본 CSS를 import하므로, 외형을 바꾸려면 라이브러리 클래스를 덮어써야 한다.
+
+### 구조
+
+- `src/app/` — 라우트는 넷뿐이다: `/`(→ `components/home/HomePage`), `/auth/login`, `/auth/signup`, `/admin`
+- `src/components/` — `auth`, `common`(Header 등), `home`, `lol/calendar`, `lol/standings`, `user`
+- `src/context/` — `AuthContext`(로그인 상태), `CalendarContext`(일정 화면 상태)
+- `src/utils/` — `api.js`(공통 fetch), `api-lol.js`, `api-notification.js`, `firebase.js`(FCM), `userPreferences.js`, `date-util.js`
+
+컴포넌트 40개 중 14개만 `"use client"`다. 상태나 이벤트를 쓰면 붙여야 한다.
+
+### API 호출 규칙
+
+`src/utils/api.js`의 `baseFetch`를 거친다. 두 가지를 자동으로 처리한다.
+
+- `credentials: 'include'` — 인증이 httpOnly 쿠키 기반이라 필수
+- **401이면 `/api/auth/token/refresh`로 토큰을 갱신하고 원래 요청을 한 번 재시도한다**
+
+호출 URL에는 반드시 `/api` prefix를 붙인다(위 "요청 경로와 `/api` prefix" 참조). `POST`/`PUT`/`DELETE`는 `X-XSRF-TOKEN` 헤더가 필요하다 — `GET /api/csrf`로 받은 값을 쓰며, `src/app/admin/page.js`에 사용 예가 여럿 있다.
+
+### 확인
+
+```bash
+cd frontend && npm run build
+```
+
+정적 export까지 도는 빌드라 라우팅·이미지 설정 문제가 여기서 걸린다. `npm run lint`(ESLint)도 있다.
+`npm run dev`는 Next dev 서버가 아니라 Express 커스텀 서버이며 기본값이 HTTPS라 로컬 인증서가 필요하다. 인증서 없이 UI만 보려면 `npm run nextdev`를 쓴다.
+
 ## 테스트
 
 - 단위 테스트는 `@ExtendWith(MockitoExtension.class)` + `@Mock`/`@InjectMocks`, 통합 테스트는 `src/test/resources/application.yml` 기준. 스프링 빈 대체는 `@MockitoBean`(`org.springframework.test.context.bean.override.mockito`) — `@MockBean`은 Boot 4에서 제거되므로 쓰지 말 것.

@@ -51,6 +51,13 @@ jobs:
           # (이슈 #45: 9턴만 쓰고 종료, 브랜치 미생성, permission_denials_count=0)
           # --allowedTools는 기본 도구를 덮어쓰지 않고 더한다.
           # gradlew/npm은 고친 코드를 커밋 전에 Claude가 직접 검증하도록 함께 연다.
+          # 턴이 모자라면 커밋 직전에 끊긴다. 이슈 #48이 60턴을 다 쓰고
+          # "Reached maximum number of turns (60)"로 실패했다 — 브랜치명까지 정해놓고
+          # push를 못 해 PR이 열리지 않았다. 이 저장소 작업 규모에는 60이 부족하다.
+          #
+          # 허용 목록에 없는 명령을 시도하면 거부되면서 턴만 소모된다(#48에서 9회).
+          # 프론트 빌드가 `cd frontend && npm run build`이므로 cd도 함께 열어야 한다.
+          # (npm --prefix는 cwd를 바꾸지 않아 대안이 되지 못한다. 실측 확인함)
           claude_args: |
-            --max-turns 60
-            --allowedTools "Edit,Write,Bash(./gradlew:*),Bash(npm:*)"
+            --max-turns 150
+            --allowedTools "Edit,Write,Bash(cd:*),Bash(npm:*),Bash(npx:*),Bash(./gradlew:*),Bash(ls:*),Bash(cat:*),Bash(mkdir:*)"

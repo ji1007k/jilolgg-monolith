@@ -13,6 +13,11 @@ jobs:
     name: "[CI] Docker 이미지 빌드 & GHCR 푸시"
     runs-on: ubuntu-22.04
 
+    # 배포 잡이 어떤 태그를 올릴지 알아야 한다.
+    # 환경변수는 잡 경계를 넘지 못하므로 출력으로 넘긴다.
+    outputs:
+      image_tag: ${{ steps.meta.outputs.image_tag }}
+
     steps:
       - name: "[1] 저장소 코드 다운로드 (Checkout)"
         uses: actions/checkout@v4
@@ -28,11 +33,13 @@ jobs:
           password: ${{ secrets.GHCR_PAT }}
 
       - name: "[4] 이미지 태그 환경 변수 설정"
+        id: meta
         # latest 외에 커밋 SHA 태그도 남긴다.
         # 배포가 어느 커밋인지 추적할 수 있고, 문제 시 이전 태그로 되돌릴 수 있다.
         run: |
           echo "REPO_URL=ghcr.io/${{ github.repository }}" >> $GITHUB_ENV
           echo "IMAGE_TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
+          echo "image_tag=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
       - name: "[5] 모놀리식 이미지 빌드"
         # Dockerfile 내부에서 Node 설치 -> ./gradlew build -PwithFrontend -x test 가 실행된다.
@@ -59,28 +66,19 @@ jobs:
           echo "- \`$REPO_URL:$IMAGE_TAG\` (커밋 ${GITHUB_SHA::7})" >> $GITHUB_STEP_SUMMARY
 
   deploy:
-    name: "[CD] Railway 재배포"
+    name: "[CD] Railway 배포"
     needs: image-release
-    runs-on: ubuntu-latest
 
     # 이미지 빌드와 같은 워크플로에 두고 needs로 묶는다.
     # 별도 워크플로 + workflow_run 으로 연결했더니 트리거 자체가 생성되지 않았다
     # (배포 워크플로 실행 17건이 전부 push 이벤트였고 workflow_run 은 0건).
     # needs 는 같은 실행 안에서 순서가 보장되므로 "이미지가 올라간 뒤 배포"가 확실하다.
-    steps:
-      - name: "[1] 배포 대상 확인"
-        run: |
-          echo "배포 커밋 ${GITHUB_SHA::7}"
-
-      - name: "[2] Railway CLI 설치"
-        run: npm install -g @railway/cli
-
-      - name: "[3] Railway 재배포 트리거"
-        run: |
-          railway redeploy \
-            --service "${{ secrets.RAILWAY_SERVICE_ID }}" \
-            -y
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_PROJECT_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
-          RAILWAY_ENVIRONMENT_ID: ${{ secrets.RAILWAY_ENV_ID }}
+    #
+    # 배포 로직 자체는 deploy-image.yml 하나로 모은다. 롤백(workflow_dispatch)과
+    # semver 릴리스가 같은 경로를 타야 "롤백해봤더니 다르게 동작"하는 일이 없다.
+    # :latest 가 아니라 커밋별 불변 태그를 물린다 - redeploy 는 태그를 다시 당길
+    # 뿐이라, :latest 로 두면 무엇이 떠 있는지도 모르고 되돌릴 수도 없었다.
+    uses: ./.github/workflows/deploy-image.yml
+    with:
+      image_tag: ${{ needs.image-release.outputs.image_tag }}
+    secrets: inherit

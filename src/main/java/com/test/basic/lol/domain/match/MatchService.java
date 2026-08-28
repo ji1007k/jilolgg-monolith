@@ -202,14 +202,19 @@ public class MatchService {
     /** 참가 팀이 없거나 전부 TBD면 아직 대진이 확정되지 않은 자리로 본다. */
     private boolean isPlaceholderMatch(MatchDto dto) {
         List<MatchTeamDto> participants = dto.getParticipants();
+
+        // 참가 팀이 아예 없는 경기는 플레이스홀더가 아니다.
+        // 대진표 자리가 아니라 팀 데이터가 유실된 실제 경기이며(현재 1,248건),
+        // 같은 시각에 경기가 여러 개인 리그에서는 이걸 자리로 오인하면
+        // 멀쩡한 완료 경기까지 화면에서 사라진다.
         if (participants == null || participants.isEmpty()) {
-            return true;
+            return false;
         }
 
         return participants.stream().allMatch(participant -> {
             TeamDto team = participant == null ? null : participant.getTeam();
             // 코드(TBDC)는 팀마다 다를 수 있어 slug로 판별한다. TB(Team Bliss) 같은 실제 팀과 섞이면 안 된다.
-            return team == null || PLACEHOLDER_TEAM_SLUG.equalsIgnoreCase(team.getSlug());
+            return team != null && PLACEHOLDER_TEAM_SLUG.equalsIgnoreCase(team.getSlug());
         });
     }
 

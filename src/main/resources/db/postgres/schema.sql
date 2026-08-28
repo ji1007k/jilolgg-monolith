@@ -82,6 +82,15 @@ CREATE TABLE IF NOT EXISTS "matches"
     -- 외래키 추가 가능: REFERENCES leagues(league_id)
 );
 -- 날짜 비교 조회 시 인덱스 범위 스캔 목적
+-- 마이그레이션: 숨김 컬럼 도입 이전 데이터베이스 보정.
+-- 반드시 matches 생성 이후에 둔다(빈 DB에서 릴레이션 없음으로 전체가 실패한다).
+ALTER TABLE "matches" ADD COLUMN IF NOT EXISTS hidden_at TIMESTAMP;
+ALTER TABLE "matches" ADD COLUMN IF NOT EXISTS hidden_reason VARCHAR(64);
+
+-- 숨긴 경기는 목록 조회에서 빠지므로 부분 인덱스로 충분하다.
+CREATE INDEX IF NOT EXISTS idx_matches_visible
+    ON "matches" ("league_id", "start_time") WHERE hidden_at IS NULL;
+
 DROP INDEX IF EXISTS idx_match_start_time;
 CREATE INDEX idx_match_start_time ON "matches" ("start_time");
 

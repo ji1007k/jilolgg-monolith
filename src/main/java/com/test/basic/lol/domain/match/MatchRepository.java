@@ -50,6 +50,7 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
         SELECT m FROM Match m
         WHERE m.league.leagueId = :leagueId
             AND m.startTime BETWEEN :startOfDay AND :endOfDay
+            AND m.hiddenAt IS NULL
     """)
     List<Match> findMatchByLeagueIdAndDate(String leagueId, LocalDateTime startOfDay, LocalDateTime endOfDay);
 
@@ -58,9 +59,15 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
     List<Match> findAllByLeague_LeagueIdAndStartTimeBetween(String leagueId, LocalDateTime start, LocalDateTime end);
 
     @Query("""
-        SELECT m FROM Match m 
+        SELECT m FROM Match m
         WHERE m.startTime >= :start AND m.startTime < :end
         AND m.state NOT IN ('completed', 'unneeded')
+        AND m.hiddenAt IS NULL
     """)
     List<Match> findMatchesStartingBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    /** 정리기용. 판정에 팀·리그가 필요해 함께 로딩한다. */
+    @EntityGraph(attributePaths = {"matchTeams", "matchTeams.team", "league"})
+    @Query("SELECT m FROM Match m WHERE m.startTime IS NOT NULL")
+    List<Match> findAllForReconcile();
 }

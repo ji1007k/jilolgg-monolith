@@ -47,6 +47,9 @@ on:
 
 env:
   RAILWAY_API: https://backboard.railway.com/graphql/v2
+  # 배포가 실제로 반영됐는지 밖에서 확인하는 곳. 워크플로 성공만으로는 부족하다 -
+  # 실제로 "뮤테이션은 성공했는데 운영은 그대로"인 상태를 겪었다.
+  APP_VERSION_URL: https://jilolgg.up.railway.app/api/version
 
 jobs:
   deploy:
@@ -122,12 +125,12 @@ jobs:
           fi
           echo "소스 이미지를 $IMAGE 로 고정했다."
 
-      # serviceInstanceUpdate 만으로 배포가 시작되지 않을 수 있어(스테이징) 명시적으로 부른다.
-      # 이미 새 이미지로 배포가 돌고 있으면 한 번 더 도는 정도이고 결과는 같다.
+      # serviceInstanceUpdate 는 설정만 바꾼다. 새 배포는 따로 만들어야 한다.
       #
-      # 배포 뮤테이션 이름은 자료마다 갈린다(serviceInstanceRedeploy / serviceInstanceDeployV2).
-      # 둘 다 시도해 통하는 쪽을 쓰고 어느 쪽이었는지 로그에 남긴다.
-      # TODO: 한 번 성공한 뒤에는 그쪽 하나로 고정할 것.
+      # 반드시 serviceInstanceDeployV2 여야 한다. serviceInstanceRedeploy 는
+      # "직전 배포를 그대로 다시" 돌리는 것이라, 소스 이미지를 바꿔도 옛 태그가
+      # 다시 뜬다. 그런데 에러는 나지 않아서 성공으로 보인다 - 실제로 이걸로
+      # 롤백이 조용히 무시됐다.
       - name: "[6] 배포 트리거"
         if: ${{ !inputs.dry_run }}
         env:
@@ -135,30 +138,38 @@ jobs:
           SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
           ENV_ID: ${{ secrets.RAILWAY_ENV_ID }}
         run: |
-          try_mutation() {
-            BODY=$(jq -n --arg q "$1" --arg s "$SERVICE_ID" --arg e "$ENV_ID" \
-              '{query:$q, variables:{serviceId:$s, environmentId:$e}}')
-            curl -sS -X POST "$RAILWAY_API" \
-              -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d "$BODY"
-          }
+          MUTATION='mutation($serviceId: String!, $environmentId: String!) { serviceInstanceDeployV2(serviceId: $serviceId, environmentId: $environmentId) }'
+          BODY=$(jq -n --arg q "$MUTATION" --arg s "$SERVICE_ID" --arg e "$ENV_ID" \
+            '{query:$q, variables:{serviceId:$s, environmentId:$e}}')
 
-          REDEPLOY='mutation($serviceId: String!, $environmentId: String!) { serviceInstanceRedeploy(serviceId: $serviceId, environmentId: $environmentId) }'
-          DEPLOY_V2='mutation($serviceId: String!, $environmentId: String!) { serviceInstanceDeployV2(serviceId: $serviceId, environmentId: $environmentId) }'
+          RESP=$(curl -sS -X POST "$RAILWAY_API" \
+            -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d "$BODY")
+          echo "$RESP" | jq .
+          if [ "$(echo "$RESP" | jq -r '.errors // empty')" != "" ]; then
+            echo "::error::serviceInstanceDeployV2 실패. 소스 이미지는 이미 $IMAGE 로 바뀌었으므로 대시보드에서 수동 배포하면 반영된다."
+            exit 1
+          fi
+          echo "배포를 시작했다: $IMAGE"
 
-          for NAME in serviceInstanceRedeploy serviceInstanceDeployV2; do
-            case "$NAME" in
-              serviceInstanceRedeploy) Q="$REDEPLOY" ;;
-              *)                       Q="$DEPLOY_V2" ;;
-            esac
-            echo "--- $NAME 시도 ---"
-            RESP=$(try_mutation "$Q")
-            echo "$RESP" | jq .
-            if [ "$(echo "$RESP" | jq -r '.errors // empty')" = "" ]; then
-              echo "배포를 시작했다: $IMAGE ($NAME)"
-              echo "- 배포 뮤테이션: \`$NAME\`" >> $GITHUB_STEP_SUMMARY
+      # 뮤테이션이 성공해도 운영이 바뀌었다는 보장이 없다. 실제로 "워크플로는
+      # 초록인데 운영은 옛 커밋 그대로"인 상태를 겪었고, 그걸 배포 성공으로
+      # 읽었다. 그래서 배포 여부는 운영이 직접 답하게 한다.
+      - name: "[7] 운영 반영 확인"
+        if: ${{ !inputs.dry_run }}
+        run: |
+          EXPECTED="${{ inputs.image_tag }}"
+          echo "$EXPECTED 가 뜰 때까지 기다린다: $APP_VERSION_URL"
+
+          for i in $(seq 1 40); do
+            ACTUAL=$(curl -sS --max-time 10 "$APP_VERSION_URL" 2>/dev/null | jq -r '.imageTag // empty')
+            if [ "$ACTUAL" = "$EXPECTED" ]; then
+              echo "확인: 운영이 $EXPECTED 로 떠 있다 (${i}회차)"
+              echo "- 운영 반영 확인: \`$EXPECTED\`" >> $GITHUB_STEP_SUMMARY
               exit 0
             fi
+            echo "  ${i}/40  현재=${ACTUAL:-응답없음}"
+            sleep 15
           done
 
-          echo "::error::두 뮤테이션 모두 실패했다. 소스 이미지는 이미 $IMAGE 로 바뀌었으므로, Railway 대시보드에서 수동 배포하면 반영된다."
+          echo "::error::10분 안에 운영이 $EXPECTED 로 바뀌지 않았다. 소스 이미지 설정은 바뀌었을 수 있으니 Railway 대시보드에서 배포 상태를 확인할 것."
           exit 1

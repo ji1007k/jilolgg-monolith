@@ -214,9 +214,7 @@ public class AuthController {
                     // Create new authentication object for makeAccessToken
                     com.test.basic.auth.security.user.CustomUserDetails userDetails = new com.test.basic.auth.security.user.CustomUserDetails(
                             user.getId(), user.getEmail(), user.getPassword(), user.getName(), user.getPasswordVersion(),
-                            java.util.Arrays.stream(user.getAuthority().split(","))
-                                    .map(org.springframework.security.core.authority.SimpleGrantedAuthority::new)
-                                    .collect(java.util.stream.Collectors.toList())
+                            com.test.basic.auth.security.user.CustomUserDetails.parseAuthorities(user.getAuthority())
                     );
                     org.springframework.security.authentication.UsernamePasswordAuthenticationToken authentication = 
                             new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

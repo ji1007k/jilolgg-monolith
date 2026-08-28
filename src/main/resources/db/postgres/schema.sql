@@ -19,6 +19,12 @@ CREATE TABLE IF NOT EXISTS "users" (
 ALTER TABLE "users" ADD COLUMN IF NOT EXISTS password_version integer DEFAULT 1;
 UPDATE "users" SET password_version = 1 WHERE password_version IS NULL;
 
+-- 마이그레이션: 권한 없이 가입된 계정 보정.
+-- createUser가 authority를 채우지 않아 NULL로 저장됐고(컬럼 default는 JPA가 NULL을
+-- 명시해 넣어 적용되지 않는다), 그 계정은 로그인 시 권한 파싱에서 막혀 401이 났다.
+-- 가입은 성공했는데 로그인만 안 되는 상태라 사용자가 원인을 알 수 없다.
+UPDATE "users" SET authority = 'SCOPE_USER' WHERE authority IS NULL OR btrim(authority) = '';
+
 -- 리프레시 토큰. RefreshToken 엔티티가 user에 @OneToOne이라 user_id에 유니크가 걸린다.
 -- 이 제약이 없으면 사용자당 토큰이 여러 개 쌓여 재로그인 시 조회가 어긋난다.
 CREATE TABLE IF NOT EXISTS "refresh_tokens" (

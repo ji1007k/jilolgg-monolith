@@ -183,6 +183,27 @@ CREATE TABLE IF NOT EXISTS "match_alarms"
     match_id  VARCHAR(64) NOT NULL
 );
 
+-- 마이그레이션: refresh_tokens에 남은 옛 네이밍 잔재 컬럼 제거. (이슈 #34)
+-- 반드시 위 CREATE TABLE 이후에 둔다.
+--
+-- 운영 refresh_tokens에는 예전 Hibernate 네이밍 전략이 만든 camelCase 컬럼이
+-- 남아 있었다(expirydate = expiry_date, createddt = created_dt). 그중 expirydate가
+-- NOT NULL이라, expiry_date에만 값을 넣는 지금의 INSERT가 전부 실패했다.
+-- 그 결과 운영에서 아무도 로그인할 수 없었다.
+--
+-- 이 테이블은 CREATE TABLE IF NOT EXISTS라 정의를 고쳐도 기존 DB에는 반영되지
+-- 않는다. 그래서 ALTER로 따로 보정한다.
+--
+-- 남기지 않고 지운다. 코드 어디에서도 참조하지 않는 고아 컬럼이고 값도 각각
+-- expiry_date/created_dt와 중복이다. refresh token은 7일이면 만료되는 재발급
+-- 가능한 데이터라, 최악의 경우라도 사용자가 다시 로그인하면 된다.
+--
+-- PL/pgSQL(DO 블록)로 일반화하지 말 것. spring.sql.init의 스크립트 분리기는
+-- 달러 인용($$)을 몰라 내부 세미콜론에서 문장을 쪼개고,
+-- continue-on-error가 꺼져 있어 그 순간 애플리케이션 기동이 통째로 실패한다.
+ALTER TABLE "refresh_tokens" DROP COLUMN IF EXISTS "expirydate";
+ALTER TABLE "refresh_tokens" DROP COLUMN IF EXISTS "createddt";
+
 -- 마이그레이션: owner_key 도입 이전에 만들어진 데이터베이스 보정.
 -- 반드시 위 CREATE TABLE 이후에 둔다(빈 DB에서 "릴레이션 없음"으로 전체가 실패한다).
 ALTER TABLE "fcm_tokens"  ADD COLUMN IF NOT EXISTS owner_key VARCHAR(80);

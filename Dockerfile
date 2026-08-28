@@ -62,6 +62,16 @@ RUN chmod +x app.jar
 # 사용자 전환
 USER appuser
 
+# 실행 중인 아티팩트를 밖에서 확인하기 위한 빌드 정보 (GET /version).
+# 반드시 파일 끝, JAR 복사 뒤에 둔다. 앞쪽에 두면 커밋마다 값이 바뀌면서
+# 그 아래 레이어 캐시가 전부 깨져 빌드가 느려진다.
+ARG GIT_SHA=unknown
+ARG IMAGE_TAG=unknown
+ARG BUILT_AT=unknown
+ENV APP_GIT_SHA=$GIT_SHA \
+    APP_IMAGE_TAG=$IMAGE_TAG \
+    APP_BUILT_AT=$BUILT_AT
+
 # 컨테이너 실행 시 JAR 파일 실행 (LF 형식 필요)
 ENTRYPOINT exec java \
   -Xms128m \

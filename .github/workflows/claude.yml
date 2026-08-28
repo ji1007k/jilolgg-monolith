@@ -45,5 +45,12 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.BOT_PAT || secrets.GITHUB_TOKEN }}
 
+          # 액션의 기본 도구에는 파일을 수정하는 Edit/Write가 없다.
+          # 이게 빠지면 Claude가 코드를 읽고 코멘트만 남긴 뒤 아무것도 고치지 못한 채
+          # 정상 종료한다. 실행이 success로 뜨고 진행 상황 코멘트까지 달려서 알아채기 어렵다.
+          # (이슈 #45: 9턴만 쓰고 종료, 브랜치 미생성, permission_denials_count=0)
+          # --allowedTools는 기본 도구를 덮어쓰지 않고 더한다.
+          # gradlew/npm은 고친 코드를 커밋 전에 Claude가 직접 검증하도록 함께 연다.
           claude_args: |
             --max-turns 60
+            --allowedTools "Edit,Write,Bash(./gradlew:*),Bash(npm:*)"

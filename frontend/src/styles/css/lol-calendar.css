@@ -157,9 +157,9 @@
 }
 
 .calendar-container .rbc-calendar .date-selectors select:focus {
-    border-color: #ff5722;
+    border-color: var(--focus-ring);
     outline: none;
-    box-shadow: 0 0 0 2px rgba(255, 87, 34, 0.2);
+    box-shadow: 0 0 0 2px var(--focus-ring-soft);
 }
 
 
@@ -204,7 +204,7 @@
     height: 35px;
     border-radius: 50%;
     margin-right: 8px;
-    background-color: #333;
+    background-color: var(--dropdown-dark-bg);
     padding: 3px;
 }
 
@@ -214,8 +214,8 @@
     bottom: 70px;
     width: max-content;
     margin-top: 4px;
-    background-color: #333;
-    border: 1px solid #ccc;
+    background-color: var(--dropdown-dark-bg);
+    border: 1px solid var(--dropdown-dark-outline);
     border-radius: 6px;
     z-index: 1000;
     max-height: 300px;
@@ -223,7 +223,7 @@
 }
 
 .dropdown-menu li {
-    border: 1px solid #333;
+    border: 1px solid var(--dropdown-dark-bg);
     padding: 8px;
     display: flex;
     align-items: center;
@@ -231,11 +231,11 @@
 }
 
 .dropdown-menu li:hover {
-    border: 1px solid #fff;
+    border: 1px solid var(--dropdown-dark-text-hover);
 }
 
 .dropdown-menu li span {
-    color: #fff;
+    color: var(--dropdown-dark-text-hover);
     font-size: 11px;
     white-space: nowrap;
 }
@@ -250,13 +250,13 @@
 .arrow {
     margin-left: auto;
     font-size: 10px;
-    color: #888;
+    color: var(--text-icon-subtle);
 }
 
 /* 즐겨찾기 버튼 그룹 */
 .favorite-teams-section {
     gap: 8px;
-    background-color: #f0f8ff;
+    background-color: var(--bg-favorites);
     padding: 2px;
     border-radius: 8px;
     overflow: auto;
@@ -347,7 +347,7 @@
     transform: translate(-50%, -50%);
     border-radius: 12px;
     background-color: var(--bg-panel-elevated);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 10px 30px var(--shadow-header);
     touch-action: pan-y; /* 세로 스크롤 허용, 가로 스와이프는 JS에서 처리 */
     -webkit-user-select: none; /* 터치 드래그 시 텍스트 선택 방지 */
     user-select: none;
@@ -392,7 +392,7 @@
     padding: 16px;
     margin: 12px 0;
     border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px var(--shadow-soft);
 }
 
 .match-list-popup .status-time-row {
@@ -416,15 +416,15 @@
 }
 
 .match-list-popup .alarm-bell-btn.active {
-    color: #f59e0b;
-    background-color: #fff7ed;
-    border-color: #f59e0b;
+    color: var(--alarm-on-text);
+    background-color: var(--alarm-on-bg);
+    border-color: var(--alarm-on-text);
 }
 
 .match-list-popup .alarm-bell-btn.inactive {
-    color: #9ca3af;
-    background-color: #f3f4f6;
-    border-color: #d1d5db;
+    color: var(--alarm-off-text);
+    background-color: var(--alarm-off-bg);
+    border-color: var(--alarm-off-border);
 }
 
 .match-list-popup .alarm-bell-btn:disabled {
@@ -446,21 +446,21 @@
 }
 
 .match-list-popup .alarm-toast.success {
-    background: #ecfdf5;
-    color: #065f46;
-    border: 1px solid #6ee7b7;
+    background: var(--toast-success-bg);
+    color: var(--toast-success-text);
+    border: 1px solid var(--toast-success-border);
 }
 
 .match-list-popup .alarm-toast.info {
-    background: #eff6ff;
-    color: #1d4ed8;
-    border: 1px solid #93c5fd;
+    background: var(--toast-info-bg);
+    color: var(--toast-info-text);
+    border: 1px solid var(--toast-info-border);
 }
 
 .match-list-popup .alarm-toast.error {
-    background: #fef2f2;
-    color: #b91c1c;
-    border: 1px solid #fca5a5;
+    background: var(--toast-error-bg);
+    color: var(--toast-error-text);
+    border: 1px solid var(--toast-error-border);
 }
 
 .match-list-popup .status-labels {
@@ -479,7 +479,7 @@
 }
 
 .match-list-popup .label.live {
-    background-color: #ef4444;
+    background-color: var(--chip-live-bg);
     color: white;
     font-weight: bold;
     animation: fadeBlink 1.5s ease-in-out infinite;
@@ -490,8 +490,8 @@
 .match-list-popup .label.unstarted,
 .match-list-popup .label.completed,
 .match-list-popup .label.strategy {
-    background-color: #e5e7eb;
-    color: #111827;
+    background-color: var(--chip-neutral-bg);
+    color: var(--chip-neutral-text);
 }
 
 .match-list-popup .vod-btn-wrapper {
@@ -500,7 +500,7 @@
 
 .match-list-popup .vod-btn {
     font-size: 0.875rem;
-    color: #2563eb;
+    color: var(--action-link);
     text-decoration: underline;
     cursor: pointer;
     background: none;
@@ -541,12 +541,12 @@
 }
 
 .match-list-popup .result.win {
-    background-color: #22c55e;
+    background-color: var(--chip-win-bg);
     color: white;
 }
 
 .match-list-popup .result.lose {
-    background-color: #e5e7eb;
+    background-color: var(--chip-neutral-bg);
     color: black;
 }
 
@@ -675,7 +675,7 @@
     transform: translate(-50%, -50%);
     border-radius: 12px;
     background-color: var(--bg-panel-elevated);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 10px 30px var(--shadow-header);
     transition: background-color 0.3s ease;
 }
 
@@ -717,7 +717,7 @@
     padding: 16px;
     margin: 12px 0;
     border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px var(--shadow-soft);
 }
 
 .match-detail-popup .status-time-row {
@@ -743,7 +743,7 @@
 }
 
 .match-detail-popup .label.live {
-    background-color: #ef4444;
+    background-color: var(--chip-live-bg);
     color: white;
     font-weight: bold;
     animation: fadeBlink 1.5s ease-in-out infinite;
@@ -754,8 +754,8 @@
 .match-detail-popup .label.unstarted,
 .match-detail-popup .label.completed,
 .match-detail-popup .label.strategy {
-    background-color: #e5e7eb;
-    color: #111827;
+    background-color: var(--chip-neutral-bg);
+    color: var(--chip-neutral-text);
 }
 
 .match-detail-popup .vod-btn-wrapper {
@@ -764,7 +764,7 @@
 
 .match-detail-popup .vod-btn {
     font-size: 0.875rem;
-    color: #2563eb;
+    color: var(--action-link);
     text-decoration: underline;
     cursor: pointer;
     background: none;
@@ -805,12 +805,12 @@
 }
 
 .match-detail-popup .result.win {
-    background-color: #22c55e;
+    background-color: var(--chip-win-bg);
     color: white;
 }
 
 .match-detail-popup .result.lose {
-    background-color: #e5e7eb;
+    background-color: var(--chip-neutral-bg);
     color: black;
 }
 
@@ -917,7 +917,7 @@
     max-height: 80vh;
     background: var(--bg-panel-elevated);
     border-radius: 8px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 10px 30px var(--shadow-header);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -1005,8 +1005,8 @@
 
 .league-order-item .control-btn:hover:not(:disabled) {
     background-color: var(--bg-nav-active);
-    color: #0070f3;
-    border-color: #0070f3;
+    color: var(--action-primary);
+    border-color: var(--action-primary);
 }
 
 .league-order-item .control-btn:disabled {
@@ -1037,7 +1037,7 @@
 }
 
 .league-order-modal .save-btn {
-    background-color: #0070f3;
+    background-color: var(--action-primary);
     color: white;
     border: none;
     padding: 8px 16px;
@@ -1047,7 +1047,7 @@
 }
 
 .league-order-modal .save-btn:hover {
-    background-color: #0051a2;
+    background-color: var(--action-primary-hover);
 }
 
 .league-order-modal .cancel-btn {
@@ -1089,18 +1089,18 @@
     position: sticky;
     top: 0;
     z-index: 10;
-    background-color: #333;
-    border-bottom: 1px solid #555;
+    background-color: var(--dropdown-dark-bg);
+    border-bottom: 1px solid var(--dropdown-dark-border);
     margin-top: 0 !important;
     padding-top: 8px !important;
     padding-bottom: 8px !important;
     justify-content: center;
-    color: #ccc !important;
+    color: var(--dropdown-dark-outline) !important;
 }
 
 .dropdown-settings-item:hover {
-    background-color: #444;
-    color: #fff !important;
+    background-color: var(--dropdown-dark-bg-hover);
+    color: var(--dropdown-dark-text-hover) !important;
 }
 
 /**
@@ -1175,13 +1175,13 @@
     font-weight: 700;
     padding: 2px 6px;
     border-radius: 9999px;
-    color: #111827;
-    background: #e5e7eb;
+    color: var(--chip-neutral-text);
+    background: var(--chip-neutral-bg);
 }
 
 .schedule-badge.live {
-    color: #fff;
-    background: #ef4444;
+    color: var(--chip-on-solid);
+    background: var(--chip-live-bg);
     animation: fadeBlink 1.5s ease-in-out infinite;
 }
 
@@ -1208,13 +1208,13 @@
 }
 
 .schedule-result.win {
-    color: #fff;
-    background: #16a34a;
+    color: var(--chip-on-solid);
+    background: var(--chip-win-bg-strong);
 }
 
 .schedule-result.lose {
-    color: #111827;
-    background: #e5e7eb;
+    color: var(--chip-neutral-text);
+    background: var(--chip-neutral-bg);
 }
 
 .schedule-empty {
@@ -1238,13 +1238,13 @@
     margin: 0 0 10px;
     font-size: 0.92rem;
     line-height: 1.6;
-    color: #333;
+    color: var(--text-panel-body);
 }
 
 .merge-prefs-modal .modal-body .merge-prefs-note {
     margin-bottom: 0;
     font-size: 0.85rem;
-    color: #777;
+    color: var(--text-panel-faint);
 }
 
 /**
@@ -1272,8 +1272,8 @@
 
 .calendar-container .rbc-calendar .date-selectors input[type="date"]:focus {
     outline: none;
-    border-color: #c8102e;
-    box-shadow: 0 0 0 2px rgba(200, 16, 46, 0.12);
+    border-color: var(--focus-ring);
+    box-shadow: 0 0 0 2px var(--focus-ring-soft);
 }
 
 /* 달력 아이콘을 select의 화살표와 같은 위치/색으로 */
@@ -1322,16 +1322,16 @@
 
 .schedule-list-view .alarm-bell-btn.active,
 .match-detail-popup .alarm-bell-btn.active {
-    color: #f59e0b;
-    background-color: #fff7ed;
-    border-color: #f59e0b;
+    color: var(--alarm-on-text);
+    background-color: var(--alarm-on-bg);
+    border-color: var(--alarm-on-text);
 }
 
 .schedule-list-view .alarm-bell-btn.inactive,
 .match-detail-popup .alarm-bell-btn.inactive {
-    color: #9ca3af;
-    background-color: #f3f4f6;
-    border-color: #d1d5db;
+    color: var(--alarm-off-text);
+    background-color: var(--alarm-off-bg);
+    border-color: var(--alarm-off-border);
 }
 
 .schedule-list-view .alarm-bell-btn:disabled,
@@ -1349,16 +1349,16 @@
     border-radius: 8px;
     font-size: 0.85rem;
     text-align: center;
-    background-color: #eef2ff;
-    color: #3730a3;
+    background-color: var(--toast-plain-bg);
+    color: var(--toast-plain-text);
 }
 
 .schedule-alarm-toast.success {
-    background-color: #ecfdf5;
-    color: #065f46;
+    background-color: var(--toast-success-bg);
+    color: var(--toast-success-text);
 }
 
 .schedule-alarm-toast.error {
-    background-color: #fef2f2;
-    color: #991b1b;
+    background-color: var(--toast-error-bg);
+    color: var(--toast-error-text-strong);
 }

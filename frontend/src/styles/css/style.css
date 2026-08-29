@@ -67,6 +67,54 @@
     --text-panel-muted: #4b5563;
     --text-panel-faint: #6b7280;
     --bg-panel-today: #fef9c3;
+
+    /* --- 상태 배지 (경기 상태, 전략 라벨) --- */
+    --chip-neutral-bg: #e5e7eb;
+    --chip-neutral-text: #111827;
+    --chip-live-bg: #ef4444;
+    --chip-win-bg: #22c55e;
+    --chip-win-bg-strong: #16a34a;
+    --chip-on-solid: #ffffff;
+
+    /* --- 알림 벨 --- */
+    --alarm-on-text: #f59e0b;
+    --alarm-on-bg: #fff7ed;
+    --alarm-off-text: #9ca3af;
+    --alarm-off-bg: #f3f4f6;
+    --alarm-off-border: #d1d5db;
+
+    /* --- 토스트 --- */
+    --toast-plain-bg: #eef2ff;
+    --toast-plain-text: #3730a3;
+    --toast-success-bg: #ecfdf5;
+    --toast-success-text: #065f46;
+    --toast-success-border: #6ee7b7;
+    --toast-info-bg: #eff6ff;
+    --toast-info-text: #1d4ed8;
+    --toast-info-border: #93c5fd;
+    --toast-error-bg: #fef2f2;
+    --toast-error-text: #b91c1c;
+    --toast-error-text-strong: #991b1b;
+    --toast-error-border: #fca5a5;
+
+    /* --- 액션 (링크/기본 버튼) --- */
+    --action-link: #2563eb;
+    --action-primary: #0070f3;
+    --action-primary-hover: #0051a2;
+
+    /* --- 포커스 링 --- */
+    --focus-ring: #c8102e;
+    --focus-ring-soft: rgba(200, 16, 46, 0.12);
+
+    /* --- 즐겨찾기 영역 --- */
+    --bg-favorites: #f0f8ff;
+
+    /* --- 의도적으로 어두운 드롭다운 (테마와 무관하게 고정) --- */
+    --dropdown-dark-bg: #333333;
+    --dropdown-dark-bg-hover: #444444;
+    --dropdown-dark-border: #555555;
+    --dropdown-dark-outline: #cccccc;
+    --dropdown-dark-text-hover: #ffffff;
 }
 
 [data-theme="dark"] {
@@ -95,6 +143,43 @@
     --text-panel-muted: #9ca3af;
     --text-panel-faint: #9ca3af;
     --bg-panel-today: rgba(255, 204, 0, 0.15);
+
+    /* --- 상태 배지 --- */
+    /* 신호색(live/win)은 두 테마에서 의미가 같아 값을 유지한다.
+       중립 배지만 어두운 패널 위에서 보이도록 반전한다. */
+    --chip-neutral-bg: rgba(255, 255, 255, 0.14);
+    --chip-neutral-text: #f3f4f6;
+
+    /* --- 알림 벨 --- */
+    --alarm-on-text: #fbbf24;
+    --alarm-on-bg: rgba(251, 191, 36, 0.15);
+    --alarm-off-text: #9ca3af;
+    --alarm-off-bg: rgba(255, 255, 255, 0.08);
+    --alarm-off-border: rgba(255, 255, 255, 0.16);
+
+    /* --- 토스트 --- */
+    /* 밝은 파스텔 배경은 어두운 패널에서 눈이 부시므로
+       배경은 반투명 틴트로, 글자는 밝은 쪽으로 뒤집는다. */
+    --toast-plain-bg: rgba(99, 102, 241, 0.15);
+    --toast-plain-text: #a5b4fc;
+    --toast-success-bg: rgba(34, 197, 94, 0.15);
+    --toast-success-text: #6ee7b7;
+    --toast-success-border: rgba(110, 231, 183, 0.4);
+    --toast-info-bg: rgba(59, 130, 246, 0.15);
+    --toast-info-text: #93c5fd;
+    --toast-info-border: rgba(147, 197, 253, 0.4);
+    --toast-error-bg: rgba(239, 68, 68, 0.15);
+    --toast-error-text: #fca5a5;
+    --toast-error-text-strong: #fca5a5;
+    --toast-error-border: rgba(252, 165, 165, 0.4);
+
+    /* --- 액션 --- */
+    --action-link: #60a5fa;
+    --action-primary: #3b82f6;
+    --action-primary-hover: #60a5fa;
+
+    /* --- 즐겨찾기 영역 --- */
+    --bg-favorites: rgba(255, 255, 255, 0.06);
 }
 
 /* ================================

@@ -20,6 +20,7 @@ import {
 
 const FAVORITE_TEAMS_KEY = 'jilolgg.favoriteTeamIds';
 const LEAGUE_ORDER_KEY = 'jilolgg.leagueOrder';
+const HIDDEN_LEAGUES_KEY = 'jilolgg.hiddenLeagueIds';
 const DEVICE_ID_KEY = 'jilolgg.deviceId';
 
 /** 서버가 비로그인 구독 주체를 식별하는 헤더 이름. NotificationController와 맞춰야 한다. */
@@ -179,6 +180,22 @@ export function applyLeagueOrder(leagues, order) {
 
     // sort는 제자리 정렬이므로 원본을 건드리지 않도록 복사한다.
     return [...leagues].sort((a, b) => rankOf(a) - rankOf(b));
+}
+
+// ── 숨긴 리그 ────────────────────────────────────────────────
+
+/**
+ * 숨긴 리그 ID 목록.
+ * 서버에는 아직 숨김 필드가 없어(schema 변경 필요, 후속 작업) 로그인 여부와 무관하게
+ * 항상 이 브라우저에만 저장한다. 계정 간 동기화는 되지 않는다.
+ * @returns {string[]} leagueId 배열
+ */
+export function getHiddenLeagueIds() {
+    return readLocalArray(HIDDEN_LEAGUES_KEY);
+}
+
+export function saveHiddenLeagueIds(leagueIds) {
+    writeLocalArray(HIDDEN_LEAGUES_KEY, leagueIds);
 }
 
 // ── 로그인 시 병합 ────────────────────────────────────────────

@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { getMatchesByLeagueIdAndDate } from '@utils/api-lol';
 import {
     getFavoriteTeamIds,
     getLocalLeagueOrder,
     applyLeagueOrder,
+    getHiddenLeagueIds,
 } from '@utils/userPreferences';
 import { useAuth } from '@/context/AuthContext';
 import { useCalendar } from '@/context/CalendarContext.js';
@@ -25,6 +26,7 @@ export const useCalendarLogic = () => {
     const [rawSchedules, setRawSchedules] = useState([]);
     const [refinedSchedules, setRefinedSchedules] = useState([]);
     const [leagues, setLeagues] = useState([]);
+    const [hiddenLeagueIds, setHiddenLeagueIds] = useState([]);
     const [popupOpen, setPopupOpen] = useState(false);
     const [popupMatches, setPopupMatches] = useState([]);
     const [popupDate, setPopupDate] = useState(selectedDate || new Date());
@@ -38,10 +40,15 @@ export const useCalendarLogic = () => {
                 // 로그인 사용자는 서버가 이미 정렬해서 내려준다.
                 // 비로그인 사용자는 이 브라우저에 저장된 순서를 여기서 적용한다.
                 const ordered = applyLeagueOrder(data, getLocalLeagueOrder());
+                // 숨김은 로그인 여부와 무관하게 항상 이 브라우저 기준이다.
+                const hidden = getHiddenLeagueIds();
 
                 setLeagues(ordered);
-                if (!selectedLeague && ordered.length > 0) {
-                    setSelectedLeague(ordered[0]);
+                setHiddenLeagueIds(hidden);
+
+                const visible = ordered.filter((league) => !hidden.includes(league.id));
+                if (!selectedLeague && visible.length > 0) {
+                    setSelectedLeague(visible[0]);
                 }
             } catch (e) {
                 // eslint-disable-next-line no-console
@@ -52,6 +59,27 @@ export const useCalendarLogic = () => {
         fetchLeagues();
         // userId가 바뀌면(로그인/로그아웃) 적용할 순서의 출처가 달라지므로 다시 불러온다.
     }, [userId, setSelectedLeague]);
+
+    const visibleLeagues = useMemo(
+        () => leagues.filter((league) => !hiddenLeagueIds.includes(league.id)),
+        [leagues, hiddenLeagueIds]
+    );
+
+    /**
+     * 리그 순서/숨김 설정 모달 저장 시 호출된다.
+     * 선택 중인 리그가 방금 숨겨졌다면 보이는 리그가 하나도 없는 화면이 되므로
+     * 보이는 리그 중 첫 번째로 대체한다.
+     */
+    const updateLeagueSettings = useCallback((newLeagues, newHiddenLeagueIds) => {
+        setLeagues(newLeagues);
+        setHiddenLeagueIds(newHiddenLeagueIds);
+
+        const isSelectedNowHidden = selectedLeague && newHiddenLeagueIds.includes(selectedLeague.id);
+        if (isSelectedNowHidden) {
+            const nextVisible = newLeagues.find((league) => !newHiddenLeagueIds.includes(league.id));
+            if (nextVisible) setSelectedLeague(nextVisible);
+        }
+    }, [selectedLeague, setSelectedLeague]);
 
     // 즐겨찾기는 리그/날짜와 무관하므로 별도 effect로 둔다.
     // (기존에는 일정 조회 안에 있어서 날짜를 넘길 때마다 같이 다시 불렀다)
@@ -91,7 +119,8 @@ export const useCalendarLogic = () => {
 
     return {
         leagues,
-        setLeagues,
+        visibleLeagues,
+        updateLeagueSettings,
         currentView,
         setCurrentView,
         refinedSchedules,

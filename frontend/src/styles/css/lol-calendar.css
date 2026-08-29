@@ -1015,6 +1015,18 @@
     cursor: not-allowed;
 }
 
+.league-order-item.league-hidden {
+    opacity: 0.45;
+}
+
+.league-order-item .hide-toggle-btn {
+    font-size: 0.9rem;
+}
+
+.league-order-item .hide-toggle-btn.is-hidden {
+    color: var(--text-panel-faint);
+}
+
 .league-order-modal .modal-footer {
     padding: 15px 20px;
     border-top: 1px solid var(--border-panel);

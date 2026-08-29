@@ -75,7 +75,8 @@ function MyCalendar({ events }) {
     const [isLoading, setIsLoading] = useState(true);
     const {
         leagues,
-        setLeagues,
+        visibleLeagues,
+        updateLeagueSettings,
         currentView,
         setCurrentView,
         refinedSchedules,
@@ -204,7 +205,11 @@ function MyCalendar({ events }) {
                 />
             )}
 
-            <LeagueAndTeamSelector leagues={leagues} setLeagues={setLeagues} />
+            <LeagueAndTeamSelector
+                leagues={leagues}
+                visibleLeagues={visibleLeagues}
+                onUpdateLeagueSettings={updateLeagueSettings}
+            />
         </div>
     );
 }

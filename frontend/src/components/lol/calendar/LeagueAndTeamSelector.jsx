@@ -4,7 +4,7 @@ import FavoriteTeamButton from "@components/lol/calendar/FavoriteTeamButton.jsx"
 import LeagueDropdown from "@components/lol/calendar/LeagueDropdown.jsx";
 import LeagueOrderModal from "@components/lol/calendar/LeagueOrderModal.jsx";
 
-const LeagueAndTeamSelector = ({ leagues, setLeagues }) => {
+const LeagueAndTeamSelector = ({ leagues, visibleLeagues, onUpdateLeagueSettings }) => {
     const [rawTeams, setRawTeams] = useState([]); // 👈 fetch 결과만 보관
     const [teams, setTeams] = useState([]);       // 👈 정렬된 최종 데이터
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
@@ -55,9 +55,9 @@ const LeagueAndTeamSelector = ({ leagues, setLeagues }) => {
         team => !favoriteTeamIds.includes(team.teamId)
     );
 
-    const handleLeagueUpdate = (newLeagues) => {
-        if (setLeagues) {
-            setLeagues(newLeagues);
+    const handleLeagueUpdate = (newLeagues, newHiddenLeagueIds) => {
+        if (onUpdateLeagueSettings) {
+            onUpdateLeagueSettings(newLeagues, newHiddenLeagueIds);
         }
     };
 
@@ -65,7 +65,7 @@ const LeagueAndTeamSelector = ({ leagues, setLeagues }) => {
         <div className="team-selector-wrapper">
             <div className="league-selector-container" style={{ display: 'flex', alignItems: 'center' }}>
                 <LeagueDropdown
-                    leagues={leagues}
+                    leagues={visibleLeagues}
                     selectedLeague={selectedLeague}
                     onChange={setSelectedLeague}
                     onOpenSettings={() => setIsOrderModalOpen(true)} // 👈 설정 버튼 핸들러 전달 (로그인 불필요)

@@ -60,21 +60,18 @@ logging:
 
 
 jwt:
+  # 개인키는 저장소에 두지 않는다. 위치만 설정으로 노출하고 내용은 환경에서 주입한다.
+  # 로컬: ./secrets/app.key (gitignore 대상). 생성 방법은 README "JWT 키 준비" 참조.
+  # 운영: 엔트리포인트가 JWT_PRIVATE_KEY_B64를 디코드해 파일로 복원하고
+  #       JWT_PRIVATE_KEY_LOCATION으로 그 경로를 가리킨다.
   private:
-    key: classpath:jwt/app.key
+    key: ${JWT_PRIVATE_KEY_LOCATION:file:./secrets/app.key}
+  # 공개키는 비밀이 아니므로 classpath 유지. 개인키를 재발급하면 이 파일도 함께 갱신해야 한다.
   public:
     key: classpath:jwt/app.pub
 
 uploads:
   path: uploads/
-
-# 대진 확정으로 밀려난 대진표 자리 정리
-#   log   - 대상만 로그로 남기고 데이터를 건드리지 않는다 (기본값)
-#   apply - 실제로 숨김 표시를 남긴다
-# 관찰 기간 동안 log로 두고, 로그에 찍힌 대상이 타당하면 apply로 바꾼다.
-sync:
-  placeholder-cleanup:
-    mode: log
 
 
 # https://developer.riotgames.com/

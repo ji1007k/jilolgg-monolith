@@ -8,15 +8,19 @@
 }
 
 .rbc-month-view {
-    @apply border border-gray-200 rounded-lg overflow-hidden shadow-md;
+    @apply rounded-lg overflow-hidden shadow-md;
+    border: 1px solid var(--border-panel);
 }
 
 .rbc-header {
-    @apply bg-gray-100 text-gray-700 text-center py-2 border-b border-gray-300;
+    @apply text-center py-2;
+    background-color: var(--bg-panel-elevated);
+    color: var(--text-panel-body);
+    border-bottom: 1px solid var(--border-panel);
 }
 
 .rbc-today {
-    @apply bg-yellow-100;
+    background-color: var(--bg-panel-today);
 }
 
 .rbc-event {

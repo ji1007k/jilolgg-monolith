@@ -80,10 +80,10 @@
     width: 100%;
     max-width: fit-content;
     padding: 5px 25px 5px 10px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-neutral);
     border-radius: 4px;
     font-size: 12px;
-    background-color: white;
+    background-color: var(--bg-input-focus);
     cursor: pointer;
     transition: border-color 0.3s ease;
   }

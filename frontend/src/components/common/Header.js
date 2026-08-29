@@ -44,8 +44,8 @@ export default function Header() {
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
-                    if (entry.isIntersecting && activeSection !== entry.target.id) {
-                        setActiveSection(entry.target.id);
+                    if (entry.isIntersecting) {
+                        setActiveSection((prev) => (prev !== entry.target.id ? entry.target.id : prev));
                     }
                 });
             },
@@ -63,9 +63,7 @@ export default function Header() {
     return (
         <header ref={headerRef}>
             <div className="header-container">
-                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
                 <div>
-                    {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
                     <Link href="/" className="main-link">JILoL.gg</Link>
                     {/*<a> 태그는 브라우저의 기본 HTML 동작을 따르기 때문에, Next.js가 제공하는 라우팅 기능 (next/link)을 우회함
                         -> basePath 적용 안됨*/}

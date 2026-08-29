@@ -4,8 +4,11 @@
    브랜드 색상(--brand-*, --danger-*)은 두 테마에서 값이 같아 [data-theme="dark"]에서 재정의하지 않는다.
 =============================== */
 :root {
-    /* 배경 */
-    --bg-page: linear-gradient(135deg, #f5f5f7 0%, #ffd9dc 100%);
+    /* 배경 (모드와 무관하게 고정 — 다크/라이트 전환 시 반전되지 않는다) */
+    --bg-page: linear-gradient(135deg, #f5f5f7 0%, #e4e6eb 100%);
+    /* 헤더 실제 높이(Header.js가 ResizeObserver로 갱신). 초기값은 모바일 2줄 헤더 기준 여유값 */
+    --header-height: 165px;
+
     --bg-header: #ffffff;
     --bg-nav: #f4f4f6;
     --bg-nav-active: rgba(26, 26, 26, 0.06);
@@ -29,8 +32,8 @@
     --text-icon-subtle: #888888;
     --link-color: #007bff;
 
-    /* 테두리 / 그림자 */
-    --border-header: rgba(230, 0, 18, 0.2);
+    /* 테두리 / 그림자 (무채색 — 핑크빛이 도는 브랜드색 저채도 보더 대신 사용) */
+    --border-header: rgba(0, 0, 0, 0.08);
     --border-surface: rgba(0, 0, 0, 0.08);
     --border-neutral: #cccccc;
     --border-input: rgba(102, 126, 234, 0.2);
@@ -67,7 +70,7 @@
 }
 
 [data-theme="dark"] {
-    --bg-page: linear-gradient(135deg, #1a1a1a 0%, #e60012 100%);
+    /* --bg-page는 의도적으로 재정의하지 않는다 — 배경은 테마와 무관하게 고정, 전경 요소만 대비를 바꾼다 */
     --bg-header: #1a1a1a;
     --bg-nav: #1a1a1a;
     --bg-nav-active: rgba(255, 255, 255, 0.1);
@@ -78,7 +81,7 @@
     --text-on-chrome-active: rgba(255, 255, 255, 0.95);
     --text-highlight: #ffcc00;
 
-    --border-header: rgba(230, 0, 18, 0.3);
+    --border-header: rgba(255, 255, 255, 0.16);
     --border-surface: rgba(255, 255, 255, 0.2);
     --border-active: rgba(255, 255, 255, 0.8);
     --shadow-header: rgba(0, 0, 0, 0.3);
@@ -144,11 +147,13 @@ header {
 
 
 @media (max-width: 500px) {
-    .header-container > div {
+    /* 사이트 링크 + API Docs 영역만 두 줄로 쌓는다. .user-info(토글+로그인 버튼)는 flex 정렬을 유지해야
+       토글 버튼이 로그인 버튼과 겹치거나 어긋나지 않는다. */
+    .header-container > div:first-child {
         display: inline-grid;
     }
 
-    .header-container > div .api-docs-link {
+    .header-container > div:first-child .api-docs-link {
         padding-left: 0;
         width: fit-content;
     }
@@ -247,8 +252,12 @@ header {
     transform: translateY(-2px);
 }
 
-.theme-toggle-btn .theme-icon-dark {
+.theme-toggle-btn .theme-icon {
     display: none;
+}
+
+.theme-toggle-btn .theme-icon-light {
+    display: inline-flex;
 }
 
 [data-theme="dark"] .theme-toggle-btn .theme-icon-light {
@@ -256,7 +265,7 @@ header {
 }
 
 [data-theme="dark"] .theme-toggle-btn .theme-icon-dark {
-    display: inline;
+    display: inline-flex;
 }
 
 /* 로그인 버튼 */

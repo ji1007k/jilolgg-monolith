@@ -5,9 +5,9 @@
  */
 .home-container {
     width: 700px;
-    height: calc(100vh - 145px);
+    height: calc(100vh - var(--header-height, 165px));
     margin: auto;
-    margin-top: 145px;
+    margin-top: var(--header-height, 165px);
 }
 
 .home-container > div:not(.chat-container) {
@@ -17,7 +17,6 @@
 @media (max-width: 768px) {
     .home-container {
         width: 95%;
-        margin-top: 130px;
     }
 
 }
@@ -346,11 +345,12 @@
     margin-top: 50px;
     transform: translate(-50%, -50%);
     border-radius: 12px;
-    background-color: #fff;
+    background-color: var(--bg-panel-elevated);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
     touch-action: pan-y; /* 세로 스크롤 허용, 가로 스와이프는 JS에서 처리 */
     -webkit-user-select: none; /* 터치 드래그 시 텍스트 선택 방지 */
     user-select: none;
+    transition: background-color 0.3s ease;
 }
 
 .match-list-popup .popup-header {
@@ -358,10 +358,11 @@
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--border-panel);
     font-size: 1.125rem;
     font-weight: bold;
-    background: #fff;
+    background: var(--bg-panel-elevated);
+    color: var(--text-panel-heading);
     position: sticky;
     top: 0;
     z-index: 10;
@@ -370,7 +371,7 @@
 .match-list-popup .close-btn {
     background: none;
     border: none;
-    color: #888;
+    color: var(--text-panel-faint);
     font-size: 1.25rem;
     cursor: pointer;
 }
@@ -379,13 +380,14 @@
     overflow-y: auto;
     flex: 1;
     padding: 8px 16px;
-    background: #f9fafb;
+    background: var(--bg-panel);
+    color: var(--text-panel-body);
 }
 
 .match-list-popup .match-card {
     position: relative;
-    border: 2px solid #ccc;
-    background: #fff;
+    border: 2px solid var(--border-panel);
+    background: var(--bg-panel-elevated);
     padding: 16px;
     margin: 12px 0;
     border-radius: 8px;
@@ -465,7 +467,7 @@
     align-items: center;
     gap: 6px;
     font-size: 0.75rem;
-    color: #4b5563;
+    color: var(--text-panel-muted);
 }
 
 .match-list-popup .label {
@@ -510,7 +512,7 @@
     align-items: center;
     font-size: 0.875rem;
     font-weight: 500;
-    color: #1f2937;
+    color: var(--text-panel-heading);
 }
 
 .match-list-popup .team {
@@ -555,14 +557,15 @@
 .match-list-popup .popup-footer {
     position: sticky;
     bottom: 0;
-    background: white;
+    background: var(--bg-panel-elevated);
     padding: 12px 16px;
-    border-top: 1px solid #ddd;
+    border-top: 1px solid var(--border-panel);
 }
 
 .match-list-popup .footer-btn {
     width: 100%;
-    background: #e5e7eb;
+    background: var(--bg-nav-active);
+    color: var(--text-panel-body);
     padding: 8px 12px;
     border-radius: 6px;
     font-weight: 500;
@@ -572,7 +575,7 @@
 }
 
 .match-list-popup .footer-btn:hover {
-    background: #d1d5db;
+    background: var(--border-panel);
 }
 
 /* 500px 미만 반응형 대응 */
@@ -670,8 +673,9 @@
     margin-top: 50px;
     transform: translate(-50%, -50%);
     border-radius: 12px;
-    background-color: #fff;
+    background-color: var(--bg-panel-elevated);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    transition: background-color 0.3s ease;
 }
 
 .match-detail-popup .popup-header {
@@ -679,10 +683,11 @@
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--border-panel);
     font-size: 1.125rem;
     font-weight: bold;
-    background: #fff;
+    background: var(--bg-panel-elevated);
+    color: var(--text-panel-heading);
     position: sticky;
     top: 0;
     z-index: 10;
@@ -691,7 +696,7 @@
 .match-detail-popup .close-btn {
     background: none;
     border: none;
-    color: #888;
+    color: var(--text-panel-faint);
     font-size: 1.25rem;
     cursor: pointer;
 }
@@ -700,13 +705,14 @@
     overflow-y: auto;
     flex: 1;
     padding: 8px 16px;
-    background: #f9fafb;
+    background: var(--bg-panel);
+    color: var(--text-panel-body);
 }
 
 .match-detail-popup .match-card {
     position: relative;
-    border: 2px solid #ccc;
-    background: #fff;
+    border: 2px solid var(--border-panel);
+    background: var(--bg-panel-elevated);
     padding: 16px;
     margin: 12px 0;
     border-radius: 8px;
@@ -725,7 +731,7 @@
     align-items: center;
     gap: 6px;
     font-size: 0.75rem;
-    color: #4b5563;
+    color: var(--text-panel-muted);
 }
 
 .match-detail-popup .label {
@@ -770,7 +776,7 @@
     align-items: center;
     font-size: 0.875rem;
     font-weight: 500;
-    color: #1f2937;
+    color: var(--text-panel-heading);
 }
 
 .match-detail-popup .team {
@@ -815,14 +821,15 @@
 .match-detail-popup .popup-footer {
     position: sticky;
     bottom: 0;
-    background: white;
+    background: var(--bg-panel-elevated);
     padding: 12px 16px;
-    border-top: 1px solid #ddd;
+    border-top: 1px solid var(--border-panel);
 }
 
 .match-detail-popup .footer-btn {
     width: 100%;
-    background: #e5e7eb;
+    background: var(--bg-nav-active);
+    color: var(--text-panel-body);
     padding: 8px 12px;
     border-radius: 6px;
     font-weight: 500;
@@ -832,7 +839,7 @@
 }
 
 .match-detail-popup .footer-btn:hover {
-    background: #d1d5db;
+    background: var(--border-panel);
 }
 
 /* 500px 미만 반응형 대응 */
@@ -907,7 +914,7 @@
 .league-order-modal {
     width: 400px;
     max-height: 80vh;
-    background: white;
+    background: var(--bg-panel-elevated);
     border-radius: 8px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
     display: flex;
@@ -918,11 +925,12 @@
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 1001;
+    transition: background-color 0.3s ease;
 }
 
 .league-order-modal .modal-header {
     padding: 15px 20px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border-panel);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -931,7 +939,7 @@
 .league-order-modal .modal-header h3 {
     margin: 0;
     font-size: 1.1rem;
-    color: #333;
+    color: var(--text-panel-heading);
 }
 
 .league-order-modal .close-btn {
@@ -939,7 +947,7 @@
     border: none;
     font-size: 1.5rem;
     cursor: pointer;
-    color: #888;
+    color: var(--text-panel-faint);
 }
 
 .league-order-modal .modal-body {
@@ -958,12 +966,12 @@
     display: flex;
     align-items: center;
     padding: 10px;
-    border-bottom: 1px solid #f5f5f5;
+    border-bottom: 1px solid var(--border-panel);
     transition: background-color 0.2s;
 }
 
 .league-order-item:hover {
-    background-color: #f9f9f9;
+    background-color: var(--bg-nav-active);
 }
 
 .league-order-item .league-icon {
@@ -976,7 +984,7 @@
 .league-order-item .league-name {
     flex-grow: 1;
     font-size: 0.95rem;
-    color: #333;
+    color: var(--text-panel-heading);
 }
 
 .league-order-item .order-controls {
@@ -986,33 +994,33 @@
 
 .league-order-item .control-btn {
     background: none;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-panel);
     border-radius: 4px;
     padding: 2px 6px;
     cursor: pointer;
-    color: #666;
+    color: var(--text-panel-muted);
     transition: all 0.2s;
 }
 
 .league-order-item .control-btn:hover:not(:disabled) {
-    background-color: #f0f0f0;
+    background-color: var(--bg-nav-active);
     color: #0070f3;
     border-color: #0070f3;
 }
 
 .league-order-item .control-btn:disabled {
-    color: #ccc;
-    border-color: #eee;
+    color: var(--text-panel-faint);
+    border-color: var(--border-panel);
     cursor: not-allowed;
 }
 
 .league-order-modal .modal-footer {
     padding: 15px 20px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--border-panel);
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-    background-color: #f9f9f9;
+    background-color: var(--bg-panel);
 }
 
 .league-order-modal .save-btn {
@@ -1030,16 +1038,16 @@
 }
 
 .league-order-modal .cancel-btn {
-    background-color: white;
-    color: #666;
-    border: 1px solid #ddd;
+    background-color: var(--bg-panel-elevated);
+    color: var(--text-panel-muted);
+    border: 1px solid var(--border-panel);
     padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
 }
 
 .league-order-modal .cancel-btn:hover {
-    background-color: #f5f5f5;
+    background-color: var(--bg-nav-active);
 }
 
 .modal-overlay {

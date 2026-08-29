@@ -154,7 +154,7 @@ export const AuthProvider = ({ children }) => {
         // 개발용 이스터에그
         const handler = (e) => {
             if (e.ctrlKey && e.altKey && e.code === 'KeyA') {
-                devLogin();
+                devLoginRef.current();
             }
         };
         
@@ -183,6 +183,10 @@ export const AuthProvider = ({ children }) => {
             devLoginInFlight.current = false;
         }
     };
+
+    // 마운트 시 한 번만 등록하는 keydown 리스너가 최신 devLogin을 참조하도록 ref로 들고 있는다.
+    const devLoginRef = useRef(devLogin);
+    devLoginRef.current = devLogin;
 
     return (
         <AuthContext.Provider value={{

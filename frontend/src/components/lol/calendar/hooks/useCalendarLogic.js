@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { getMatchesByLeagueIdAndDate } from '@utils/api-lol';
 import {
     getFavoriteTeamIds,
@@ -31,6 +31,11 @@ export const useCalendarLogic = () => {
     const [popupMatches, setPopupMatches] = useState([]);
     const [popupDate, setPopupDate] = useState(selectedDate || new Date());
 
+    // 리그 목록을 불러올 때 "선택된 리그가 없으면 첫 리그로 채운다"는 판단에만 최신 값이 필요하고,
+    // selectedLeague 변경 자체로 목록을 다시 불러오고 싶지는 않아 ref로 최신 값만 참조한다.
+    const selectedLeagueRef = useRef(selectedLeague);
+    selectedLeagueRef.current = selectedLeague;
+
     useEffect(() => {
         const fetchLeagues = async () => {
             try {
@@ -47,11 +52,10 @@ export const useCalendarLogic = () => {
                 setHiddenLeagueIds(hidden);
 
                 const visible = ordered.filter((league) => !hidden.includes(league.id));
-                if (!selectedLeague && visible.length > 0) {
+                if (!selectedLeagueRef.current && visible.length > 0) {
                     setSelectedLeague(visible[0]);
                 }
             } catch (e) {
-                // eslint-disable-next-line no-console
                 console.error('리그 로딩 실패', e);
             }
         };
@@ -88,7 +92,6 @@ export const useCalendarLogic = () => {
             try {
                 setFavoriteTeamIds(await getFavoriteTeamIds());
             } catch (e) {
-                // eslint-disable-next-line no-console
                 console.error('즐겨찾기 로딩 실패', e);
             }
         };

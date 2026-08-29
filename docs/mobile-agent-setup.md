@@ -10,7 +10,7 @@
                               │
                               └─> build.yml (테스트/빌드 검증)
                                         │
-                            사람이 develop -> main 머지
+                              사람이 main 에 머지
                                         │
                               release-main.yml ── 이미지 빌드 -> 배포
 ```
@@ -96,9 +96,13 @@ Claude는 저장소 루트의 `CLAUDE.md`를 읽고 프로젝트 규칙(빌드 �
 Claude는 **PR을 열 뿐 머지하지 않는다.** 머지는 사람이 한다.
 
 1. Claude가 연 PR에서 `build.yml` 검증 통과 확인
-2. `develop`에 머지
-3. `develop -> main` PR을 열고 머지
-4. `release-main.yml`이 이미지를 굽고 같은 실행의 `deploy` 잡이 Railway에 배포
+2. `main`에 머지
+3. `release-main.yml`이 이미지를 굽고 같은 실행의 `deploy` 잡이 Railway에 배포
+
+브랜치 전략은 **트렁크 기반**이다. `main` 하나에 짧게 사는 기능 브랜치를 붙였다 뗀다.
+`develop`은 2026-08-29에 폐기했다 — 통과 의례 역할만 했고, Claude가 만드는 브랜치는
+기본 브랜치(`main`)에서 잘리므로 자동화가 이미 건너뛰고 있었다.
+릴리스를 끊어 표시할 필요가 있으면 `v*` 태그를 쓴다(`release-tag.yml`).
 
 자동 머지는 켜지 않았다. CI가 테스트를 돌리게 됐지만, 검토 없이 운영에 나가는 것은
 별개의 결정이다.

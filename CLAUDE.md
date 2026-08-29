@@ -209,6 +209,8 @@ cd frontend && npm run build
 
 커밋 메시지 라벨(`docs/commit-convention.md`): `feat`, `fix`, `refactor`, `chore`, `test`, `docs`.
 
+**브랜치는 트렁크 기반이다.** `main` 하나에 짧게 사는 기능 브랜치를 붙였다 뗀다. PR은 항상 `main`을 향한다. 릴리스를 끊어 표시할 필요가 있으면 `v*` 태그를 쓴다(`release-tag.yml`). `develop`은 2026-08-29에 폐기했다 — 통과 의례 역할만 하면서 같은 기능이 두 브랜치에 각각 들어가 충돌하는 사고를 냈다.
+
 문서는 `docs/` 루트에 현행 문서만 두고 과거 기록은 `docs/archive/`로 옮긴다. `docs/README.md`가 색인이다. `docs/architecture.md`는 **레거시**(AWS EC2 + Nginx + WebSocket) 기록이므로 현재 구조는 루트 `README.md`를 기준으로 볼 것 — WebSocket/채팅 기능은 제거되었고 FCM 푸시로 대체되었다.
 
 주석과 로그 메시지는 한국어로 작성되어 있다.

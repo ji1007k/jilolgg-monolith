@@ -1,7 +1,7 @@
 name: "[BOT] Claude 코드 작업"
 
 # 모바일에서 이슈나 PR에 "@claude ..." 라고 코멘트하면 Claude가 코드를 고쳐 PR을 연다.
-# 배포는 그 PR을 develop -> main 으로 머지하면 release-main.yml이 이어받는다.
+# 배포는 그 PR을 main 에 머지하면 release-main.yml이 이어받는다.
 #
 # 멘션 감지는 액션이 알아서 한다(기본 트리거 문구 @claude). 별도 if 조건을 걸지 않는다.
 # 프로젝트 규칙은 저장소 루트의 CLAUDE.md를 그대로 따른다.

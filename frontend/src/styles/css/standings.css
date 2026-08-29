@@ -20,13 +20,8 @@
     grid-auto-flow: column;
 }
 
-@media (min-width: 700px) {
-    .ranking-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 700px) {
+/* 앱 전역 공용 브레이크포인트(768px)와 통일 */
+@media (max-width: 768px) {
     .ranking-grid {
         grid-template-columns: 1fr !important;
     }

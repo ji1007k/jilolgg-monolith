@@ -1,7 +1,7 @@
 /* responsive.css */
 
-/* Mobile Breakpoint (up to 800px) */
-@media (max-width: 800px) {
+/* Mobile Breakpoint (up to 768px, 앱 전역 공용 브레이크포인트와 통일) */
+@media (max-width: 768px) {
   .calendar-container {
     padding: 10px;
   }

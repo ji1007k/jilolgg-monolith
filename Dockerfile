@@ -50,14 +50,18 @@ RUN adduser \
   --no-create-home \
   --uid "${UID}" \
   appuser \
-  && mkdir -p /app/logs \
-  && chown -R ${UID}:${UID} /app/logs
+  && mkdir -p /app/logs /app/secrets \
+  && chown -R ${UID}:${UID} /app/logs /app/secrets \
+  && chmod 700 /app/secrets
 
 # JAR 파일을 복사
 COPY --from=build --chown=appuser:appuser /app/build/libs/*.jar app.jar
 
+# 엔트리포인트 스크립트 복사 (JWT 개인키를 환경변수에서 복원한다)
+COPY --chown=appuser:appuser docker-entrypoint.sh /app/docker-entrypoint.sh
+
 # 파일에 실행 권한 추가 (보너스)
-RUN chmod +x app.jar
+RUN chmod +x app.jar /app/docker-entrypoint.sh
 
 # 사용자 전환
 USER appuser
@@ -72,14 +76,10 @@ ENV APP_GIT_SHA=$GIT_SHA \
     APP_IMAGE_TAG=$IMAGE_TAG \
     APP_BUILT_AT=$BUILT_AT
 
-# 컨테이너 실행 시 JAR 파일 실행 (LF 형식 필요)
-ENTRYPOINT exec java \
-  -Xms128m \
-  -Xmx256m \
-  -XX:MaxMetaspaceSize=512m \
-  -Dfile.encoding=UTF-8 \
-  -Duser.timezone=Asia/Seoul \
-  -jar app.jar
+# 엔트리포인트가 JWT_PRIVATE_KEY_B64를 디코드해 /app/secrets/app.key 로 복원한 뒤 앱을 띄운다.
+# 키가 없으면 스크립트가 exit 1 로 죽는다 — 조용히 뜬 채 인증만 깨지는 것보다 낫다.
+# (LF 형식 필요. .gitattributes 의 *.sh text eol=lf 가 보장한다)
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 
 
 EXPOSE 8080

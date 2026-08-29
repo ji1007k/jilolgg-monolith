@@ -1,11 +1,107 @@
 /* ================================
+   다크모드 CSS 변수
+   :root = 라이트 팔레트, [data-theme="dark"] = 다크 팔레트.
+   브랜드 색상(--brand-*, --danger-*)은 두 테마에서 값이 같아 [data-theme="dark"]에서 재정의하지 않는다.
+=============================== */
+:root {
+    /* 배경 */
+    --bg-page: linear-gradient(135deg, #f5f5f7 0%, #ffd9dc 100%);
+    --bg-header: #ffffff;
+    --bg-nav: #f4f4f6;
+    --bg-nav-active: rgba(26, 26, 26, 0.06);
+    --bg-surface: rgba(255, 255, 255, 0.95);
+    --bg-surface-alt: #f0f0f0;
+    --bg-surface-alt-2: #f9f9f9;
+    --bg-dropdown: #ffffff;
+    --bg-dropdown-hover: #f1f1f1;
+    --bg-input: rgba(255, 255, 255, 0.9);
+    --bg-input-focus: #ffffff;
+    --bg-overlay: rgba(0, 0, 0, 0.4);
+
+    /* 텍스트 */
+    --text-on-chrome: #1a1a1a;
+    --text-on-chrome-hover: rgba(26, 26, 26, 0.7);
+    --text-on-chrome-active: rgba(26, 26, 26, 0.9);
+    --text-label: #333333;
+    --text-muted: #666666;
+    --text-highlight: #cc8f00;
+    --text-icon-muted: #cccccc;
+    --text-icon-subtle: #888888;
+    --link-color: #007bff;
+
+    /* 테두리 / 그림자 */
+    --border-header: rgba(230, 0, 18, 0.2);
+    --border-surface: rgba(0, 0, 0, 0.08);
+    --border-neutral: #cccccc;
+    --border-input: rgba(102, 126, 234, 0.2);
+    --border-active: rgba(26, 26, 26, 0.6);
+    --shadow-header: rgba(0, 0, 0, 0.15);
+    --shadow-soft: rgba(0, 0, 0, 0.1);
+    --glow-chrome: rgba(26, 26, 26, 0.15);
+
+    /* 브랜드 (테마 공통) */
+    --brand: #e60012;
+    --brand-gradient: linear-gradient(135deg, #1a1a1a 0%, #e60012 100%);
+    --brand-gradient-hover: linear-gradient(135deg, #e60012 0%, #1a1a1a 100%);
+    --brand-border: rgba(230, 0, 18, 0.5);
+    --shadow-brand: rgba(230, 0, 18, 0.4);
+    --shadow-brand-hover: rgba(230, 0, 18, 0.5);
+    --shadow-brand-hover-strong: rgba(230, 0, 18, 0.6);
+    --shadow-brand-soft: rgba(230, 0, 18, 0.1);
+
+    /* 위험(탈퇴 등, 테마 공통) */
+    --danger-gradient: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+    --danger-gradient-hover: linear-gradient(135deg, #ee5a5a 0%, #ff6b6b 100%);
+    --shadow-danger: rgba(255, 107, 107, 0.4);
+    --shadow-danger-hover: rgba(255, 107, 107, 0.5);
+
+    /* 메인 화면 패널(달력 등) — 폼/모달 카드와 달리 테마에 따라 배경이 전환된다 */
+    --bg-panel: #f9f9f9;
+    --bg-panel-elevated: #ffffff;
+    --border-panel: #e5e7eb;
+    --text-panel-heading: #111827;
+    --text-panel-body: #374151;
+    --text-panel-muted: #4b5563;
+    --text-panel-faint: #6b7280;
+    --bg-panel-today: #fef9c3;
+}
+
+[data-theme="dark"] {
+    --bg-page: linear-gradient(135deg, #1a1a1a 0%, #e60012 100%);
+    --bg-header: #1a1a1a;
+    --bg-nav: #1a1a1a;
+    --bg-nav-active: rgba(255, 255, 255, 0.1);
+    --bg-overlay: rgba(0, 0, 0, 0.6);
+
+    --text-on-chrome: #ffffff;
+    --text-on-chrome-hover: rgba(255, 255, 255, 0.8);
+    --text-on-chrome-active: rgba(255, 255, 255, 0.95);
+    --text-highlight: #ffcc00;
+
+    --border-header: rgba(230, 0, 18, 0.3);
+    --border-surface: rgba(255, 255, 255, 0.2);
+    --border-active: rgba(255, 255, 255, 0.8);
+    --shadow-header: rgba(0, 0, 0, 0.3);
+    --glow-chrome: rgba(255, 255, 255, 0.5);
+
+    --bg-panel: #202020;
+    --bg-panel-elevated: #2a2a2a;
+    --border-panel: rgba(255, 255, 255, 0.12);
+    --text-panel-heading: #f3f4f6;
+    --text-panel-body: #d1d5db;
+    --text-panel-muted: #9ca3af;
+    --text-panel-faint: #9ca3af;
+    --bg-panel-today: rgba(255, 204, 0, 0.15);
+}
+
+/* ================================
    공통 스타일
 =============================== */
 
 /* 전체 페이지 스타일 */
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-    background: linear-gradient(135deg, #1a1a1a 0%, #e60012 100%);
+    background: var(--bg-page);
     background-attachment: fixed;
     margin: 0;
     padding: 0;
@@ -15,6 +111,7 @@ body {
     justify-content: center;
     align-items: center;
     flex-direction: column;
+    transition: background 0.3s ease;
 }
 
 /* ================================
@@ -30,18 +127,19 @@ header {
 
 .header-container {
     box-sizing: border-box;
-    background: #1a1a1a;
-    color: white;
+    background: var(--bg-header);
+    color: var(--text-on-chrome);
     padding: 15px 25px;
     width: 100%;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 32px var(--shadow-header);
     backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(230, 0, 18, 0.3);
+    border-bottom: 1px solid var(--border-header);
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin: 0 auto;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 
@@ -58,7 +156,7 @@ header {
 
 /* Main Link 스타일 */
 .header-container .main-link {
-    color: white;
+    color: var(--text-on-chrome);
     text-decoration: none;
     font-size: 30px;
     font-weight: 600;
@@ -68,22 +166,22 @@ header {
 
 /* Main Link Hover 효과 */
 .header-container .main-link:hover {
-    color: rgba(255, 255, 255, 0.8);
-    text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    color: var(--text-on-chrome-hover);
+    text-shadow: 0 0 20px var(--glow-chrome);
     transform: translateY(-2px);
     transition: all 0.3s ease;
 }
 
 .header-container .api-docs-link {
-    color: white;
+    color: var(--text-on-chrome);
     text-decoration: none;
     padding-left: 20px;
     transition: color 0.3s ease;
 }
 
 .header-container .api-docs-link:hover {
-    color: rgba(255, 255, 255, 0.8);
-    text-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+    color: var(--text-on-chrome-hover);
+    text-shadow: 0 0 15px var(--glow-chrome);
     transform: translateY(-2px);
     transition: all 0.3s ease;
 }
@@ -126,6 +224,41 @@ header {
     gap: 10px; /* 요소들 사이의 간격을 10px로 설정 */
 }
 
+/* 다크모드 토글 버튼 */
+.theme-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid var(--border-header);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-on-chrome);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.theme-toggle-btn:hover {
+    background-color: var(--bg-nav-active);
+    transform: translateY(-2px);
+}
+
+.theme-toggle-btn .theme-icon-dark {
+    display: none;
+}
+
+[data-theme="dark"] .theme-toggle-btn .theme-icon-light {
+    display: none;
+}
+
+[data-theme="dark"] .theme-toggle-btn .theme-icon-dark {
+    display: inline;
+}
+
 /* 로그인 버튼 */
 .user-info .login-btn {
     width: 100%;
@@ -140,17 +273,17 @@ header {
 }
 
 .user-info .login-btn {
-    background: linear-gradient(135deg, #1a1a1a 0%, #e60012 100%);
-    border: 1px solid rgba(230, 0, 18, 0.5);
+    background: var(--brand-gradient);
+    border: 1px solid var(--brand-border);
     color: #fff;
-    box-shadow: 0 4px 15px rgba(230, 0, 18, 0.4);
+    box-shadow: 0 4px 15px var(--shadow-brand);
     transition: all 0.3s ease;
 }
 
 .user-info .login-btn:hover {
-    background: linear-gradient(135deg, #e60012 0%, #1a1a1a 100%);
+    background: var(--brand-gradient-hover);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(230, 0, 18, 0.6);
+    box-shadow: 0 6px 20px var(--shadow-brand-hover-strong);
 }
 
 #username-area {
@@ -168,8 +301,8 @@ header {
 
 .username-clickable:hover {
     cursor: pointer;
-    color: rgba(255, 255, 255, 0.9);
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    color: var(--text-on-chrome-hover);
+    text-shadow: 0 0 10px var(--glow-chrome);
     font-weight: 500;
 }
 
@@ -180,7 +313,7 @@ header {
 }
 
 .refresh-token-btn {
-    background: linear-gradient(135deg, #1a1a1a 0%, #e60012 100%);
+    background: var(--brand-gradient);
     color: white;
     padding: 6px 12px;
     font-size: 14px;
@@ -188,30 +321,30 @@ header {
     border-radius: 5px;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(230, 0, 18, 0.4);
+    box-shadow: 0 4px 15px var(--shadow-brand);
 }
 
 .refresh-token-btn:hover {
-    background: linear-gradient(135deg, #e60012 0%, #1a1a1a 100%);
+    background: var(--brand-gradient-hover);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(230, 0, 18, 0.6);
+    box-shadow: 0 6px 20px var(--shadow-brand-hover-strong);
 }
 
 /* 드롭다운 메뉴 스타일 */
 #dropdown {
     position: absolute;
-    background-color: #fff;
+    background-color: var(--bg-dropdown);
     min-width: 160px;
     z-index: 1;
     border-radius: 5px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px var(--shadow-soft);
     top: 60px; /* 사용자 이름 바로 아래에 나타나도록 */
 }
 
 /* 드롭다운 메뉴 항목 스타일 */
 #dropdown a {
     cursor: pointer;
-    color: #333;
+    color: var(--text-label);
     padding: 12px 18px;
     text-decoration: none;
     display: block;
@@ -223,7 +356,7 @@ header {
 /* 드롭다운 메뉴 Hover 효과 */
 #dropdown a:hover {
     cursor: pointer;
-    background-color: #f1f1f1;
+    background-color: var(--bg-dropdown-hover);
 }
 
 /* 드롭다운 메뉴 보이기 */
@@ -236,11 +369,11 @@ header {
    로그인 페이지 전용 스타일
 =============================== */
 .login-container {
-    background: rgba(255, 255, 255, 0.95);
+    background: var(--bg-surface);
     backdrop-filter: blur(20px);
     padding: 40px;
     border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 60px var(--shadow-header);
     width: 100%;
     max-width: 380px;
     text-align: center;
@@ -248,13 +381,13 @@ header {
     margin: auto;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
     box-sizing: border-box;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--border-surface);
 }
 
 .login-container h2 {
     font-size: 28px;
     font-weight: 700;
-    background: linear-gradient(135deg, #1a1a1a 0%, #e60012 100%);
+    background: var(--brand-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -269,7 +402,7 @@ header {
 
 .login-form-group label {
     font-size: 16px;
-    color: #333;
+    color: var(--text-label);
     font-weight: 500;
 }
 
@@ -277,10 +410,10 @@ header {
     width: 100%;
     padding: 14px 16px;
     margin-top: 8px;
-    border: 2px solid rgba(102, 126, 234, 0.2);
+    border: 2px solid var(--border-input);
     border-radius: 12px;
     font-size: 16px;
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--bg-input);
     transition: all 0.3s ease;
     box-sizing: border-box;
     backdrop-filter: blur(10px);
@@ -288,9 +421,9 @@ header {
 
 .login-container input:focus {
     outline: none;
-    border-color: #e60012;
-    box-shadow: 0 0 0 4px rgba(230, 0, 18, 0.1);
-    background: rgba(255, 255, 255, 1);
+    border-color: var(--brand);
+    box-shadow: 0 0 0 4px var(--shadow-brand-soft);
+    background: var(--bg-input-focus);
 }
 
 /* 로그인 버튼 */
@@ -308,27 +441,27 @@ header {
 }
 
 .login-container .login-btn {
-    background: linear-gradient(135deg, #1a1a1a 0%, #e60012 100%);
+    background: var(--brand-gradient);
     color: white;
-    box-shadow: 0 8px 20px rgba(230, 0, 18, 0.4);
+    box-shadow: 0 8px 20px var(--shadow-brand);
 }
 
 .login-container .login-btn:hover {
-    background: linear-gradient(135deg, #e60012 0%, #1a1a1a 100%);
+    background: var(--brand-gradient-hover);
     transform: translateY(-2px);
-    box-shadow: 0 12px 28px rgba(230, 0, 18, 0.5);
+    box-shadow: 0 12px 28px var(--shadow-brand-hover);
 }
 
 /* 회원가입 링크 스타일 */
 .login-container .register-link {
-    color: #007bff;
+    color: var(--link-color);
     font-size: 14px;
     text-decoration: none;
     transition: color 0.3s ease;
 }
 
 .login-container .register-link:hover {
-    color: #e60012;
+    color: var(--brand);
     text-decoration: underline;
 }
 
@@ -337,7 +470,7 @@ header {
 =============================== */
 .token-expiration-time-area {
     font-size: 14px;
-    color: #666;
+    color: var(--text-muted);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -348,7 +481,7 @@ header {
 .token-expiration-time {
     font-weight: bold;
     margin-left: 8px;
-    color: #ffcc00; /* 노란색으로 강조 */
+    color: var(--text-highlight); /* 강조 색상 */
 }
 
 /* ================================
@@ -406,18 +539,18 @@ header {
    마이페이지 전용 스타일
 =============================== */
 .mypage-container {
-    background: rgba(255, 255, 255, 0.95);
+    background: var(--bg-surface);
     backdrop-filter: blur(20px);
     padding: 40px;
     border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 60px var(--shadow-header);
     width: 100%;
     max-width: 400px;
     text-align: center;
     margin: 100px auto;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
     box-sizing: border-box;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--border-surface);
 }
 
 /* ================================
@@ -442,7 +575,7 @@ header {
     left: 50%;
     transform: translate(-50%, -50%);
     font-size: 50px;
-    color: #ccc; /* 기본 아이콘 색상 */
+    color: var(--text-icon-muted); /* 기본 아이콘 색상 */
     pointer-events: none; /* 클릭 이벤트가 아이콘에 걸리지 않도록 */
 }
 
@@ -452,7 +585,7 @@ header {
     height: 100px; /* 원하는 크기 설정 */
     border-radius: 50%;
     overflow: hidden;
-    background-color: #f0f0f0; /* 기본 배경색 */
+    background-color: var(--bg-surface-alt); /* 기본 배경색 */
     position: relative;
     cursor: pointer; /* 마우스 커서 스타일 */
 }
@@ -466,7 +599,7 @@ header {
 
 .mypage-form-group label {
     font-size: 16px;
-    color: #333;
+    color: var(--text-label);
     font-weight: 500;
 }
 
@@ -475,10 +608,10 @@ header {
     width: 100%;
     padding: 14px 16px;
     margin-top: 8px;
-    border: 2px solid rgba(102, 126, 234, 0.2);
+    border: 2px solid var(--border-input);
     border-radius: 12px;
     font-size: 16px;
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--bg-input);
     transition: all 0.3s ease;
     box-sizing: border-box;
     backdrop-filter: blur(10px);
@@ -487,9 +620,9 @@ header {
 .mypage-container input:focus,
 .mypage-container select:focus {
     outline: none;
-    border-color: #e60012;
-    box-shadow: 0 0 0 4px rgba(230, 0, 18, 0.1);
-    background: rgba(255, 255, 255, 1);
+    border-color: var(--brand);
+    box-shadow: 0 0 0 4px var(--shadow-brand-soft);
+    background: var(--bg-input-focus);
 }
 
 /* 저장 버튼 */
@@ -502,16 +635,16 @@ header {
     font-size: 18px;
     cursor: pointer;
     transition: all 0.3s ease;
-    background: linear-gradient(135deg, #1a1a1a 0%, #e60012 100%);
+    background: var(--brand-gradient);
     color: white;
     font-weight: 600;
-    box-shadow: 0 8px 20px rgba(230, 0, 18, 0.4);
+    box-shadow: 0 8px 20px var(--shadow-brand);
 }
 
 .save-btn:hover {
-    background: linear-gradient(135deg, #e60012 0%, #1a1a1a 100%);
+    background: var(--brand-gradient-hover);
     transform: translateY(-2px);
-    box-shadow: 0 12px 28px rgba(230, 0, 18, 0.5);
+    box-shadow: 0 12px 28px var(--shadow-brand-hover);
 }
 
 
@@ -522,8 +655,8 @@ header {
     appearance: none; /* 기본 스타일 제거 */
     -webkit-appearance: none;
     -moz-appearance: none;
-    background-color: #f9f9f9;
-    border: 1px solid #ccc;
+    background-color: var(--bg-surface-alt-2);
+    border: 1px solid var(--border-neutral);
     border-radius: 8px;
     padding: 12px;
     font-size: 16px;
@@ -538,8 +671,8 @@ header {
 /* 포커스 효과 */
 .mypage-form-group select:focus {
     outline: none;
-    border-color: #e60012;
-    box-shadow: 0 0 0 4px rgba(230, 0, 18, 0.1);
+    border-color: var(--brand);
+    box-shadow: 0 0 0 4px var(--shadow-brand-soft);
 }
 
 /* 옵션 스타일 */
@@ -561,7 +694,7 @@ header {
     right: 15px;
     transform: translateY(-50%);
     font-size: 14px;
-    color: #888;
+    color: var(--text-icon-subtle);
     pointer-events: none; /* 클릭 불가능하게 설정 */
 }
 
@@ -576,7 +709,7 @@ header {
    탈퇴하기 버튼 스타일
 =============================== */
 .delete-btn {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+    background: var(--danger-gradient);
     color: white;
     border: none;
     border-radius: 12px;
@@ -587,13 +720,13 @@ header {
     transition: all 0.3s ease;
     width: 100%;
     margin-top: 24px;
-    box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+    box-shadow: 0 8px 20px var(--shadow-danger);
 }
 
 .delete-btn:hover {
-    background: linear-gradient(135deg, #ee5a5a 0%, #ff6b6b 100%);
+    background: var(--danger-gradient-hover);
     transform: translateY(-2px);
-    box-shadow: 0 12px 28px rgba(255, 107, 107, 0.5);
+    box-shadow: 0 12px 28px var(--shadow-danger-hover);
 }
 
 /* ================================
@@ -605,7 +738,7 @@ header {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.6);
+    background: var(--bg-overlay);
     backdrop-filter: blur(5px);
     display: flex;
     align-items: center;
@@ -613,21 +746,21 @@ header {
 }
 
 .modal {
-    background: rgba(255, 255, 255, 0.95);
+    background: var(--bg-surface);
     backdrop-filter: blur(20px);
     padding: 30px;
     border-radius: 20px;
     text-align: center;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 60px var(--shadow-header);
     width: 320px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--border-surface);
 }
 
 .modal p {
     font-size: 18px;
     font-weight: 600;
     margin-bottom: 20px;
-    color: #333;
+    color: var(--text-label);
 }
 
 .confirm-btn, .cancel-btn {
@@ -642,27 +775,27 @@ header {
 }
 
 .confirm-btn {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+    background: var(--danger-gradient);
     color: white;
-    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+    box-shadow: 0 4px 15px var(--shadow-danger);
 }
 
 .confirm-btn:hover {
-    background: linear-gradient(135deg, #ee5a5a 0%, #ff6b6b 100%);
+    background: var(--danger-gradient-hover);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.5);
+    box-shadow: 0 6px 20px var(--shadow-danger-hover);
 }
 
 .cancel-btn {
-    background: linear-gradient(135deg, #1a1a1a 0%, #e60012 100%);
+    background: var(--brand-gradient);
     color: white;
-    box-shadow: 0 4px 15px rgba(230, 0, 18, 0.4);
+    box-shadow: 0 4px 15px var(--shadow-brand);
 }
 
 .cancel-btn:hover {
-    background: linear-gradient(135deg, #e60012 0%, #1a1a1a 100%);
+    background: var(--brand-gradient-hover);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(230, 0, 18, 0.5);
+    box-shadow: 0 6px 20px var(--shadow-brand-hover-strong);
 }
 
 
@@ -691,12 +824,13 @@ header {
 .nav-container nav ul {
     list-style-type: none;
     display: flex;
-    background: #1a1a1a;
+    background: var(--bg-nav);
     padding: 0;
     margin: 0;
     flex-wrap: wrap;
     justify-content: center;
-    border-bottom: 1px solid rgba(230, 0, 18, 0.3);
+    border-bottom: 1px solid var(--border-header);
+    transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .nav-container nav ul li {
@@ -706,7 +840,7 @@ header {
 }
 
 .nav-container nav ul li a {
-    color: white;
+    color: var(--text-on-chrome);
     text-decoration: none;
     font-size: 14px;
     font-weight: 500;
@@ -714,18 +848,18 @@ header {
 }
 
 .nav-container nav ul li:hover a {
-    color: rgba(255, 255, 255, 0.9);
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    color: var(--text-on-chrome-hover);
+    text-shadow: 0 0 10px var(--glow-chrome);
 }
 
 .nav-container nav ul li.active {
     padding: 12px 16px;
-    border-bottom: 3px solid rgba(255, 255, 255, 0.8);
-    background: rgba(255, 255, 255, 0.1);
+    border-bottom: 3px solid var(--border-active);
+    background: var(--bg-nav-active);
 }
 
 .nav-container nav ul li.active a {
-    color: rgba(255, 255, 255, 0.95);
+    color: var(--text-on-chrome-active);
     font-weight: 700;
 }
 

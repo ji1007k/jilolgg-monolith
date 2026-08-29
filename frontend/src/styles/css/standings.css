@@ -5,7 +5,7 @@
  */
 .ranking-container {
     padding: 15px;
-    background-color: #ffffff;
+    background-color: var(--bg-panel-elevated);
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     max-width: 1200px;
@@ -33,11 +33,11 @@
 }
 
 .team-card {
-    border: 1px solid #eee;
+    border: 1px solid var(--border-panel);
     padding: 0.75rem;
     border-radius: 8px;
     text-align: center;
-    background: #fafafa;
+    background: var(--bg-panel);
 }
 
 .team-card img {
@@ -56,13 +56,13 @@
 
 .team-record {
     font-size: 12px;
-    color: #666;
+    color: var(--text-panel-muted);
 }
 
 .no-ranking {
     padding: 1rem;
     text-align: center;
-    color: #999;
+    color: var(--text-panel-faint);
 }
 
 /* 전체 컨테이너 스타일 */
@@ -70,9 +70,9 @@
     max-width: 1200px; /* 최대 너비 제한 */
     margin: 0 auto;
     padding: 10px;
-    background-color: #f9f9f9; /* 배경색 */
+    background-color: var(--bg-panel); /* 배경색 */
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* 부드러운 그림자 */
+    box-shadow: 0 0 10px var(--shadow-soft); /* 부드러운 그림자 */
 }
 
 /* 토너먼트 셀렉트박스 스타일 */
@@ -94,10 +94,10 @@
     max-width: fit-content;
     padding: 7px 39px 7px 15px;
     font-size: 14px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border-neutral);
     border-radius: 8px;
-    background-color: #fff;
-    color: #333;
+    background-color: var(--bg-input);
+    color: var(--text-label);
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -130,8 +130,8 @@
 
 .stage-buttons button {
     padding: 0.5rem 1rem;
-    border: 1px solid #ccc;
-    background: white;
+    border: 1px solid var(--border-neutral);
+    background: var(--bg-input);
     cursor: pointer;
     border-radius: 4px;
     font-size: 12px;
@@ -157,7 +157,7 @@
 .section-buttons button {
     cursor: pointer;
     font-size: 12px;
-    color: #333;
+    color: var(--text-panel-body);
 }
 
 .section-buttons button:hover {
@@ -173,8 +173,8 @@
 
 .team-card {
     padding: 10px 15px;
-    background-color: #f9fafb;
-    border: 1px solid #e0e0e0;
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-panel);
     border-radius: 10px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
     text-align: center;
@@ -211,9 +211,9 @@
     text-align: center;
     font-size: 16px;
     margin: auto 0;
-    background-color: white;
-    color: #333;
-    border-bottom: 2px solid #333;
+    background-color: var(--bg-panel-elevated);
+    color: var(--text-panel-heading);
+    border-bottom: 2px solid var(--border-panel);
 }
 
 .team-rank-badge span {
@@ -222,7 +222,7 @@
 
 .team-rank-badge span:not(:first-child) {
     font-size: 11px;
-    color: #444;
+    color: var(--text-panel-muted);
     margin-top: -5px;
 }
 
@@ -246,13 +246,13 @@
 .team-info .team-name {
     font-size: 18px;
     font-weight: 600;
-    color: #333;
+    color: var(--text-panel-heading);
     margin: 8px 0;
 }
 
 .team-info .team-record {
     font-size: 14px;
-    color: #444;
+    color: var(--text-panel-muted);
 }
 
 .team-info .team-record span {
@@ -272,13 +272,13 @@
 
 .team-info .team-record span:not(:last-child)::after {
     content: ' | ';
-    color: #333;
+    color: var(--text-panel-muted);
 }
 
 .no-ranking {
     text-align: center;
     font-size: 18px;
-    color: #b0b0b0;
+    color: var(--text-panel-faint);
     margin-top: 40px;
 }
 

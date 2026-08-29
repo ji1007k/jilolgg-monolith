@@ -4,7 +4,12 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import Header from "@/components/common/Header.js";
 import { AuthProvider } from "@/context/AuthContext.js";
+import { ThemeProvider } from "@/context/ThemeContext.js";
 import "@/styles/css/style.css";
+
+// hydration 전에 <html data-theme>를 세팅해 다크모드 FOUC(테마 전환 시 깜빡임)를 막는다.
+// localStorage에 저장된 값이 없으면 OS의 prefers-color-scheme를 따른다.
+const themeInitScript = `(function(){try{var t=localStorage.getItem('theme');if(t!=='dark'&&t!=='light'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,12 +29,17 @@ export const metadata = {
 // 헤더를 모든 페이지에서 공통으로 사용
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         {/* AuthProvider로 앱 전체를 감싸기 */}
         <AuthProvider>
-          <Header />
-          {children}
+          <ThemeProvider>
+            <Header />
+            {children}
+          </ThemeProvider>
         </AuthProvider>
       </body>
     </html>

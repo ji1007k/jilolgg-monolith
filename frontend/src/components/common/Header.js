@@ -3,6 +3,7 @@
 import {useAuth} from "@/context/AuthContext.js"; // useAuth 훅을 사용
 import UserInfo from "@/components/user/UserInfo.js"; // UserInfo 컴포넌트
 import LoginLink from "@/components/auth/LoginLink.js"; // LoginLink 컴포넌트
+import ThemeToggle from "@/components/common/ThemeToggle.js"; // 다크모드 토글 버튼
 import Link from 'next/link';
 import {usePathname} from "next/navigation.js";
 import {useEffect, useState} from "react";
@@ -51,6 +52,7 @@ export default function Header() {
                     <a href="/api/swagger-ui/index.html" className="api-docs-link">API Docs</a>
                 </div>
                 <div className="user-info">
+                    <ThemeToggle />
                     {username ? (
                         <UserInfo username={username} />
                     ) : (

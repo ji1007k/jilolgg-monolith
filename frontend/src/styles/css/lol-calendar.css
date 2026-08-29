@@ -1227,6 +1227,10 @@
     display: flex;
     gap: 5px;
 }
+
+.toolbar-controls button.active {
+    color: var(--brand);
+}
 /**
     설정 병합 확인 모달 (로그인 시)
  */

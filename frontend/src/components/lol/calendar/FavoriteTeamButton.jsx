@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FaStar, FaRegStar } from 'react-icons/fa';
+import { FiStar } from 'react-icons/fi';
 import { useCalendar } from "@/context/CalendarContext.js";
 import { addFavoriteTeam, removeFavoriteTeam } from "@utils/userPreferences.js";
 
@@ -55,7 +55,7 @@ const FavoriteTeamButton = ({ teamId, name, slug, image }) => {
                 title={isFavorited ? '즐겨찾기 해제' : '즐겨찾기 추가'}
             >
                 <i className={`star-icon ${isFavorited ? 'active' : 'inactive'} ${hovered ? 'hover' : ''}`}>
-                    {isFavorited ? <FaStar /> : <FaRegStar />}
+                    <FiStar fill={isFavorited ? 'currentColor' : 'none'} />
                 </i>
             </button>
 

@@ -300,8 +300,9 @@
     margin-top: 50px;
     transform: translate(-50%, -50%);
     border-radius: 12px;
-    background-color: #fff;
+    background-color: var(--bg-panel-elevated);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    transition: background-color 0.3s ease;
 }
 
 .match-history-popup .popup-header {
@@ -309,10 +310,11 @@
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--border-panel);
     font-size: 1.125rem;
     font-weight: bold;
-    background: #fff;
+    background: var(--bg-panel-elevated);
+    color: var(--text-panel-heading);
     position: sticky;
     top: 0;
     z-index: 10;
@@ -321,7 +323,7 @@
 .match-history-popup .close-btn {
     background: none;
     border: none;
-    color: #888;
+    color: var(--text-panel-faint);
     font-size: 1.25rem;
     cursor: pointer;
 }
@@ -330,13 +332,14 @@
     overflow-y: auto;
     flex: 1;
     padding: 8px 16px;
-    background: #f9fafb;
+    background: var(--bg-panel);
+    color: var(--text-panel-body);
 }
 
 .match-history-popup .match-card {
     position: relative;
-    border: 2px solid #ccc;
-    background: #fff;
+    border: 2px solid var(--border-panel);
+    background: var(--bg-panel-elevated);
     padding: 16px;
     margin: 12px 0;
     border-radius: 8px;
@@ -346,15 +349,15 @@
 .match-history-popup .num-badge {
     width: 20px;
     height: 20px;
-    background-color: #fff;
+    background-color: var(--bg-panel-elevated);
     border: none;
-    color: #111827;
+    color: var(--text-panel-heading);
     font-size: 0.75rem;
     font-weight: bold;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 1px 2px #444;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     margin-right: 3px;
 }
 
@@ -370,7 +373,7 @@
     align-items: center;
     gap: 6px;
     font-size: 0.75rem;
-    color: #4b5563;
+    color: var(--text-panel-muted);
 }
 
 .match-history-popup .label {
@@ -413,7 +416,7 @@
     align-items: center;
     font-size: 0.875rem;
     font-weight: 500;
-    color: #1f2937;
+    color: var(--text-panel-heading);
 }
 
 .match-history-popup .team {
@@ -458,14 +461,15 @@
 .match-history-popup .popup-footer {
     position: sticky;
     bottom: 0;
-    background: white;
+    background: var(--bg-panel-elevated);
     padding: 12px 16px;
-    border-top: 1px solid #ddd;
+    border-top: 1px solid var(--border-panel);
 }
 
 .match-history-popup .footer-btn {
     width: 100%;
-    background: #e5e7eb;
+    background: var(--bg-nav-active);
+    color: var(--text-panel-body);
     padding: 8px 12px;
     border-radius: 6px;
     font-weight: 500;
@@ -475,7 +479,7 @@
 }
 
 .match-history-popup .footer-btn:hover {
-    background: #d1d5db;
+    background: var(--border-panel);
 }
 
 /* 500px 미만 반응형 대응 */

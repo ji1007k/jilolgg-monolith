@@ -6,13 +6,33 @@ import LoginLink from "@/components/auth/LoginLink.js"; // LoginLink 컴포넌�
 import ThemeToggle from "@/components/common/ThemeToggle.js"; // 다크모드 토글 버튼
 import Link from 'next/link';
 import {usePathname} from "next/navigation.js";
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 
 export default function Header() {
     const { username } = useAuth();  // AuthContext에서 값 가져오기
     const pathname = usePathname();
     const isMainPage = pathname === "/";
     const [activeSection, setActiveSection] = useState('');
+    const headerRef = useRef(null);
+
+    // 헤더 실제 높이를 CSS 변수로 반영한다. 모바일에서 로그인 상태/화면 폭에 따라
+    // 헤더가 한 줄/두 줄로 바뀌면서 높이가 달라지는데, 하드코딩된 여백을 쓰면
+    // 달력 상단(연/월 선택, Today 버튼)이 fixed 헤더 밑에 가려지는 문제가 있었다.
+    useEffect(() => {
+        const headerEl = headerRef.current;
+        if (!headerEl) return;
+
+        const updateHeaderHeight = () => {
+            document.documentElement.style.setProperty('--header-height', `${headerEl.offsetHeight}px`);
+        };
+
+        updateHeaderHeight();
+
+        const observer = new ResizeObserver(updateHeaderHeight);
+        observer.observe(headerEl);
+
+        return () => observer.disconnect();
+    }, [isMainPage, username]);
 
     const handleClick = (sectionId) => {
         setActiveSection(sectionId);
@@ -41,7 +61,7 @@ export default function Header() {
 
 
     return (
-        <header>
+        <header ref={headerRef}>
             <div className="header-container">
                 {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
                 <div>

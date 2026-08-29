@@ -82,6 +82,10 @@
     font-weight: bold;
     font-size: 15px;
     padding: 0 15px;
+    /* color 미지정 시 브라우저 기본값(검정 계열)이 고정으로 적용돼, 다크모드 전환 시
+       .tournament-container의 어두운 배경(--bg-panel)과 거의 구분되지 않았다.
+       테마 토큰으로 지정해 라이트/다크 양쪽에서 대비를 보장한다. */
+    color: var(--text-panel-heading);
 }
 
 .tournament-select-wrapper .tournament-select {

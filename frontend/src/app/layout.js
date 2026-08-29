@@ -1,7 +1,7 @@
 /**
  * 전체 레이아웃
  */
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import Header from "@/components/common/Header.js";
 import { AuthProvider } from "@/context/AuthContext.js";
 import { ThemeProvider } from "@/context/ThemeContext.js";
@@ -11,14 +11,14 @@ import "@/styles/css/style.css";
 // localStorage에 저장된 값이 없으면 OS의 prefers-color-scheme를 따른다.
 const themeInitScript = `(function(){try{var t=localStorage.getItem('theme');if(t!=='dark'&&t!=='light'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+// 기존 Geist Sans/Mono는 subsets: ["latin"]만 로드해 한글 글리프가 없었고, 실제
+// font-family도 이 변수를 참조하지 않아 완전히 죽은 코드였다(항상 시스템 폰트로 폴백).
+// 한글 텍스트가 대부분인 서비스라 한글 글리프를 포함한 Pretendard Variable로 교체한다.
+const pretendard = localFont({
+  src: "../../node_modules/pretendard/dist/web/variable/woff2/PretendardVariable.woff2",
+  variable: "--font-pretendard",
+  weight: "45 920",
+  display: "swap",
 });
 
 export const metadata = {
@@ -33,7 +33,7 @@ export default function RootLayout({ children }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className={pretendard.variable}>
         {/* AuthProvider로 앱 전체를 감싸기 */}
         <AuthProvider>
           <ThemeProvider>

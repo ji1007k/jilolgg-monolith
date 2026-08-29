@@ -1,5 +1,5 @@
 import React from "react";
-import { FaCalendarAlt, FaCalendarDay, FaCalendarWeek, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FiCalendar, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import format from "date-fns/format";
 
 const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i);
@@ -26,7 +26,7 @@ const CustomToolbar = (toolbar) => {
     return (
         <div className="custom-toolbar">
             <div className="label-area">
-                <button onClick={goToBack}><FaChevronLeft /></button>
+                <button onClick={goToBack}><FiChevronLeft /></button>
 
                 <div className="date-selectors">
                     {toolbar.view === "month" && (
@@ -55,15 +55,23 @@ const CustomToolbar = (toolbar) => {
                     )}
                 </div>
 
-                <button onClick={goToNext}><FaChevronRight /></button>
+                <button onClick={goToNext}><FiChevronRight /></button>
             </div>
 
             <div className="toolbar-controls">
                 <button title="오늘 날짜로 이동" onClick={goToToday}>Today</button>
-                <button title="월별" onClick={() => goToView("month")}><FaCalendarAlt /></button>
-                <button title="주별" onClick={() => goToView("week")}><FaCalendarWeek /></button>
+                <button
+                    title="월별"
+                    className={toolbar.view === "month" ? "active" : ""}
+                    onClick={() => goToView("month")}
+                ><FiCalendar /></button>
+                <button
+                    title="주별"
+                    className={toolbar.view === "week" ? "active" : ""}
+                    onClick={() => goToView("week")}
+                ><FiCalendar /></button>
                 {/* 일별 뷰 버튼 숨김 */}
-                {/* <button title="일별" onClick={() => goToView("day")}><FaCalendarDay /></button> */}
+                {/* <button title="일별" onClick={() => goToView("day")}><FiCalendar /></button> */}
             </div>
         </div>
     );

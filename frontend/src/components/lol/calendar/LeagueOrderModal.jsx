@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
-import { saveLeagueOrder, getHiddenLeagueIds, saveHiddenLeagueIds } from '@/utils/userPreferences';
+import { saveLeagueSettings } from '@/utils/userPreferences';
 
-const LeagueOrderModal = ({ isOpen, onClose, leagues, onUpdate }) => {
+const LeagueOrderModal = ({ isOpen, onClose, leagues, hiddenLeagueIds: initialHiddenLeagueIds, onUpdate }) => {
     const [orderedLeagues, setOrderedLeagues] = useState([]);
     const [hiddenLeagueIds, setHiddenLeagueIds] = useState([]);
 
     useEffect(() => {
         if (isOpen) {
             setOrderedLeagues([...leagues]);
-            setHiddenLeagueIds(getHiddenLeagueIds());
+            setHiddenLeagueIds(initialHiddenLeagueIds || []);
         }
-    }, [isOpen, leagues]);
+    }, [isOpen, leagues, initialHiddenLeagueIds]);
 
     const moveUp = (index) => {
         if (index === 0) return;
@@ -38,10 +38,8 @@ const LeagueOrderModal = ({ isOpen, onClose, leagues, onUpdate }) => {
         try {
             // 백엔드 LeagueDto의 @JsonProperty("id")가 leagueId에 매핑되어 있으므로, 프론트에서는 id를 사용해야 함
             const leagueIds = orderedLeagues.map(l => l.id);
-            // 비로그인이면 이 브라우저에만, 로그인이면 서버에 저장된다.
-            await saveLeagueOrder(leagueIds);
-            // 숨김 설정은 서버에 아직 필드가 없어 로그인 여부와 무관하게 이 브라우저에만 저장한다.
-            saveHiddenLeagueIds(hiddenLeagueIds);
+            // 비로그인이면 이 브라우저에만, 로그인이면 서버(계정)에 저장되어 기기 간 동기화된다.
+            await saveLeagueSettings(leagueIds, hiddenLeagueIds);
             onUpdate(orderedLeagues, hiddenLeagueIds); // 부모 컴포넌트에 변경된 목록/숨김 상태 전달
             onClose();
         } catch (error) {

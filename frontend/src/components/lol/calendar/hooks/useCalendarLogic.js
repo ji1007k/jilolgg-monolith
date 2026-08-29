@@ -40,8 +40,8 @@ export const useCalendarLogic = () => {
                 // 로그인 사용자는 서버가 이미 정렬해서 내려준다.
                 // 비로그인 사용자는 이 브라우저에 저장된 순서를 여기서 적용한다.
                 const ordered = applyLeagueOrder(data, getLocalLeagueOrder());
-                // 숨김은 로그인 여부와 무관하게 항상 이 브라우저 기준이다.
-                const hidden = getHiddenLeagueIds();
+                // 숨김: 로그인 사용자는 서버가 내려준 hidden 필드에서, 비로그인 사용자는 이 브라우저에서 읽는다.
+                const hidden = getHiddenLeagueIds(ordered);
 
                 setLeagues(ordered);
                 setHiddenLeagueIds(hidden);
@@ -120,6 +120,7 @@ export const useCalendarLogic = () => {
     return {
         leagues,
         visibleLeagues,
+        hiddenLeagueIds,
         updateLeagueSettings,
         currentView,
         setCurrentView,

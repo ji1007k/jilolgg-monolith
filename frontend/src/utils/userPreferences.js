@@ -155,16 +155,6 @@ export function getLocalLeagueOrder() {
     return order.length > 0 ? order : null;
 }
 
-export async function saveLeagueOrder(leagueIds) {
-    if (!isLoggedIn()) {
-        writeLocalArray(LEAGUE_ORDER_KEY, leagueIds);
-        return;
-    }
-
-    await ensureCsrfToken();
-    await apiUpdateLeagueOrders(leagueIds);
-}
-
 /**
  * 저장된 순서대로 리그 목록을 재정렬한다.
  * 순서 정보에 없는 리그(새로 생긴 리그 등)는 원래 순서를 유지한 채 뒤로 보낸다.
@@ -186,16 +176,40 @@ export function applyLeagueOrder(leagues, order) {
 
 /**
  * 숨긴 리그 ID 목록.
- * 서버에는 아직 숨김 필드가 없어(schema 변경 필요, 후속 작업) 로그인 여부와 무관하게
- * 항상 이 브라우저에만 저장한다. 계정 간 동기화는 되지 않는다.
+ * 로그인 사용자는 서버가 리그 목록에 `hidden` 필드를 실어 내려주므로 그 목록에서 뽑아낸다.
+ * 비로그인 사용자는 서버에 계정이 없으므로 이 브라우저(localStorage)에서 읽는다.
+ * @param {Array<{id?: string, leagueId?: string, hidden?: boolean}>} leagues 서버에서 받은 리그 목록(로그인 시에만 사용)
  * @returns {string[]} leagueId 배열
  */
-export function getHiddenLeagueIds() {
+export function getHiddenLeagueIds(leagues = []) {
+    if (isLoggedIn()) {
+        return leagues
+            .filter((league) => league.hidden)
+            .map((league) => league.id ?? league.leagueId);
+    }
     return readLocalArray(HIDDEN_LEAGUES_KEY);
 }
 
-export function saveHiddenLeagueIds(leagueIds) {
-    writeLocalArray(HIDDEN_LEAGUES_KEY, leagueIds);
+/**
+ * 리그 순서와 숨김 여부를 함께 저장한다.
+ * 비로그인이면 이 브라우저에만, 로그인이면 서버(계정)에 저장되어 기기 간 동기화된다.
+ * @param {string[]} leagueIds 순서대로 나열된 leagueId 배열
+ * @param {string[]} hiddenLeagueIds 숨긴 leagueId 배열
+ */
+export async function saveLeagueSettings(leagueIds, hiddenLeagueIds) {
+    if (!isLoggedIn()) {
+        writeLocalArray(LEAGUE_ORDER_KEY, leagueIds);
+        writeLocalArray(HIDDEN_LEAGUES_KEY, hiddenLeagueIds);
+        return;
+    }
+
+    await ensureCsrfToken();
+    await apiUpdateLeagueOrders(
+        leagueIds.map((leagueId) => ({
+            leagueId,
+            hidden: hiddenLeagueIds.includes(leagueId),
+        }))
+    );
 }
 
 // ── 로그인 시 병합 ────────────────────────────────────────────
@@ -204,7 +218,8 @@ export function saveHiddenLeagueIds(leagueIds) {
 export function hasLocalPreferences() {
     return (
         readLocalArray(FAVORITE_TEAMS_KEY).length > 0 ||
-        readLocalArray(LEAGUE_ORDER_KEY).length > 0
+        readLocalArray(LEAGUE_ORDER_KEY).length > 0 ||
+        readLocalArray(HIDDEN_LEAGUES_KEY).length > 0
     );
 }
 
@@ -212,6 +227,7 @@ export function readLocalPreferences() {
     return {
         favoriteTeamIds: readLocalArray(FAVORITE_TEAMS_KEY),
         leagueOrder: readLocalArray(LEAGUE_ORDER_KEY),
+        hiddenLeagueIds: readLocalArray(HIDDEN_LEAGUES_KEY),
     };
 }
 
@@ -220,18 +236,19 @@ export function clearLocalPreferences() {
 
     window.localStorage.removeItem(FAVORITE_TEAMS_KEY);
     window.localStorage.removeItem(LEAGUE_ORDER_KEY);
+    window.localStorage.removeItem(HIDDEN_LEAGUES_KEY);
 }
 
 /**
  * 로컬 설정을 로그인한 계정으로 옮긴다.
  *
  * 즐겨찾기는 계정에 없는 것만 추가한다(합집합).
- * 리그 순서는 두 순서를 합칠 방법이 없으므로 로컬 순서로 덮어쓴다.
+ * 리그 순서/숨김은 두 상태를 합칠 방법이 없으므로 로컬 상태로 덮어쓴다.
  *
  * 반드시 로그인이 끝난 뒤(localStorage에 userId가 들어간 뒤) 호출해야 한다.
  */
 export async function mergeLocalPreferencesIntoAccount() {
-    const { favoriteTeamIds, leagueOrder } = readLocalPreferences();
+    const { favoriteTeamIds, leagueOrder, hiddenLeagueIds } = readLocalPreferences();
 
     if (favoriteTeamIds.length > 0) {
         let serverFavoriteIds = [];
@@ -261,7 +278,12 @@ export async function mergeLocalPreferencesIntoAccount() {
     if (leagueOrder.length > 0) {
         try {
             await ensureCsrfToken();
-            await apiUpdateLeagueOrders(leagueOrder);
+            await apiUpdateLeagueOrders(
+                leagueOrder.map((leagueId) => ({
+                    leagueId,
+                    hidden: hiddenLeagueIds.includes(leagueId),
+                }))
+            );
         } catch (e) {
             console.error('[userPreferences] 리그 순서 병합 실패', e);
         }

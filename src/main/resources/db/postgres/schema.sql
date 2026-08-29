@@ -151,6 +151,7 @@ CREATE TABLE IF NOT EXISTS "user_league_orders"
     user_id       BIGINT      NOT NULL,
     league_id     VARCHAR(64) NOT NULL,
     display_order INT         NOT NULL,
+    hidden        BOOLEAN   NOT NULL DEFAULT FALSE,
     updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (user_id, league_id)
 );
@@ -160,7 +161,10 @@ comment on column "user_league_orders".id is '고유 ID';
 comment on column "user_league_orders".user_id is '사용자 ID (users 테이블 FK)';
 comment on column "user_league_orders".league_id is '리그 ID (leagues 테이블 league_id)';
 comment on column "user_league_orders".display_order is '정렬 순서 (0부터 시작)';
+comment on column "user_league_orders".hidden is '리그 목록 숨김 여부';
 comment on column "user_league_orders".updated_at is '수정 일시';
+
+ALTER TABLE "user_league_orders" ADD COLUMN IF NOT EXISTS hidden BOOLEAN NOT NULL DEFAULT FALSE;
 
 -- owner_key: 알림 구독의 주체. 로그인 사용자는 'u:<userId>', 비로그인 기기는 'd:<deviceId>'.
 -- 로그인 없이도 알림을 받을 수 있어야 해서 user_id 단일 키에서 이 형태로 일반화했다.

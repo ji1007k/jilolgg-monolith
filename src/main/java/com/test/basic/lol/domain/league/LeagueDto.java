@@ -18,6 +18,7 @@ public class LeagueDto {
     private String region;
     private String image;
     private int priority;
+    private boolean hidden;
 
     @JsonProperty("displayPriority")
     private DisplayPriority displayPriority;

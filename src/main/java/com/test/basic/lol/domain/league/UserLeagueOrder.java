@@ -31,6 +31,10 @@ public class UserLeagueOrder {
     @Column(name = "display_order", nullable = false)
     private Integer displayOrder;
 
+    @Builder.Default
+    @Column(name = "hidden", nullable = false)
+    private boolean hidden = false;
+
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 

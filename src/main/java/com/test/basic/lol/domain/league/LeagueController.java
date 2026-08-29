@@ -57,11 +57,11 @@ public class LeagueController {
     @PutMapping("/orders")
     @PreAuthorize("isAuthenticated()")
     @io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "02_BearerAuth")
-    @io.swagger.v3.oas.annotations.Operation(summary = "리그 노출 순서 변경", description = "사용자별로 리그 목록의 노출 순서를 저장합니다.")
-    public ResponseEntity<Void> updateLeagueOrders(@RequestBody List<String> leagueIds) {
+    @io.swagger.v3.oas.annotations.Operation(summary = "리그 노출 순서/숨김 변경", description = "사용자별로 리그 목록의 노출 순서와 숨김 여부를 저장합니다.")
+    public ResponseEntity<Void> updateLeagueOrders(@RequestBody List<LeagueOrderItemRequest> items) {
         Long userId = getUserIdFromAuthentication();
         if (userId != null) {
-            leagueService.updateLeagueOrders(userId, leagueIds);
+            leagueService.updateLeagueOrders(userId, items);
         }
         return ResponseEntity.ok().build();
     }

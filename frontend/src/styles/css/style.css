@@ -5,7 +5,7 @@
 =============================== */
 :root {
     /* 배경 (모드와 무관하게 고정 — 다크/라이트 전환 시 반전되지 않는다) */
-    --bg-page: linear-gradient(135deg, #f5f5f7 0%, #e4e6eb 100%);
+    --bg-page: linear-gradient(135deg, #1a1a1a 0%, #e60012 100%);
     /* 헤더 실제 높이(Header.js가 ResizeObserver로 갱신). 초기값은 모바일 2줄 헤더 기준 여유값 */
     --header-height: 165px;
 

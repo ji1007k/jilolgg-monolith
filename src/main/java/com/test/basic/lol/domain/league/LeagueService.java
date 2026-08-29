@@ -42,25 +42,30 @@ public class LeagueService {
 
         Map<String, Integer> orderMap = orders.stream()
                 .collect(Collectors.toMap(UserLeagueOrder::getLeagueId, UserLeagueOrder::getDisplayOrder));
+        Map<String, Boolean> hiddenMap = orders.stream()
+                .collect(Collectors.toMap(UserLeagueOrder::getLeagueId, UserLeagueOrder::isHidden));
 
         return allLeagues.stream()
+                .peek(league -> league.setHidden(hiddenMap.getOrDefault(league.getLeagueId(), false)))
                 .sorted(Comparator.comparingInt(league -> orderMap.getOrDefault(league.getLeagueId(), Integer.MAX_VALUE)))
                 .toList();
     }
 
     @Transactional
-    public void updateLeagueOrders(Long userId, List<String> leagueIds) {
-        logger.info("Updating league orders for userId: {}, leagueIds: {}", userId, leagueIds);
-        
+    public void updateLeagueOrders(Long userId, List<LeagueOrderItemRequest> items) {
+        logger.info("Updating league orders for userId: {}, items: {}", userId, items);
+
         userLeagueOrderRepository.deleteByUserId(userId);
         logger.info("Deleted existing orders for userId: {}", userId);
-        
+
         List<UserLeagueOrder> newOrders = new ArrayList<>();
-        for (int i = 0; i < leagueIds.size(); i++) {
+        for (int i = 0; i < items.size(); i++) {
+            LeagueOrderItemRequest item = items.get(i);
             newOrders.add(UserLeagueOrder.builder()
                     .userId(userId)
-                    .leagueId(leagueIds.get(i))
+                    .leagueId(item.leagueId())
                     .displayOrder(i)
+                    .hidden(item.hidden())
                     .build());
         }
         userLeagueOrderRepository.saveAll(newOrders);

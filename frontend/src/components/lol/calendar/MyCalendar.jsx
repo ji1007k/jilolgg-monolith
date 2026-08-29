@@ -76,6 +76,7 @@ function MyCalendar({ events }) {
     const {
         leagues,
         visibleLeagues,
+        hiddenLeagueIds,
         updateLeagueSettings,
         currentView,
         setCurrentView,
@@ -208,6 +209,7 @@ function MyCalendar({ events }) {
             <LeagueAndTeamSelector
                 leagues={leagues}
                 visibleLeagues={visibleLeagues}
+                hiddenLeagueIds={hiddenLeagueIds}
                 onUpdateLeagueSettings={updateLeagueSettings}
             />
         </div>

@@ -127,7 +127,10 @@ export async function apiGetMatchHistory(matchIds) {
     return await response.json();
 }
 
-export async function apiUpdateLeagueOrders(leagueIds) {
+/**
+ * @param {{leagueId: string, hidden: boolean}[]} orderItems 순서대로 나열된 리그별 숨김 여부
+ */
+export async function apiUpdateLeagueOrders(orderItems) {
     const csrfToken = getCookie("XSRF-TOKEN");
     const response = await baseFetch(`/api/lol/leagues/orders`, {
         method: "PUT",
@@ -135,7 +138,7 @@ export async function apiUpdateLeagueOrders(leagueIds) {
             "Content-Type": "application/json",
             "X-XSRF-TOKEN": csrfToken,
         },
-        body: JSON.stringify(leagueIds),
+        body: JSON.stringify(orderItems),
     });
 
     if (!response.ok) {

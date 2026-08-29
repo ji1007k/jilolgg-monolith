@@ -107,7 +107,11 @@ Next.js 15 App Router + React 19. `output: 'export'` 정적 빌드이므로 **�
 - Tailwind가 설치돼 있지만 **실제 스타일은 대부분 커스텀 CSS 클래스**다 (`header-container`, `user-info`, `main-link` 등). Tailwind는 일부에서만 보조로 쓴다.
 - 스타일은 `src/styles/css/` 아래 8개 파일에 나뉘어 있다: `style.css`(공통·헤더·레이아웃), `lol-calendar.css`(경기 일정, 가장 큼), `standings.css`, `post-style.css`, `chat.css`, `loading.css`, `responsive.css`, 그리고 `src/styles/tailwind/lol/calendar.css`.
 - `src/app/layout.js`가 `style.css`를 로드한다. 나머지는 사용하는 컴포넌트에서 import한다.
-- **CSS 변수(커스텀 프로퍼티)를 쓰지 않는다.** 색상이 약 356곳에 하드코딩돼 있다(총 3,344줄). 테마·다크모드처럼 색을 일괄로 바꾸는 작업은 Tailwind `dark:` 프리픽스로 해결되지 않으며, CSS 변수 도입부터 해야 하는 큰 작업이다.
+- **색상은 CSS 변수 토큰으로 관리한다.** `style.css` 상단에 `:root`(라이트)와 `[data-theme="dark"]`(다크) 두 벌의 팔레트가 정의돼 있다. 테마·다크모드 작업은 Tailwind `dark:` 프리픽스가 아니라 이 토큰을 통해서 한다.
+  - **새 색을 하드코딩하지 말 것.** 기존 토큰에 없으면 `style.css` 양쪽 블록에 토큰을 추가한 뒤 `var(--...)`로 참조한다. 다크 블록에 빠뜨리면 라이트 값이 그대로 남아 어두운 배경에서 글자가 묻힌다.
+  - 브랜드/신호색(`--brand-*`, `--danger-*`, `--chip-live-bg` 등)은 두 테마에서 의미가 같아 다크 블록에서 재정의하지 않는다. 반대로 중립 배경·본문 텍스트는 반드시 재정의해야 한다.
+  - `--bg-page`는 **의도적으로 테마와 무관하게 고정**이다. 전환 시 배경이 반전되지 않게 한 결정이므로 다크 블록에 넣지 말 것.
+  - 잔여 하드코딩은 `chat.css`, `post-style.css`, `loading.css` 등에 일부 남아 있다. 파일 단위로 마이그레이션할 때는 **그 파일의 최종 상태를 기준으로** 작업해야 하므로, 같은 파일을 건드리는 다른 브랜치가 머지된 뒤에 진행할 것.
 - 달력은 `react-big-calendar`를 쓰고 라이브러리 기본 CSS를 import하므로, 외형을 바꾸려면 라이브러리 클래스를 덮어써야 한다.
 
 ### 구조

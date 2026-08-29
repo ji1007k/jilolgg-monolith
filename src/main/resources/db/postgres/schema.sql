@@ -156,6 +156,12 @@ CREATE TABLE IF NOT EXISTS "user_league_orders"
     UNIQUE (user_id, league_id)
 );
 
+-- 컬럼 추가는 그 컬럼을 참조하는 comment 보다 먼저 와야 한다.
+-- 기존 DB에서는 위 CREATE TABLE 이 건너뛰어지므로, 이 ALTER 가 없으면 hidden 컬럼이 없는 상태에서
+-- comment on column ... .hidden 이 실행되어 스크립트가 실패하고 기동이 통째로 죽는다.
+-- 빈 DB에서는 CREATE TABLE 이 컬럼을 만들어 주므로 이 문제가 재현되지 않는다.
+ALTER TABLE "user_league_orders" ADD COLUMN IF NOT EXISTS hidden BOOLEAN NOT NULL DEFAULT FALSE;
+
 comment on table "user_league_orders" is '사용자별 리그 정렬 순서';
 comment on column "user_league_orders".id is '고유 ID';
 comment on column "user_league_orders".user_id is '사용자 ID (users 테이블 FK)';
@@ -163,8 +169,6 @@ comment on column "user_league_orders".league_id is '리그 ID (leagues 테이�
 comment on column "user_league_orders".display_order is '정렬 순서 (0부터 시작)';
 comment on column "user_league_orders".hidden is '리그 목록 숨김 여부';
 comment on column "user_league_orders".updated_at is '수정 일시';
-
-ALTER TABLE "user_league_orders" ADD COLUMN IF NOT EXISTS hidden BOOLEAN NOT NULL DEFAULT FALSE;
 
 -- owner_key: 알림 구독의 주체. 로그인 사용자는 'u:<userId>', 비로그인 기기는 'd:<deviceId>'.
 -- 로그인 없이도 알림을 받을 수 있어야 해서 user_id 단일 키에서 이 형태로 일반화했다.

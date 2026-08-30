@@ -938,7 +938,7 @@
     width: 400px;
     max-height: 80vh;
     background: var(--bg-panel-elevated);
-    border-radius: 8px;
+    border-radius: 12px;
     box-shadow: 0 10px 30px var(--shadow-header);
     display: flex;
     flex-direction: column;
@@ -1069,15 +1069,16 @@
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-    background-color: var(--bg-panel);
+    background-color: var(--bg-panel-elevated);
 }
 
 .league-order-modal .save-btn {
+    flex: 1;
     background-color: var(--action-primary);
     color: white;
     border: none;
     padding: 8px 16px;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     font-weight: 500;
 }
@@ -1087,11 +1088,12 @@
 }
 
 .league-order-modal .cancel-btn {
+    flex: 1;
     background-color: var(--bg-panel-elevated);
     color: var(--text-panel-muted);
     border: 1px solid var(--border-panel);
     padding: 8px 16px;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
 }
 

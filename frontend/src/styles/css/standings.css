@@ -157,7 +157,7 @@
 
 .section-buttons .active {
     font-weight: bolder;
-    border-bottom: 2px solid #ff5722;
+    border-bottom: 2px solid var(--brand);
 }
 
 /* 순위표 스타일 */
@@ -400,6 +400,9 @@
 }
 
 .match-history-popup .vod-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     font-size: 0.875rem;
     color: #2563eb;
     text-decoration: underline;

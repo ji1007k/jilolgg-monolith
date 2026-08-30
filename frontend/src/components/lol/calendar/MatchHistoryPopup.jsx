@@ -1,5 +1,5 @@
 import Popup from "reactjs-popup";
-import { FiX } from "react-icons/fi";
+import { FiX, FiVideo } from "react-icons/fi";
 import format from "date-fns/format";
 import ko from "date-fns/locale/ko";
 import Loading from "@components/common/Loading.js";
@@ -67,7 +67,7 @@ function MatchHistoryPopup({ team, matches, open, onClose, isLoading }) {
                                                         onClick={() => window.open(match.vodUrl || `https://www.youtube.com/results?search_query=${teamA.code}+vs+${teamB.code}`, "_blank")}
                                                         className="vod-btn"
                                                     >
-                                                        🎥 영상 보기
+                                                        <FiVideo /> 영상 보기
                                                     </button>
                                                 </div>
                                             )}

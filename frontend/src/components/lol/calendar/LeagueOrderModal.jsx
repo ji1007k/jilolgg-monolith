@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { FiX, FiEye, FiEyeOff, FiChevronUp, FiChevronDown } from 'react-icons/fi';
 import { saveLeagueSettings } from '@/utils/userPreferences';
 
 const LeagueOrderModal = ({ isOpen, onClose, leagues, hiddenLeagueIds: initialHiddenLeagueIds, onUpdate }) => {
@@ -56,7 +57,7 @@ const LeagueOrderModal = ({ isOpen, onClose, leagues, hiddenLeagueIds: initialHi
             <div className="league-order-modal">
                 <div className="modal-header">
                     <h3>리그 순서 설정</h3>
-                    <button onClick={onClose} className="close-btn" aria-label="닫기">&times;</button>
+                    <button onClick={onClose} className="close-btn" aria-label="닫기"><FiX /></button>
                 </div>
                 
                 <div className="modal-body">
@@ -78,7 +79,7 @@ const LeagueOrderModal = ({ isOpen, onClose, leagues, hiddenLeagueIds: initialHi
                                             title={isHidden ? '리그 표시하기' : '리그 숨기기'}
                                             aria-label={isHidden ? '리그 표시하기' : '리그 숨기기'}
                                         >
-                                            {isHidden ? '🙈' : '👁️'}
+                                            {isHidden ? <FiEyeOff /> : <FiEye />}
                                         </button>
                                         <button
                                             onClick={() => moveUp(index)}
@@ -86,7 +87,7 @@ const LeagueOrderModal = ({ isOpen, onClose, leagues, hiddenLeagueIds: initialHi
                                             className="control-btn"
                                             aria-label="위로 이동"
                                         >
-                                            ▲
+                                            <FiChevronUp />
                                         </button>
                                         <button
                                             onClick={() => moveDown(index)}
@@ -94,7 +95,7 @@ const LeagueOrderModal = ({ isOpen, onClose, leagues, hiddenLeagueIds: initialHi
                                             className="control-btn"
                                             aria-label="아래로 이동"
                                         >
-                                            ▼
+                                            <FiChevronDown />
                                         </button>
                                     </div>
                                 </li>

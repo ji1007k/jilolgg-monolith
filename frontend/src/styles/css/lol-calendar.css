@@ -84,12 +84,19 @@
 }
 
 .custom-toolbar button {
+    position: relative;
     background: none;
     border: none;
     cursor: pointer;
     font-size: 16px;
     margin: 0 5px;
     color: var(--text-panel-body);
+}
+
+.custom-toolbar button::after {
+    content: '';
+    position: absolute;
+    inset: -10px;
 }
 
 .custom-toolbar button:hover {
@@ -370,11 +377,19 @@
 }
 
 .match-list-popup .close-btn {
+    position: relative;
     background: none;
     border: none;
     color: var(--text-panel-faint);
     font-size: 1.25rem;
     cursor: pointer;
+}
+
+/* 시각적 크기는 유지하되 터치 타겟을 44px 권장 크기에 가깝게 넓힌다 (레이아웃에는 영향 없음) */
+.match-list-popup .close-btn::after {
+    content: '';
+    position: absolute;
+    inset: -10px;
 }
 
 .match-list-popup .popup-body {
@@ -695,11 +710,18 @@
 }
 
 .match-detail-popup .close-btn {
+    position: relative;
     background: none;
     border: none;
     color: var(--text-panel-faint);
     font-size: 1.25rem;
     cursor: pointer;
+}
+
+.match-detail-popup .close-btn::after {
+    content: '';
+    position: absolute;
+    inset: -10px;
 }
 
 .match-detail-popup .popup-body {
@@ -944,11 +966,18 @@
 }
 
 .league-order-modal .close-btn {
+    position: relative;
     background: none;
     border: none;
     font-size: 1.5rem;
     cursor: pointer;
     color: var(--text-panel-faint);
+}
+
+.league-order-modal .close-btn::after {
+    content: '';
+    position: absolute;
+    inset: -10px;
 }
 
 .league-order-modal .modal-body {
@@ -994,6 +1023,7 @@
 }
 
 .league-order-item .control-btn {
+    position: relative;
     background: none;
     border: 1px solid var(--border-panel);
     border-radius: 4px;
@@ -1001,6 +1031,12 @@
     cursor: pointer;
     color: var(--text-panel-muted);
     transition: all 0.2s;
+}
+
+.league-order-item .control-btn::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
 }
 
 .league-order-item .control-btn:hover:not(:disabled) {

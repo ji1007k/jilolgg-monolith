@@ -53,6 +53,7 @@ const FavoriteTeamButton = ({ teamId, name, slug, image }) => {
                     handleFavoriteToggle();  // 즐겨찾기 토글
                 }}
                 title={isFavorited ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                aria-label={isFavorited ? '즐겨찾기 해제' : '즐겨찾기 추가'}
             >
                 <i className={`star-icon ${isFavorited ? 'active' : 'inactive'} ${hovered ? 'hover' : ''}`}>
                     <FiStar fill={isFavorited ? 'currentColor' : 'none'} />

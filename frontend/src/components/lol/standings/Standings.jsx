@@ -66,7 +66,10 @@ const Standings = ({ tournamentId }) => {
 
         const updateRowCount = () => {
             const containerWidth = gridContainerRef.current ? gridContainerRef.current.offsetWidth : window.innerWidth; // container의 너비를 확인
-            const isMobile = containerWidth <= 450;
+            // standings.css의 .ranking-grid 1열 전환 브레이크포인트(768px)와 맞춘다.
+            // 이전에는 450px 기준이라, 450~768px 구간에서 CSS는 1열인데 JS는 2열 기준 행 수를 계산해
+            // grid-auto-flow: column 특성상 일부 카드가 보이지 않는 열로 밀려나는 문제가 있었다.
+            const isMobile = containerWidth <= 768;
             const rows = isMobile ? rankings.length : Math.ceil(rankings.length / 2);
             setRowCount(rows);
             // console.log("Container Width: ", containerWidth); // 상태 변경 후 확인

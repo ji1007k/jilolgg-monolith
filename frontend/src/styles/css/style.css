@@ -202,6 +202,15 @@ body {
     transition: background 0.3s ease;
 }
 
+/* 키보드 포커스 표시. 버튼/링크 상당수가 outline: none 없이도 기본 포커스 링에 의존하고 있어
+   커스텀 배경색 위에서 대비가 보장되지 않는 문제를 :focus-visible로 일괄 보완한다.
+   마우스 클릭 시에는 표시되지 않아 기존 시각 디자인에 영향을 주지 않는다. */
+button:focus-visible,
+a:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
 /* ================================
    헤더 스타일 (세련된 디자인)
 =============================== */
@@ -321,6 +330,7 @@ header {
     -webkit-appearance: none;
     appearance: none;
     box-sizing: border-box;
+    position: relative;
     display: inline-flex;
     flex-shrink: 0;
     align-items: center;
@@ -336,6 +346,12 @@ header {
     font-size: 16px;
     line-height: 1;
     transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+}
+
+.theme-toggle-btn::after {
+    content: '';
+    position: absolute;
+    inset: -5px;
 }
 
 .theme-toggle-btn:hover {

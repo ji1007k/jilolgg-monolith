@@ -43,6 +43,7 @@ const CustomEventWrapper = ({ open, event, children }) => {
                                 close();
                             }}
                             className="close-btn"
+                            aria-label="닫기"
                         >
                             <FiX />
                         </button>

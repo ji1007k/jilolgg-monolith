@@ -26,7 +26,7 @@ const CustomToolbar = (toolbar) => {
     return (
         <div className="custom-toolbar">
             <div className="label-area">
-                <button onClick={goToBack}><FiChevronLeft /></button>
+                <button onClick={goToBack} aria-label="이전"><FiChevronLeft /></button>
 
                 <div className="date-selectors">
                     {toolbar.view === "month" && (
@@ -55,18 +55,20 @@ const CustomToolbar = (toolbar) => {
                     )}
                 </div>
 
-                <button onClick={goToNext}><FiChevronRight /></button>
+                <button onClick={goToNext} aria-label="다음"><FiChevronRight /></button>
             </div>
 
             <div className="toolbar-controls">
                 <button title="오늘 날짜로 이동" onClick={goToToday}>Today</button>
                 <button
                     title="월별"
+                    aria-label="월별 보기"
                     className={toolbar.view === "month" ? "active" : ""}
                     onClick={() => goToView("month")}
                 ><FiCalendar /></button>
                 <button
                     title="주별"
+                    aria-label="주별 보기"
                     className={toolbar.view === "week" ? "active" : ""}
                     onClick={() => goToView("week")}
                 ><FiCalendar /></button>

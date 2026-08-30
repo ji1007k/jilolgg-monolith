@@ -27,14 +27,6 @@
     }
 }
 
-.team-card {
-    border: 1px solid var(--border-panel);
-    padding: 0.75rem;
-    border-radius: 8px;
-    text-align: center;
-    background: var(--bg-panel);
-}
-
 .team-card img {
     height: 45px;
 }
@@ -320,11 +312,18 @@
 }
 
 .match-history-popup .close-btn {
+    position: relative;
     background: none;
     border: none;
     color: var(--text-panel-faint);
     font-size: 1.25rem;
     cursor: pointer;
+}
+
+.match-history-popup .close-btn::after {
+    content: '';
+    position: absolute;
+    inset: -10px;
 }
 
 .match-history-popup .popup-body {

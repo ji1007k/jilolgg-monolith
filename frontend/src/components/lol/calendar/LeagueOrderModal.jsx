@@ -56,7 +56,7 @@ const LeagueOrderModal = ({ isOpen, onClose, leagues, hiddenLeagueIds: initialHi
             <div className="league-order-modal">
                 <div className="modal-header">
                     <h3>리그 순서 설정</h3>
-                    <button onClick={onClose} className="close-btn">&times;</button>
+                    <button onClick={onClose} className="close-btn" aria-label="닫기">&times;</button>
                 </div>
                 
                 <div className="modal-body">
@@ -76,6 +76,7 @@ const LeagueOrderModal = ({ isOpen, onClose, leagues, hiddenLeagueIds: initialHi
                                             onClick={() => toggleHidden(league.id)}
                                             className={`control-btn hide-toggle-btn${isHidden ? ' is-hidden' : ''}`}
                                             title={isHidden ? '리그 표시하기' : '리그 숨기기'}
+                                            aria-label={isHidden ? '리그 표시하기' : '리그 숨기기'}
                                         >
                                             {isHidden ? '🙈' : '👁️'}
                                         </button>
@@ -83,6 +84,7 @@ const LeagueOrderModal = ({ isOpen, onClose, leagues, hiddenLeagueIds: initialHi
                                             onClick={() => moveUp(index)}
                                             disabled={index === 0}
                                             className="control-btn"
+                                            aria-label="위로 이동"
                                         >
                                             ▲
                                         </button>
@@ -90,6 +92,7 @@ const LeagueOrderModal = ({ isOpen, onClose, leagues, hiddenLeagueIds: initialHi
                                             onClick={() => moveDown(index)}
                                             disabled={index === orderedLeagues.length - 1}
                                             className="control-btn"
+                                            aria-label="아래로 이동"
                                         >
                                             ▼
                                         </button>

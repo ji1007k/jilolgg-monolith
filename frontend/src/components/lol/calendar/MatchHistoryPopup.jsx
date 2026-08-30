@@ -26,6 +26,7 @@ function MatchHistoryPopup({ team, matches, open, onClose, isLoading }) {
                                 onClose();
                             }}
                             className="close-btn"
+                            aria-label="닫기"
                         >
                             <FiX />
                         </button>

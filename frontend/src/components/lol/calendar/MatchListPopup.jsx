@@ -44,6 +44,7 @@ function MatchListPopup ({ open, onClose, matches, date, isLoading, onPrevDate, 
                                 onClose();
                             }}
                             className="close-btn"
+                            aria-label="닫기"
                         >
                             <FiX />
                         </button>

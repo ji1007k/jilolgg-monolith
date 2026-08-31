@@ -29,10 +29,10 @@ const MergePreferencesModal = ({ isOpen, onMerge, onKeepAccount, busy }) => {
                 </div>
 
                 <div className="modal-footer">
-                    <button onClick={onKeepAccount} className="cancel-btn" disabled={busy}>
+                    <button onClick={onKeepAccount} className="footer-btn" disabled={busy}>
                         계정 설정 사용
                     </button>
-                    <button onClick={onMerge} className="save-btn" disabled={busy}>
+                    <button onClick={onMerge} className="footer-btn footer-btn-primary" disabled={busy}>
                         {busy ? '합치는 중...' : '합치기'}
                     </button>
                 </div>

@@ -1067,38 +1067,33 @@
     padding: 15px 20px;
     border-top: 1px solid var(--border-panel);
     display: flex;
-    justify-content: flex-end;
     gap: 10px;
     background-color: var(--bg-panel-elevated);
 }
 
-.league-order-modal .save-btn {
+.league-order-modal .footer-btn {
     flex: 1;
-    background-color: var(--action-primary);
-    color: white;
+    background: var(--bg-nav-active);
+    color: var(--text-panel-body);
     border: none;
-    padding: 8px 16px;
+    padding: 8px 12px;
     border-radius: 6px;
-    cursor: pointer;
     font-weight: 500;
-}
-
-.league-order-modal .save-btn:hover {
-    background-color: var(--action-primary-hover);
-}
-
-.league-order-modal .cancel-btn {
-    flex: 1;
-    background-color: var(--bg-panel-elevated);
-    color: var(--text-panel-muted);
-    border: 1px solid var(--border-panel);
-    padding: 8px 16px;
-    border-radius: 6px;
+    transition: background 0.2s ease;
     cursor: pointer;
 }
 
-.league-order-modal .cancel-btn:hover {
-    background-color: var(--bg-nav-active);
+.league-order-modal .footer-btn:hover {
+    background: var(--border-panel);
+}
+
+.league-order-modal .footer-btn-primary {
+    background: var(--brand-gradient);
+    color: white;
+}
+
+.league-order-modal .footer-btn-primary:hover {
+    background: var(--brand-gradient-hover);
 }
 
 /* 500px 미만 반응형 대응 */

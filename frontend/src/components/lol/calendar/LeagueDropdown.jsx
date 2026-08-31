@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { FiSettings } from 'react-icons/fi';
 
 const LeagueDropdown = ({ leagues, selectedLeague, onChange, onOpenSettings }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -43,7 +44,7 @@ const LeagueDropdown = ({ leagues, selectedLeague, onChange, onOpenSettings }) =
                     {/* 설정 버튼 (최상단 고정) */}
                     {onOpenSettings && (
                         <li className="dropdown-settings-item" onClick={handleSettingsClick}>
-                            <span style={{ marginRight: '5px' }}>⚙️</span>
+                            <span style={{ marginRight: '5px' }}><FiSettings /></span>
                             <span>순서 설정</span>
                         </li>
                     )}

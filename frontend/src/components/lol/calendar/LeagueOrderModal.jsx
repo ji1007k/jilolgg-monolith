@@ -105,8 +105,8 @@ const LeagueOrderModal = ({ isOpen, onClose, leagues, hiddenLeagueIds: initialHi
                 </div>
 
                 <div className="modal-footer">
-                    <button onClick={onClose} className="cancel-btn">취소</button>
-                    <button onClick={handleSave} className="save-btn">저장</button>
+                    <button onClick={onClose} className="footer-btn">취소</button>
+                    <button onClick={handleSave} className="footer-btn footer-btn-primary">저장</button>
                 </div>
             </div>
         </>

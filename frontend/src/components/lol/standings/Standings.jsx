@@ -112,7 +112,8 @@ const Standings = ({ tournamentId }) => {
         setIsLoadingRoster(true);
 
         try {
-            const detail = await apiGetTeamDetail(team.slug);
+            // team.slug는 standings API 응답 값이라 teams 테이블(slug 기준 조회)과 일치하지 않을 수 있어 teamId 사용
+            const detail = await apiGetTeamDetail(team.teamId);
             setRosterPlayers(detail?.players ?? []);
         } catch (err) {
             console.error("팀 로스터 조회 실패:", err);

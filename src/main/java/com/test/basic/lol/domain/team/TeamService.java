@@ -69,7 +69,10 @@ public class TeamService {
     }
 
     public Team getTeamBySlugFromDB(String slug) {
+        // slug는 getStandings/getSchedule 등 외부 API 엔드포인트마다 값이 달라질 수 있어
+        // teams 테이블(getTeams 기준 slug)과 매칭이 안 될 수 있다. teamId는 모든 엔드포인트에서 일관되므로 fallback으로 사용.
         return teamRepository.findBySlug(slug)
+                .or(() -> teamRepository.findByTeam_TeamId(slug))
                 .orElseThrow(() -> new EntityNotFoundException("Team not found: " + slug));
     }
 

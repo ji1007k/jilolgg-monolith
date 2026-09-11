@@ -44,9 +44,9 @@ public class TeamController {
 
     @GetMapping("/{slug}")
     @Operation(summary = "팀 상세 조회", description = "팀 슬러그를 이용해 특정 팀의 상세 정보 및 선수 로스터를 조회합니다.")
-    public ResponseEntity<Team> getTeamBySlug(@PathVariable String slug) {
+    public ResponseEntity<TeamDto> getTeamBySlug(@PathVariable String slug) {
         try {
-            Team foundTeam = teamService.getTeamBySlugFromDB(slug);
+            TeamDto foundTeam = teamService.getTeamDetailBySlug(slug);
             return ResponseEntity.ok(foundTeam);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.notFound().build();

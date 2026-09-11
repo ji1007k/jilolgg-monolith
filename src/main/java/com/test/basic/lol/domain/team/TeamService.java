@@ -73,6 +73,12 @@ public class TeamService {
                 .orElseThrow(() -> new EntityNotFoundException("Team not found: " + slug));
     }
 
+    @Transactional(readOnly = true)
+    public TeamDto getTeamDetailBySlug(String slug) {
+        Team team = getTeamBySlugFromDB(slug);
+        return teamMapper.teamToTeamDetailDto(team);
+    }
+
     public List<TeamSyncDto> parseTeamsFromResponse(String response) {
         try {
             JsonNode teamsNode = objectMapper.readTree(response)

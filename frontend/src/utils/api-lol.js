@@ -111,6 +111,18 @@ export async function apiFetchStandings(tournamentId) {
     return await response.json();
 }
 
+export async function apiGetTeamDetail(slug) {
+    const response = await baseFetch(`/api/lol/teams/${slug}`, {
+        method: 'GET',
+    });
+
+    if (!response.ok) {
+        throw new Error('팀 상세 정보 조회 실패');
+    }
+
+    return await response.json();
+}
+
 export async function apiGetMatchHistory(matchIds) {
     const response = await baseFetch(`/api/lol/matchhistory`, {
         method: 'POST',

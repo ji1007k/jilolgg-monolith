@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {apiFetchStandings, apiGetMatchHistory} from "@utils/api-lol.js";
+import {apiFetchStandings, apiGetMatchHistory, apiGetTeamDetail} from "@utils/api-lol.js";
 import Loading from "@components/common/Loading.js";
 import MatchHistoryPopup from "@components/lol/calendar/MatchHistoryPopup.jsx";
+import TeamRosterPopup from "@components/lol/calendar/TeamRosterPopup.jsx";
 
-// TODO
-//  - 팀 아이콘 클릭 시 팀&로스터 정보 조회
 const Standings = ({ tournamentId }) => {
     const [standings, setStandings] = useState([]);
     const [activeStageId, setActiveStageId] = useState('');
@@ -23,6 +22,12 @@ const Standings = ({ tournamentId }) => {
     const [matchHistoryPopupOpen, setMatchHistoryPopupOpen] = useState(false);
     const [selectedTeam, setSelectedTeam] = useState(null);
     const [selectedTeamMatchHistory, setSelectedTeamMatchHistory] = useState([]);
+
+    // 로스터
+    const [rosterPopupOpen, setRosterPopupOpen] = useState(false);
+    const [rosterTeam, setRosterTeam] = useState(null);
+    const [rosterPlayers, setRosterPlayers] = useState([]);
+    const [isLoadingRoster, setIsLoadingRoster] = useState(false);
 
     const stages = standings?.[0]?.stages || [];
     const activeStage = stages.find(stage => stage.id === activeStageId);
@@ -97,6 +102,24 @@ const Standings = ({ tournamentId }) => {
         setSelectedTeamMatchHistory(filtered);
 
         fetchMatchHistory(filtered.map(m => m.matchId));
+    }
+
+    async function handleTeamIconClick(e, team) {
+        e.stopPropagation(); // 카드 클릭(전적 팝업)으로 전파되지 않도록 함
+
+        setRosterTeam(team);
+        setRosterPopupOpen(true);
+        setIsLoadingRoster(true);
+
+        try {
+            const detail = await apiGetTeamDetail(team.slug);
+            setRosterPlayers(detail?.players ?? []);
+        } catch (err) {
+            console.error("팀 로스터 조회 실패:", err);
+            setRosterPlayers([]);
+        } finally {
+            setIsLoadingRoster(false);
+        }
     }
 
     async function fetchMatchHistory(matchIds) {
@@ -183,7 +206,10 @@ const Standings = ({ tournamentId }) => {
                                     <span>{team.rank}</span>
                                     {isSharedRank && <span> 공동</span>}
                                 </div>
-                                <div className="team-icon">
+                                <div
+                                    className="team-icon"
+                                    onClick={(e) => handleTeamIconClick(e, team)}
+                                >
                                     <img src={team.image} title={team.name} alt={team.name} />
                                 </div>
                                 <div className="team-info">
@@ -210,6 +236,16 @@ const Standings = ({ tournamentId }) => {
                     open={matchHistoryPopupOpen}
                     onClose={() => setMatchHistoryPopupOpen(false)}
                     isLoading={isLoadingHistory}
+                />
+            }
+            {
+                rosterPopupOpen &&
+                <TeamRosterPopup
+                    team={rosterTeam}
+                    players={rosterPlayers}
+                    open={rosterPopupOpen}
+                    onClose={() => setRosterPopupOpen(false)}
+                    isLoading={isLoadingRoster}
                 />
             }
         </div>

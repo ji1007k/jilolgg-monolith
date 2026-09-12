@@ -87,9 +87,15 @@ public class SyncTeamService {
             }
             long syncEndTime = System.currentTimeMillis();
 
-            // 에러 로그 출력
-            if (!errorLogMap.isEmpty()) {
-                StringBuilder groupedErrorLog = new StringBuilder(">>> 동기화 중 실패한 팀 목록:\n");
+            // 개별 팀 실패는 여기서 로그로만 남기면 응답(화면)에는 "성공"만 보여 원인 파악이 어렵다.
+            // 실패한 팀/원인을 응답 메시지에도 그대로 포함시켜 관리자가 바로 확인할 수 있게 한다.
+            String resultMessage;
+            if (errorLogMap.isEmpty()) {
+                resultMessage = "팀 수동 동기화 성공";
+            } else {
+                StringBuilder groupedErrorLog = new StringBuilder(
+                        String.format("팀 수동 동기화 완료 (성공 %d건 / 전체 %d건). 아래 팀은 동기화에서 제외됨:\n",
+                                successCnt, externalTeams.size()));
                 errorLogMap.forEach((reason, names) -> {
                     if (names.length() >= 2) {
                         names.setLength(names.length() - 2);  // 마지막 ", " 제거
@@ -98,13 +104,14 @@ public class SyncTeamService {
                     groupedErrorLog.append(String.format("원인: %s%n", reason));
                     groupedErrorLog.append("- ").append(names).append("\n");
                 });
-                logger.error("{}", groupedErrorLog);
+                resultMessage = groupedErrorLog.toString();
+                logger.error(">>> 동기화 중 실패한 팀 목록:\n{}", resultMessage);
             }
 
             logger.info(">>> 팀 동기화 완료 (성공 {}건 / 전체 {}건)", successCnt, externalTeams.size());
             logger.info(">>> LoL Esports API로부터 팀 정보 동기화 완료, 소요 시간: {}ms", (syncEndTime - syncStartTime));
 
-            return "팀 수동 동기화 성공";
+            return resultMessage;
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

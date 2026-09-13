@@ -5,6 +5,7 @@ import { saveLeagueSettings } from '@/utils/userPreferences';
 const LeagueOrderModal = ({ isOpen, onClose, leagues, hiddenLeagueIds: initialHiddenLeagueIds, onUpdate }) => {
     const [orderedLeagues, setOrderedLeagues] = useState([]);
     const [hiddenLeagueIds, setHiddenLeagueIds] = useState([]);
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
@@ -36,6 +37,8 @@ const LeagueOrderModal = ({ isOpen, onClose, leagues, hiddenLeagueIds: initialHi
     };
 
     const handleSave = async () => {
+        if (isSaving) return;
+        setIsSaving(true);
         try {
             // 백엔드 LeagueDto의 @JsonProperty("id")가 leagueId에 매핑되어 있으므로, 프론트에서는 id를 사용해야 함
             const leagueIds = orderedLeagues.map(l => l.id);
@@ -46,6 +49,8 @@ const LeagueOrderModal = ({ isOpen, onClose, leagues, hiddenLeagueIds: initialHi
         } catch (error) {
             console.error("리그 순서 저장 실패:", error);
             alert("리그 순서 저장에 실패했습니다.");
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -105,8 +110,10 @@ const LeagueOrderModal = ({ isOpen, onClose, leagues, hiddenLeagueIds: initialHi
                 </div>
 
                 <div className="modal-footer">
-                    <button onClick={onClose} className="footer-btn">취소</button>
-                    <button onClick={handleSave} className="footer-btn footer-btn-primary">저장</button>
+                    <button onClick={onClose} className="footer-btn" disabled={isSaving}>취소</button>
+                    <button onClick={handleSave} className="footer-btn footer-btn-primary" disabled={isSaving}>
+                        {isSaving ? '저장 중...' : '저장'}
+                    </button>
                 </div>
             </div>
         </>

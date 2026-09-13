@@ -7,8 +7,13 @@ export default function TokenExpiration() {
     const [timeLeft, setTimeLeft] = useState(null);
 
     const handleLogout = async () => {
-        logout();
-        await apiLogout();
+        try {
+            await apiLogout();
+        } catch (err) {
+            console.error("로그아웃 요청 실패:", err);
+        } finally {
+            logout();
+        }
     }
 
     // 인터벌 콜백은 항상 최신 값을 참조해야 하지만, expirationTime이 바뀔 때만

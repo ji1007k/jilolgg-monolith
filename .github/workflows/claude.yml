@@ -60,4 +60,4 @@ jobs:
           # (npm --prefix는 cwd를 바꾸지 않아 대안이 되지 못한다. 실측 확인함)
           claude_args: |
             --max-turns 150
-            --allowedTools "Edit,Write,Bash(cd:*),Bash(npm:*),Bash(npx:*),Bash(./gradlew:*),Bash(ls:*),Bash(cat:*),Bash(mkdir:*)"
+            --allowedTools "Edit,Write,Bash(cd:*),Bash(npm:*),Bash(npx:*),Bash(./gradlew:*),Bash(ls:*),Bash(cat:*),Bash(mkdir:*),Bash(gh issue view:*),Bash(gh issue list:*)"

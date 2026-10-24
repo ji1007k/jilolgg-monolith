@@ -291,6 +291,7 @@ public class MatchService {
         copy.setBlockName(src.getBlockName());
         copy.setWinningTeamCode(src.getWinningTeamCode());
         copy.setParticipants(src.getParticipants());
+        copy.setGames(src.getGames());
         return copy;
     }
 
@@ -305,6 +306,9 @@ public class MatchService {
         merged.setParticipants(left.getParticipants() != null && !left.getParticipants().isEmpty()
                 ? left.getParticipants()
                 : right.getParticipants());
+        merged.setGames(left.getGames() != null && !left.getGames().isEmpty()
+                ? left.getGames()
+                : right.getGames());
         return merged;
     }
 

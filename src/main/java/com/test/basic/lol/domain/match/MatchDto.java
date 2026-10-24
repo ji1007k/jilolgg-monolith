@@ -1,5 +1,6 @@
 package com.test.basic.lol.domain.match;
 
+import com.test.basic.lol.domain.matchgame.MatchGameDto;
 import com.test.basic.lol.domain.matchteam.MatchTeamDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,4 +22,5 @@ public class MatchDto {
     private String winningTeamCode;
 
     private List<MatchTeamDto> participants;
+    private List<MatchGameDto> games;
 }

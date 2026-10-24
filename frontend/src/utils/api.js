@@ -82,7 +82,9 @@ export async function signup(username, password) {
 }
 
 export async function logout() {
-    const response = await fetch("/api/auth/logout", { method: "GET" });
+    // access token이 만료된 상태에서도 baseFetch가 401 시 자동 갱신 후
+    // 재시도하므로 서버의 쿠키 삭제/refresh token 삭제가 확실히 실행된다.
+    const response = await baseFetch("/api/auth/logout", { method: "GET" });
     if (!response.ok) {
         throw new Error("로그아웃 실패");
     }

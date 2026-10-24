@@ -29,8 +29,13 @@ export default function UserInfo({ username }) {
 
     const handleLogout = async (e) => {
         e.preventDefault();
-        await apiLogout();
-        logout();
+        try {
+            await apiLogout();
+        } catch (err) {
+            console.error("로그아웃 요청 실패:", err);
+        } finally {
+            logout();
+        }
     };
 
     const handleMenuClick = (e, targetPath) => {

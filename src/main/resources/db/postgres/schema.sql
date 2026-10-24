@@ -116,6 +116,20 @@ WHERE id NOT IN (
 CREATE UNIQUE INDEX IF NOT EXISTS uq_match_teams_match_team
     ON "match_teams" (match_id, team_id);
 
+-- 경기(시리즈)별 세트. 승자는 확정 가능할 때만 채운다(NULL 허용).
+CREATE TABLE IF NOT EXISTS "match_games"
+(
+    id             BIGSERIAL PRIMARY KEY,
+    game_id        VARCHAR(64) NOT NULL UNIQUE,
+    match_id       VARCHAR(64) NOT NULL,
+    game_number    INT         NOT NULL,
+    state          VARCHAR(50),
+    blue_team_id   VARCHAR(64),
+    red_team_id    VARCHAR(64),
+    winner_team_id VARCHAR(64)
+);
+CREATE INDEX IF NOT EXISTS idx_match_games_match_id ON "match_games" (match_id);
+
 CREATE TABLE IF NOT EXISTS "teams"
 (
     id          BIGSERIAL PRIMARY KEY,

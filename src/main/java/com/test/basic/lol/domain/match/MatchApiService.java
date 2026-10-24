@@ -70,7 +70,8 @@ public class MatchApiService {
                                     team.getTeam().setLeagueId(leagueId);
                                     return team;
                                 })
-                                .toList()
+                                .toList(),
+                        null
                 ));
             }
         } catch (Exception e) {

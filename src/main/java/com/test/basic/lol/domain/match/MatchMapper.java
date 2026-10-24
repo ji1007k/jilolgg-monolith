@@ -1,5 +1,7 @@
 package com.test.basic.lol.domain.match;
 
+import com.test.basic.lol.domain.matchgame.MatchGame;
+import com.test.basic.lol.domain.matchgame.MatchGameDto;
 import com.test.basic.lol.domain.matchteam.MatchTeam;
 import com.test.basic.lol.domain.matchteam.MatchTeamMapper;
 import com.test.basic.lol.domain.team.Team;
@@ -18,6 +20,8 @@ public interface MatchMapper {
     @Mapping(source = "matchTeams", target = "participants")    // 필드 이름이 다를 경우 매핑 명시
     @Mapping(target = "strategy", expression = "java(refineStrategy(match))")
     MatchDto entityToDto(Match match);
+
+    MatchGameDto gameToDto(MatchGame game);
 
     default String getWinningTeamCode(Match match) {
         return match.getMatchTeams().stream()

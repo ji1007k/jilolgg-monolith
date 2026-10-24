@@ -5,8 +5,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.test.basic.lol.domain.league.League;
 import com.test.basic.lol.domain.matchteam.MatchTeam;
 import com.test.basic.lol.domain.tournament.Tournament;
+import com.test.basic.lol.domain.matchgame.MatchGame;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -62,6 +65,14 @@ public class Match {
 
     @OneToMany(mappedBy = "match")
     private List<MatchTeam> matchTeams;
+
+    // 세트 목록. match_id 문자열로만 연결하는 읽기 전용 관계다(저장은 MatchGameSyncService가 담당).
+    @OneToMany
+    @JoinColumn(name = "match_id", referencedColumnName = "match_id", insertable = false, updatable = false)
+    @OrderBy("number ASC")
+    @BatchSize(size = 50)
+    @EqualsAndHashCode.Exclude
+    private List<MatchGame> games;
 
     @Override
     public String toString() {

@@ -6,6 +6,7 @@ import com.test.basic.lol.domain.league.League;
 import com.test.basic.lol.domain.league.LeagueRepository;
 import com.test.basic.lol.domain.match.mapping.MatchExternalMappingService;
 import com.test.basic.lol.domain.match.manual.ManualMatchOverrideService;
+import com.test.basic.lol.domain.matchgame.MatchGameSyncService;
 import com.test.basic.lol.domain.matchteam.MatchTeam;
 import com.test.basic.lol.domain.matchteam.MatchTeamRepository;
 import com.test.basic.lol.domain.matchteam.MatchTeamService;
@@ -41,6 +42,7 @@ public class MatchSyncWorker {
     private final MatchTeamService matchTeamService;
     private final ManualMatchOverrideService manualMatchOverrideService;
     private final MatchExternalMappingService matchExternalMappingService;
+    private final MatchGameSyncService matchGameSyncService;
 
     private Team resolveTeamForSync(String code, String name) {
         List<Team> candidates = "TBD".equalsIgnoreCase(name)
@@ -141,6 +143,9 @@ public class MatchSyncWorker {
         if (isUpdated) {
             matchRepository.save(match);
         }
+
+        // [1-1] 세트 목록 upsert (승자는 확정 가능한 세트만)
+        matchGameSyncService.sync(match.getMatchId(), matchDetail);
 
         // [2] MatchTeam 갱신
         // 기존 매치 팀 데이터 조회 (DB에 저장된 상태)

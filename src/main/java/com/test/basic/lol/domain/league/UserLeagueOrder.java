@@ -43,4 +43,9 @@ public class UserLeagueOrder {
     public void prePersist() {
         this.updatedAt = LocalDateTime.now();
     }
+
+    public void updateOrder(int displayOrder, boolean hidden) {
+        this.displayOrder = displayOrder;
+        this.hidden = hidden;
+    }
 }

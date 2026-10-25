@@ -1395,3 +1395,40 @@
     background-color: var(--toast-error-bg);
     color: var(--toast-error-text-strong);
 }
+
+/* 세트별 스코어보드 */
+.match-list-popup .game-scoreboard {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-panel);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.75rem;
+    color: var(--text-panel-body);
+}
+
+.match-list-popup .game-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.match-list-popup .game-number {
+    font-weight: 600;
+    min-width: 40px;
+}
+
+.match-list-popup .game-sides {
+    flex: 1;
+    text-align: center;
+}
+
+.match-list-popup .game-winner {
+    font-weight: 700;
+}
+
+.match-list-popup .game-unconfirmed {
+    opacity: 0.6;
+}

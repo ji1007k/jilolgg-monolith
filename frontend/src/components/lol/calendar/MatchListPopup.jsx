@@ -8,6 +8,7 @@ import Loading from "@components/common/Loading.js";
 import {useSwipeable} from "react-swipeable";
 import { useMatchAlarms } from "@components/lol/calendar/hooks/useMatchAlarms.js";
 import MatchAlarmButton from "@components/lol/calendar/MatchAlarmButton.jsx";
+import GameScoreboard from "@components/lol/calendar/GameScoreboard.jsx";
 
 function MatchListPopup ({ open, onClose, matches, date, isLoading, onPrevDate, onNextDate }) {
     const matchDate = format(new Date(date), "yyyy년 M월 d일 (EEE)", { locale: ko });
@@ -138,6 +139,10 @@ function MatchListPopup ({ open, onClose, matches, date, isLoading, onPrevDate, 
                                                         <span className="team-code">{teamB.team.code}</span>
                                                     </div>
                                                 </div>
+                                            )}
+
+                                            {!isUnstarted && (
+                                                <GameScoreboard games={match.games} teamA={teamA.team} teamB={teamB.team} />
                                             )}
 
                                             {match.vodUrl && (

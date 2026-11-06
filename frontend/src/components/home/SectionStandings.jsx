@@ -4,6 +4,15 @@ import Loading from "@components/common/Loading";
 import { apiFetchTournaments } from "@utils/api-lol";
 import {useCalendar} from "@/context/CalendarContext.js";
 
+// slug만으로는 구분이 어려워 기간(MM.DD~MM.DD)을 덧붙인다. 날짜가 없으면 slug만 쓴다.
+const shortDate = (d) => (typeof d === 'string' && d.length >= 10 ? d.slice(5, 10).replace('-', '.') : '');
+
+const tournamentLabel = (t) => {
+    const s = shortDate(t.startDate);
+    const e = shortDate(t.endDate);
+    return s && e ? `${t.slug} (${s}~${e})` : t.slug;
+};
+
 export default function SectionStandings() {
     const { selectedLeague, selectedDate } = useCalendar();
     const [tournaments, setTournaments] = useState([]);
@@ -46,7 +55,7 @@ export default function SectionStandings() {
                 >
                     {tournaments.map(t => (
                         <option key={t.id} value={t.id}>
-                            {t.slug}
+                            {tournamentLabel(t)}
                         </option>
                     ))}
                 </select>

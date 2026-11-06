@@ -275,6 +275,13 @@
 }
 
 /* 순위표가 없는 스테이지의 대진 목록 */
+.bracket-round-title {
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-panel-faint);
+}
+
 .stage-match-list {
     list-style: none;
     margin: 12px 0 0;

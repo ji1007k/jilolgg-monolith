@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {apiFetchStandings, apiGetMatchHistory, apiGetTeamDetail} from "@utils/api-lol.js";
 import Loading from "@components/common/Loading.js";
 import MatchHistoryPopup from "@components/lol/calendar/MatchHistoryPopup.jsx";
+import BracketView from "@components/lol/standings/BracketView.jsx";
 import TeamRosterPopup from "@components/lol/calendar/TeamRosterPopup.jsx";
 
 const Standings = ({ tournamentId }) => {
@@ -232,26 +233,7 @@ const Standings = ({ tournamentId }) => {
                             ? '이 스테이지는 순위표 없이 대진으로 진행됩니다.'
                             : '아직 시작 전이거나 표시할 순위 정보가 없습니다.'}
                     </div>
-                    {matches.length > 0 && (
-                        <ul className="stage-match-list">
-                            {matches.map((m, idx) => (
-                                <li key={m.matchId || idx} className="stage-match-item">
-                                    {(m.teams || []).map((t, i) => (
-                                        <span
-                                            key={i}
-                                            className={`stage-match-team${t.result?.outcome === 'win' ? ' winner' : ''}`}
-                                        >
-                                            {t.code || t.name || 'TBD'}
-                                            {m.state !== 'unstarted' && ` ${t.result?.gameWins ?? 0}`}
-                                        </span>
-                                    ))}
-                                    <span className="stage-match-state">
-                                        {m.state === 'completed' ? '종료' : m.state === 'inProgress' ? '진행 중' : '예정'}
-                                    </span>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
+                    {matches.length > 0 && <BracketView matches={matches} />}
                 </div>
             )}
             {

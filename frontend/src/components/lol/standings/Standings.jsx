@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {apiFetchStandings, apiGetMatchHistory, apiGetTeamDetail} from "@utils/api-lol.js";
 import Loading from "@components/common/Loading.js";
 import MatchHistoryPopup from "@components/lol/calendar/MatchHistoryPopup.jsx";
@@ -12,7 +12,6 @@ const Standings = ({ tournamentId }) => {
     const [activeSectionIndex, setActiveSectionIndex] = useState(0);
     const gridContainerRef = useRef(null);
     const [hasMounted, setHasMounted] = useState(false);
-    const [rankings, setRankings] = useState([]);
     const [rowCount, setRowCount] = useState(0);
 
     const [isLoading, setIsLoading] = useState(true);
@@ -20,7 +19,6 @@ const Standings = ({ tournamentId }) => {
 
 
     // 전적
-    const [matches, setMatches] = useState([]);
     const [matchHistoryPopupOpen, setMatchHistoryPopupOpen] = useState(false);
     const [selectedTeam, setSelectedTeam] = useState(null);
     const [selectedTeamMatchHistory, setSelectedTeamMatchHistory] = useState([]);
@@ -35,6 +33,11 @@ const Standings = ({ tournamentId }) => {
     const activeStage = stages.find(stage => stage.id === activeStageId);
     const sections = activeStage?.sections || [];
     const activeSection = sections[activeSectionIndex] || null;
+
+    // 스테이지/섹션 전환과 같은 렌더에서 즉시 계산한다.
+    // (이전에는 effect+state라 한 프레임 동안 이전 내용이 남아 높이가 두 번 바뀌며 스크롤이 튀었다)
+    const rankings = useMemo(() => resolveSectionRankings(activeSection), [activeSection]);
+    const matches = useMemo(() => activeSection?.matches || [], [activeSection]);
 
 
     useEffect(() => {
@@ -61,15 +64,11 @@ const Standings = ({ tournamentId }) => {
     }, [standings]);
 
     useEffect(() => {
-        const stage = standings?.[0]?.stages?.find(stage => stage.id === activeStageId);
-        const section = stage?.sections?.[activeSectionIndex];
-        setRankings(resolveSectionRankings(section));
-        setMatches(section?.matches || []);
-    }, [standings, activeStageId, activeSectionIndex]);
-
-    useEffect(() => {
         setHasMounted(true);
+    }, []);
 
+    // paint 전에 행 수를 반영해 stale gridTemplateRows로 인한 높이 깜빡임을 막는다.
+    useLayoutEffect(() => {
         const updateRowCount = () => {
             const containerWidth = gridContainerRef.current ? gridContainerRef.current.offsetWidth : window.innerWidth; // container의 너비를 확인
             // standings.css의 .ranking-grid 1열 전환 브레이크포인트(768px)와 맞춘다.

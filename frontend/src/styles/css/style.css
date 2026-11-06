@@ -288,6 +288,15 @@ header {
 @media (max-width: 500px) {
     .header-container {
         padding: 10px 20px;
+        position: relative; /* 드롭다운(#dropdown)의 위치 기준 */
+    }
+
+    /* 사용자명 오른쪽으로 펼쳐지며 화면 밖으로 잘리던 것을 헤더 우측 안쪽에 고정 */
+    .header-container #dropdown {
+        left: auto;
+        right: 20px;
+        top: 100%;
+        max-width: calc(100vw - 40px);
     }
 
     .header-container .main-link {

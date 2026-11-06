@@ -274,6 +274,34 @@
     margin-top: 40px;
 }
 
+/* 순위표가 없는 스테이지의 대진 목록 */
+.stage-match-list {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.stage-match-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    color: var(--text-panel-faint);
+}
+
+.stage-match-team.winner {
+    font-weight: 700;
+}
+
+.stage-match-state {
+    margin-left: auto;
+    font-size: 12px;
+}
+
 
 /**
     순위표 - 전적

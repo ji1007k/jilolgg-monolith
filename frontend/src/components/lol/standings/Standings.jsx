@@ -47,7 +47,11 @@ const Standings = ({ tournamentId }) => {
     }, [tournamentId]);
 
     useEffect(() => {
-        const defaultStage = standings?.[0]?.stages?.[0];
+        const allStages = standings?.[0]?.stages || [];
+        // 순위표가 있는 마지막 스테이지를 기본 선택한다(없으면 첫 스테이지).
+        // 대회 후반부(토너먼트 등)는 순위표가 없어 빈 화면이 먼저 보이는 문제를 줄인다.
+        const hasRankings = (st) => st.sections?.some(sec => sec.refinedRankings?.length > 0);
+        const defaultStage = [...allStages].reverse().find(hasRankings) || allStages[0];
         if (defaultStage) {
             setActiveStageId(defaultStage.id);
             setActiveSectionIndex(0); // 기본은 첫 번째 섹션
@@ -57,13 +61,8 @@ const Standings = ({ tournamentId }) => {
     useEffect(() => {
         const stage = standings?.[0]?.stages?.find(stage => stage.id === activeStageId);
         const section = stage?.sections?.[activeSectionIndex];
-        if (section?.refinedRankings) {
-            setRankings(section.refinedRankings);
-            setMatches(section.matches);
-        } else {
-            setRankings([]);
-            setMatches([]);
-        }
+        setRankings(section?.refinedRankings || []);
+        setMatches(section?.matches || []);
     }, [standings, activeStageId, activeSectionIndex]);
 
     useEffect(() => {
@@ -227,7 +226,33 @@ const Standings = ({ tournamentId }) => {
                 }
                 </div>
             ) : (
-                <div className="no-ranking">표시할 순위 정보가 없습니다.</div>
+                <div>
+                    <div className="no-ranking">
+                        {matches.length > 0
+                            ? '이 스테이지는 순위표 없이 대진으로 진행됩니다.'
+                            : '아직 시작 전이거나 표시할 순위 정보가 없습니다.'}
+                    </div>
+                    {matches.length > 0 && (
+                        <ul className="stage-match-list">
+                            {matches.map((m, idx) => (
+                                <li key={m.matchId || idx} className="stage-match-item">
+                                    {(m.teams || []).map((t, i) => (
+                                        <span
+                                            key={i}
+                                            className={`stage-match-team${t.result?.outcome === 'win' ? ' winner' : ''}`}
+                                        >
+                                            {t.code || t.name || 'TBD'}
+                                            {m.state !== 'unstarted' && ` ${t.result?.gameWins ?? 0}`}
+                                        </span>
+                                    ))}
+                                    <span className="stage-match-state">
+                                        {m.state === 'completed' ? '종료' : m.state === 'inProgress' ? '진행 중' : '예정'}
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
             )}
             {
                 matchHistoryPopupOpen &&

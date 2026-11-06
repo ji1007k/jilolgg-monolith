@@ -3,6 +3,7 @@ import {apiFetchStandings, apiGetMatchHistory, apiGetTeamDetail} from "@utils/ap
 import Loading from "@components/common/Loading.js";
 import MatchHistoryPopup from "@components/lol/calendar/MatchHistoryPopup.jsx";
 import BracketView from "@components/lol/standings/BracketView.jsx";
+import { resolveSectionRankings } from "@utils/standings-util.js";
 import TeamRosterPopup from "@components/lol/calendar/TeamRosterPopup.jsx";
 
 const Standings = ({ tournamentId }) => {
@@ -62,7 +63,7 @@ const Standings = ({ tournamentId }) => {
     useEffect(() => {
         const stage = standings?.[0]?.stages?.find(stage => stage.id === activeStageId);
         const section = stage?.sections?.[activeSectionIndex];
-        setRankings(section?.refinedRankings || []);
+        setRankings(resolveSectionRankings(section));
         setMatches(section?.matches || []);
     }, [standings, activeStageId, activeSectionIndex]);
 
@@ -220,6 +221,11 @@ const Standings = ({ tournamentId }) => {
                                         <span className="loss">패: {losses}</span>
                                         <span>득실: {gameDiff}</span>
                                     </div>
+                                    {team.badge && (
+                                        <div className={`team-badge ${team.badge === '진출' ? 'advance' : 'eliminated'}`}>
+                                            {team.badge}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         );
@@ -228,11 +234,9 @@ const Standings = ({ tournamentId }) => {
                 </div>
             ) : (
                 <div>
-                    <div className="no-ranking">
-                        {matches.length > 0
-                            ? '이 스테이지는 순위표 없이 대진으로 진행됩니다.'
-                            : '아직 시작 전이거나 표시할 순위 정보가 없습니다.'}
-                    </div>
+                    {matches.length === 0 && (
+                        <div className="no-ranking">아직 시작 전이거나 표시할 순위 정보가 없습니다.</div>
+                    )}
                     {matches.length > 0 && <BracketView matches={matches} />}
                 </div>
             )}
